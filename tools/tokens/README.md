@@ -1,17 +1,17 @@
 # Token Analysis Tool
 
-This tool analyzes token counts for the Googology Wiki statistics HTML file using different tokenization methods.
+This tool analyzes token counts for the Googology Wiki MediaWiki XML export using tiktoken (OpenAI GPT-4).
 
 ## Overview
 
-The token analysis tool compares how different tokenization methods count tokens in the `data/statistics-googology-wiki-fandom.html` file. This is useful for understanding how different Large Language Models (LLMs) would process the content and for estimating API costs.
+The token analysis tool counts tokens in the MediaWiki XML using OpenAI's tiktoken. This is useful for understanding how GPT models would process the content and for estimating OpenAI API costs.
 
 ## Features
 
-- **Multiple tokenization methods**: Compares tiktoken (OpenAI GPT-4), transformers (BERT), and generic estimation
-- **Performance analysis**: Measures processing time for each method
-- **Detailed comparison**: Shows percentage differences between methods
-- **Usage recommendations**: Provides guidance on when to use each method
+- **tiktoken tokenization**: Uses OpenAI's official GPT-4 tokenizer
+- **Exclusion filtering**: Supports exclude.md to filter out unwanted content sections
+- **Before/after comparison**: Shows token counts before and after exclusion
+- **Performance metrics**: Processing time and character-to-token ratio analysis
 
 ## Usage
 
@@ -20,7 +20,7 @@ The token analysis tool compares how different tokenization methods count tokens
 Install required Python packages:
 
 ```bash
-pip install tiktoken transformers
+pip install tiktoken
 ```
 
 ### Running the Analysis
@@ -32,67 +32,27 @@ python3 tokens.py
 
 ### Input
 
-- `data/statistics-googology-wiki-fandom.html` - Googology Wiki statistics page (HTML format)
+- `data/googology_pages_current.xml` - Googology Wiki MediaWiki XML export
 
 ### Output
 
 - `tokens.md` - Markdown report with tokenization analysis results
-- Console output with comparison table
+- Console output with token analysis results
 
-## Methods Compared
+## Tokenization Method
 
-### 1. tiktoken (OpenAI GPT-4)
-- **Purpose**: Most accurate for OpenAI models (ChatGPT, GPT-4)
-- **Use case**: API cost estimation, prompt planning
-- **Tokenizer**: OpenAI's official tokenizer
-
-### 2. transformers (BERT)
-- **Purpose**: General NLP tasks with Hugging Face models
-- **Use case**: Working with BERT and other transformer models
-- **Tokenizer**: Hugging Face BERT tokenizer
-
-### 3. Generic Estimation
-- **Purpose**: Quick approximation
-- **Use case**: Fast estimates when exact counts aren't critical
-- **Method**: Character count ÷ 3
+### tiktoken (OpenAI GPT-4)
+- **Purpose**: Accurate token counting for OpenAI models (ChatGPT, GPT-4)
+- **Use case**: API cost estimation, prompt planning, content analysis
+- **Tokenizer**: OpenAI's official GPT-4 tokenizer
+- **Accuracy**: Matches actual OpenAI API token consumption
 
 ## Sample Output
 
-The tool generates both console output and a markdown report:
-
-```
-Method               Tokens       Time (s)   Chars/Token 
--------------------------------------------------------
-tiktoken (GPT-4)     91,605       0.102s     2.48
-transformers (BERT)  109,445      1.287s     2.08
-Generic estimation   75,778       0.000s     3.00
-```
-
-## Analysis Results
-
-The markdown report includes:
-- File statistics (size, character count)
-- Token count comparison table
-- Performance differences between methods
-- Usage recommendations
-- Method accuracy analysis
-
-## Dependencies
-
-- Python 3.x
-- tiktoken
-- transformers
-- Standard library modules (os, time, datetime)
+See [tokens.md](tokens.md) for the complete analysis report.
 
 ## Notes
 
-- The transformers library may show warnings about missing PyTorch/TensorFlow - these can be ignored for tokenization-only tasks
-- BERT tokenizer has a 512 token limit warning, but this doesn't affect the counting accuracy
-- Different tokenizers handle HTML content, special characters, and technical terms differently
-
-## Integration
-
-This tool is integrated into:
-- `tools/dothemall.bash` - Automated execution
-- `tools/README.md` - Documentation
-- GitHub Actions workflows - CI/CD pipeline
+- tiktoken provides accurate token counts that match OpenAI API consumption
+- Processing large XML files may take several seconds depending on file size
+- Exclusion filtering can significantly reduce token counts for analysis purposes
