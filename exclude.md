@@ -9,4 +9,5 @@ This document defines guidelines for excluding certain pages from search and ana
 - File: `<title>File:*</title>`
 - Template: `<title>Template:*</title>`
 - FANDOM system pages: `<username>FANDOM</username>`
+- Wikia system pages: `<username>Wikia</username>`
 
