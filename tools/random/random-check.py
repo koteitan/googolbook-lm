@@ -17,6 +17,7 @@ XML_FILE = '../../data/googology_pages_current.xml'
 OUTPUT_FILE = 'index.html'
 FETCH_LOG_FILE = '../../data/fetch_log.txt'
 EXCLUDE_FILE = '../../exclude.md'
+RANDOM_LINKS_COUNT = 50  # Number of random links to display
 
 
 def load_excluded_namespaces(exclude_file_path: str) -> Tuple[List[str], List[str]]:
@@ -141,15 +142,8 @@ def generate_html_page(pages_data: List[Tuple[str, str, str]], output_file: str)
         pages_data: List of (page_id, page_title, namespace) tuples
         output_file: Path to output HTML file
     """
-    # Convert pages data to JavaScript array (page IDs only for button)
-    js_pages = []
-    for page_id, title, namespace in pages_data:
-        js_pages.append(f'"{page_id}"')
-    
-    pages_js_array = '[' + ','.join(js_pages) + ']'
-    
     # Generate random sample for links list with both ID and title
-    random_sample = random.sample(pages_data, min(20, len(pages_data)))
+    random_sample = random.sample(pages_data, min(RANDOM_LINKS_COUNT, len(pages_data)))
     random_links_js = []
     random_links_html = ""
     for page_id, title, namespace in random_sample:
@@ -169,7 +163,7 @@ def generate_html_page(pages_data: List[Tuple[str, str, str]], output_file: str)
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Random Jump - Googology Wiki</title>
+    <title>Random Check - Googology Wiki</title>
     <style>
         body {{
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -270,18 +264,40 @@ def generate_html_page(pages_data: List[Tuple[str, str, str]], output_file: str)
         .random-links a:hover {{
             color: #ffffff;
         }}
+        .license {{
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #2a2a2a;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+            text-align: left;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }}
+        .license p {{
+            margin: 0;
+            color: #b0b0b0;
+            font-size: 14px;
+            line-height: 1.5;
+        }}
+        .license a {{
+            color: #aecbfa;
+            text-decoration: none;
+        }}
+        .license a:hover {{
+            color: #ffffff;
+            text-decoration: underline;
+        }}
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎲 Random Jump</h1>
+        <h1>🎲 Random Check</h1>
         <div class="description">
-            Discover random pages from the Googology Wiki! Click the button below to jump to a randomly selected page from the wiki's vast collection of mathematical concepts and large numbers.
+            This tool displays random pages from the Googology Wiki to verify that exclude.md exclusion rules are working correctly.
         </div>
         
-        <button class="random-button" onclick="goToRandomPage()">
-            🎯 Random Jump
-        </button>
         
         <div class="random-links">
             <h3>🎲 Random Page Samples</h3>
@@ -295,31 +311,17 @@ def generate_html_page(pages_data: List[Tuple[str, str, str]], output_file: str)
             📊 Total available pages: {len(pages_data):,}<br>
             🚫 Excluded {73776 - len(pages_data):,} pages by <a href="../../exclude.md" target="_blank">exclude.md</a><br>
             📅 Generated: {get_fetch_date()}<br>
-            🤖 Created by random-jump.py
+            🤖 Created by random-check.py
+        </div>
+        
+        <div class="license">
+            <p><strong>License:</strong> This content is derived from the <a href="https://googology.fandom.com/" target="_blank">Googology Wiki</a>, which is licensed under <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank">CC BY-SA 3.0</a>. Any derivative work must maintain the same license.</p>
         </div>
     </div>
 
     <script>
-        // Array of all available page IDs (for random button)
-        const pages = {pages_js_array};
-        
         // Array of random sample pages with titles (for display)
         const randomLinks = {random_links_js_array};
-        
-        function goToRandomPage() {{
-            if (pages.length === 0) {{
-                alert('No pages available!');
-                return;
-            }}
-            
-            // Select random page
-            const randomIndex = Math.floor(Math.random() * pages.length);
-            const pageId = pages[randomIndex];
-            
-            // Navigate to the page in background tab
-            const url = `https://googology.fandom.com/?curid=${{pageId}}`;
-            window.open(url, '_blank', 'noopener,noreferrer');
-        }}
     </script>
 </body>
 </html>"""
