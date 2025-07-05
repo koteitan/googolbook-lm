@@ -10,12 +10,70 @@ import tiktoken
 from transformers import AutoTokenizer
 import os
 import time
+import re
 from datetime import datetime
+from typing import List
 
 # Configuration
 HTML_FILE = '../../data/statistics-googology-wiki-fandom.html'
 OUTPUT_FILE = 'tokens.md'
 FETCH_LOG_FILE = '../../data/fetch_log.txt'
+EXCLUDE_FILE = '../../exclude.md'
+
+def load_excluded_namespaces(exclude_file_path: str) -> List[str]:
+    """
+    Load excluded namespaces from exclude.md file.
+    
+    Args:
+        exclude_file_path: Path to the exclude.md file
+        
+    Returns:
+        List of excluded namespace prefixes
+    """
+    excluded_namespaces = []
+    try:
+        with open(exclude_file_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith('- `') and line.endswith(':`'):
+                    # Extract namespace from lines like "- `User talk:`"
+                    namespace = line[3:-2]  # Remove "- `" and "`:"
+                    excluded_namespaces.append(namespace)
+    except Exception as e:
+        print(f"Warning: Could not load exclusions from {exclude_file_path}: {e}")
+    return excluded_namespaces
+
+def filter_excluded_content(content: str, excluded_namespaces: List[str]) -> str:
+    """
+    Filter out content sections that match excluded namespaces.
+    This removes table rows and sections that reference excluded namespace pages.
+    
+    Args:
+        content: HTML content to filter
+        excluded_namespaces: List of excluded namespace prefixes
+        
+    Returns:
+        Filtered content with excluded sections removed
+    """
+    if not excluded_namespaces:
+        return content
+    
+    lines = content.split('\n')
+    filtered_lines = []
+    
+    for line in lines:
+        # Check if line contains references to excluded namespaces
+        should_exclude = False
+        for namespace in excluded_namespaces:
+            # Look for namespace references in various formats
+            if f"{namespace}:" in line or f"{namespace} " in line:
+                should_exclude = True
+                break
+        
+        if not should_exclude:
+            filtered_lines.append(line)
+    
+    return '\n'.join(filtered_lines)
 
 def get_fetch_date() -> str:
     """
@@ -91,7 +149,9 @@ def format_bytes(bytes_count: int) -> str:
     return f"{bytes_count:.1f} TB"
 
 def generate_report(file_size, char_count, tiktoken_count, tiktoken_time, 
-                   transformers_count, transformers_time, generic_count, generic_time):
+                   transformers_count, transformers_time, generic_count, generic_time,
+                   filtered_file_size, filtered_char_count, filtered_tiktoken_count, 
+                   filtered_transformers_count, filtered_generic_count):
     """Generate markdown report from token analysis results."""
     
     # Generate report content
@@ -104,70 +164,35 @@ Analysis of token counts for the Googology Wiki statistics HTML file using diffe
 - **File**: `data/statistics-googology-wiki-fandom.html`
 - **File size**: {format_bytes(file_size)}
 - **Character count**: {format_number(char_count)}
+- **Excluded content size**: {format_bytes(file_size - filtered_file_size)}
+- **Excluded character count**: {format_number(char_count - filtered_char_count)}
+- **File size after exclude**: {format_bytes(filtered_file_size)}
+- **Character count after exclude**: {format_number(filtered_char_count)}
 - **Analysis methods**: 3 different tokenization approaches
 
 ## Token Count Results
 
-| Method | Tokens | Processing Time | Chars/Token | Description |
-|--------|--------|----------------|-------------|-------------|
+| Method | Tokens | Tokens (after exclude) | Processing Time | Chars/Token | Description |
+|--------|--------|----------------------|----------------|-------------|-------------|
 """
     
     # Add tiktoken results
     if tiktoken_count:
         chars_per_token = char_count / tiktoken_count
-        report_content += f"| tiktoken (GPT-4) | {format_number(tiktoken_count)} | {tiktoken_time:.3f}s | {chars_per_token:.2f} | OpenAI GPT-4 tokenizer |\n"
+        report_content += f"| tiktoken (GPT-4) | {format_number(tiktoken_count)} | {format_number(filtered_tiktoken_count)} | {tiktoken_time:.3f}s | {chars_per_token:.2f} | OpenAI GPT-4 tokenizer |\n"
     
     # Add transformers results
     if transformers_count:
         chars_per_token = char_count / transformers_count
-        report_content += f"| transformers (BERT) | {format_number(transformers_count)} | {transformers_time:.3f}s | {chars_per_token:.2f} | Hugging Face BERT tokenizer |\n"
+        report_content += f"| transformers (BERT) | {format_number(transformers_count)} | {format_number(filtered_transformers_count)} | {transformers_time:.3f}s | {chars_per_token:.2f} | Hugging Face BERT tokenizer |\n"
     
     # Add generic results
     if generic_count:
         chars_per_token = char_count / generic_count
-        report_content += f"| Generic estimation | {format_number(generic_count)} | {generic_time:.3f}s | {chars_per_token:.2f} | Character count / 3 |\n"
+        report_content += f"| Generic estimation | {format_number(generic_count)} | {format_number(filtered_generic_count)} | {generic_time:.3f}s | {chars_per_token:.2f} | Character count / 3 |\n"
     
-    # Add comparison analysis
+    # Add license section
     report_content += f"""
-## Method Comparison
-
-### Accuracy and Use Cases
-- **tiktoken (GPT-4)**: Most accurate for OpenAI models, recommended for ChatGPT/GPT-4 API usage estimation
-- **transformers (BERT)**: Good for general NLP tasks, may differ from GPT models due to different vocabulary
-- **Generic estimation**: Fastest approximation, useful for quick estimates
-
-### Performance Differences
-"""
-    
-    # Add percentage differences
-    if tiktoken_count and transformers_count:
-        diff_percent = abs(tiktoken_count - transformers_count) / tiktoken_count * 100
-        report_content += f"- **tiktoken vs transformers**: {diff_percent:.1f}% difference\n"
-    
-    if tiktoken_count and generic_count:
-        diff_percent = abs(tiktoken_count - generic_count) / tiktoken_count * 100
-        report_content += f"- **tiktoken vs generic**: {diff_percent:.1f}% difference\n"
-    
-    if transformers_count and generic_count:
-        diff_percent = abs(transformers_count - generic_count) / transformers_count * 100
-        report_content += f"- **transformers vs generic**: {diff_percent:.1f}% difference\n"
-    
-    # Add analysis summary
-    report_content += f"""
-## Analysis Summary
-
-### Token Count Characteristics
-The HTML file contains a mix of structured content (HTML tags, CSS, JavaScript) and text content (statistics, descriptions). Different tokenizers handle this mixed content differently:
-
-- **Structured content**: HTML tags and attributes are tokenized differently by each method
-- **Numeric data**: Statistics and numbers have varying tokenization patterns
-- **Mixed language**: English text with some technical terms affects token boundaries
-
-### Recommendations
-- Use **tiktoken** for OpenAI API cost estimation and prompt planning
-- Use **transformers** tokenizers when working with specific Hugging Face models
-- Use **generic estimation** for quick approximations when exact counts aren't critical
-
 ---
 
 ## License and Attribution
@@ -213,8 +238,21 @@ def main():
     print(f"Character count: {format_number(char_count)} characters")
     print()
     
+    # Load exclusions and filter content
+    print("Loading exclusions...")
+    excluded_namespaces = load_excluded_namespaces(EXCLUDE_FILE)
+    print(f"Found {len(excluded_namespaces)} excluded namespaces")
+    
+    filtered_content = filter_excluded_content(content, excluded_namespaces)
+    filtered_file_size = len(filtered_content.encode('utf-8'))
+    filtered_char_count = len(filtered_content)
+    
+    print(f"Filtered file size: {format_number(filtered_file_size)} bytes")
+    print(f"Filtered character count: {format_number(filtered_char_count)} characters")
+    print()
+    
     # Count tokens using different methods
-    print("Counting tokens...")
+    print("Counting tokens (original content)...")
     
     # 1. tiktoken (OpenAI GPT-4)
     print("1. tiktoken (OpenAI GPT-4)...")
@@ -234,10 +272,24 @@ def main():
     generic_count = count_tokens_generic(content)
     generic_time = time.time() - start_time
     
+    # Count tokens for filtered content
+    print("Counting tokens (filtered content)...")
+    
+    print("1. tiktoken (GPT-4) - filtered...")
+    filtered_tiktoken_count = count_tokens_tiktoken(filtered_content)
+    
+    print("2. transformers (BERT) - filtered...")
+    filtered_transformers_count = count_tokens_transformers(filtered_content)
+    
+    print("3. Generic estimation - filtered...")
+    filtered_generic_count = count_tokens_generic(filtered_content)
+    
     # Generate report
     report_content = generate_report(
         file_size, char_count, tiktoken_count, tiktoken_time,
-        transformers_count, transformers_time, generic_count, generic_time
+        transformers_count, transformers_time, generic_count, generic_time,
+        filtered_file_size, filtered_char_count, filtered_tiktoken_count,
+        filtered_transformers_count, filtered_generic_count
     )
     
     # Write report to file
@@ -247,24 +299,24 @@ def main():
     print(f"Report generated: {OUTPUT_FILE}")
     
     # Display console results
-    print("\n" + "=" * 50)
+    print("\n" + "=" * 70)
     print("RESULTS COMPARISON")
-    print("=" * 50)
+    print("=" * 70)
     
-    print(f"{'Method':<20} {'Tokens':<12} {'Time (s)':<10} {'Chars/Token':<12}")
-    print("-" * 55)
+    print(f"{'Method':<20} {'Tokens':<12} {'After Exclude':<14} {'Time (s)':<10} {'Chars/Token':<12}")
+    print("-" * 70)
     
     if tiktoken_count:
         chars_per_token = char_count / tiktoken_count
-        print(f"{'tiktoken (GPT-4)':<20} {format_number(tiktoken_count):<12} {tiktoken_time:.3f}s{'':<4} {chars_per_token:.2f}")
+        print(f"{'tiktoken (GPT-4)':<20} {format_number(tiktoken_count):<12} {format_number(filtered_tiktoken_count):<14} {tiktoken_time:.3f}s{'':<4} {chars_per_token:.2f}")
     
     if transformers_count:
         chars_per_token = char_count / transformers_count
-        print(f"{'transformers (BERT)':<20} {format_number(transformers_count):<12} {transformers_time:.3f}s{'':<4} {chars_per_token:.2f}")
+        print(f"{'transformers (BERT)':<20} {format_number(transformers_count):<12} {format_number(filtered_transformers_count):<14} {transformers_time:.3f}s{'':<4} {chars_per_token:.2f}")
     
     if generic_count:
         chars_per_token = char_count / generic_count
-        print(f"{'Generic estimation':<20} {format_number(generic_count):<12} {generic_time:.3f}s{'':<4} {chars_per_token:.2f}")
+        print(f"{'Generic estimation':<20} {format_number(generic_count):<12} {format_number(filtered_generic_count):<14} {generic_time:.3f}s{'':<4} {chars_per_token:.2f}")
     
     print(f"\nAnalysis complete! Report saved to: {OUTPUT_FILE}")
 
