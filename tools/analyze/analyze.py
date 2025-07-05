@@ -179,15 +179,15 @@ Analysis of content distribution across namespaces in the Googology Wiki XML exp
 
 ## Namespace Breakdown
 
-| Namespace | Bytes | Pages | Avg Size | Percentage |
-|-----------|-------|-------|----------|------------|
+| Namespace | kBytes | Pages | Percentage |
+|-----------|--------|-------|------------|
 """
     
     for namespace, (bytes_count, page_count) in sorted_namespaces:
-        avg_size = bytes_count / page_count if page_count > 0 else 0
+        kbytes = bytes_count / 1024
         percentage = (bytes_count / total_bytes * 100) if total_bytes > 0 else 0
         
-        report_content += f"| {namespace} | {format_bytes(bytes_count)} | {page_count:,} | {format_bytes(avg_size)} | {percentage:.1f}% |\n"
+        report_content += f"| {namespace} | {kbytes:.1f} | {page_count:,} | {percentage:.1f} |\n"
     
     # Add license and metadata
     report_content += f"""
