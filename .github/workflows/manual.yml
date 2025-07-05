@@ -28,7 +28,7 @@ jobs:
     - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install requests beautifulsoup4 py7zr
+        pip install requests beautifulsoup4 py7zr tiktoken transformers
     
     - name: Create data directory
       run: |
@@ -96,6 +96,13 @@ jobs:
         fi
         echo "✓ random/index.html exists"
         
+        # Check token analysis
+        if [ ! -f "tools/tokens/tokens.md" ]; then
+          echo "ERROR: tokens.md not found"
+          exit 1
+        fi
+        echo "✓ tokens.md exists"
+        
     - name: Verify file content quality
       run: |
         echo "Checking file content quality..."
@@ -131,6 +138,14 @@ jobs:
         fi
         echo "✓ random/index.html contains wiki links"
         
+        # Check tokens.md has data
+        tokens_lines=$(wc -l < "tools/tokens/tokens.md")
+        if [ "$tokens_lines" -lt 30 ]; then
+          echo "ERROR: tokens.md too short ($tokens_lines lines)"
+          exit 1
+        fi
+        echo "✓ tokens.md has $tokens_lines lines"
+        
     - name: Check for Python errors in logs
       run: |
         echo "Checking for Python errors..."
@@ -148,6 +163,11 @@ jobs:
         
         if grep -i "error\|traceback\|exception" tools/namespaces/namespaces.md 2>/dev/null; then
           echo "ERROR: Found error messages in namespaces.md"
+          exit 1
+        fi
+        
+        if grep -i "error\|traceback\|exception" tools/tokens/tokens.md 2>/dev/null; then
+          echo "ERROR: Found error messages in tokens.md"
           exit 1
         fi
         

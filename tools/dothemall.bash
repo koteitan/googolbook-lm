@@ -36,6 +36,13 @@ python3 random-check.py
 cd ..
 echo "✓ Random check completed"
 
+# Run token analysis
+echo "5. Running token analysis..."
+cd tokens
+python3 tokens.py
+cd ..
+echo "✓ Token analysis completed"
+
 echo "=============================="
 echo "All analysis tools completed successfully!"
 echo ""
@@ -44,3 +51,4 @@ echo "- tools/contributors/contributors.md"
 echo "- tools/large-pages/large-pages.md"
 echo "- tools/namespaces/namespaces.md"
 echo "- tools/random/index.html"
+echo "- tools/tokens/tokens.md"
