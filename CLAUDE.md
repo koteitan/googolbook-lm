@@ -11,29 +11,36 @@ This repository contains XML data from the Googology Wiki, specifically wiki pag
 ```
 /
 ├── data/                           # Data files
-│   ├── googology_pages_current.xml    # Main MediaWiki XML export (210MB)
+│   ├── .dummy                         # Placeholder to maintain directory structure
+│   ├── googology_pages_current.xml   # Main MediaWiki XML export (210MB, not in Git)
 │   └── statistics-googology-wiki-fandom.html  # Wiki statistics page
-├── tool/                           # Future processing tools directory
+├── tools/                          # Analysis and processing tools
+│   └── large-pages/                   # Large page analysis tool
+│       ├── README.md                     # Tool documentation
+│       ├── large-pages.py               # Python analysis script
+│       └── large-pages.md               # Generated analysis report
 ├── mediawiki.md                    # MediaWiki XML format documentation
 ├── CLAUDE.md                       # This file
 ├── README.md                       # Project description
-└── LICENSE                         # CC BY-SA 3.0 license
+├── LICENSE                         # CC BY-SA 3.0 license
+└── .gitignore                      # Git ignore rules
 ```
 
 ## Data Specifications
 
-- **Primary Data**: `data/googology_pages_current.xml` (210MB, 3.6M lines)
+- **Primary Data**: `data/googology_pages_current.xml` (210MB, 3.6M lines, not tracked in Git)
 - **Format**: MediaWiki XML Export Schema version 0.11
 - **Source**: Googology Wiki (googology.fandom.com)
 - **Content**: Complete wiki dump including all namespaces and revision history
 - **Statistics**: HTML page with wiki metrics and usage data
+- **Note**: Large XML file is excluded from Git tracking via `.gitignore`
 
 ## Architecture
 
 The repository follows a data-centric architecture:
-- **Raw Data**: MediaWiki XML export in `data/` directory
+- **Raw Data**: MediaWiki XML export in `data/` directory (large files excluded from Git)
+- **Analysis Tools**: `tools/` directory with specialized analysis scripts
 - **Documentation**: Comprehensive MediaWiki format documentation in `mediawiki.md`
-- **Processing**: `tool/` directory prepared for future XML processing and analysis tools
 - **Licensing**: CC BY-SA 3.0 to comply with source content licensing
 
 ## All Files Description
@@ -46,6 +53,7 @@ The repository follows a data-centric architecture:
 - **Structure**: Contains site metadata, page content, revision history, and contributor information
 - **Format**: MediaWiki XML Export Schema version 0.11 with UTF-8 encoding
 - **Usage**: Primary data source for googology concepts and mathematical content
+- **Git Status**: Excluded from repository via `.gitignore` due to large file size
 
 #### `data/statistics-googology-wiki-fandom.html`
 - **Size**: Large HTML file with embedded statistics
@@ -75,9 +83,22 @@ The repository follows a data-centric architecture:
 - **Purpose**: Ensures compliance with Googology Wiki source content licensing
 - **Requirements**: Attribution and ShareAlike for derivative works
 
-#### `tool/` directory
-- **Status**: Empty directory prepared for future development
-- **Purpose**: Intended for XML processing scripts, analysis tools, and utilities
+#### `data/.dummy`
+- **Purpose**: Placeholder file to maintain `data/` directory structure in Git
+- **Content**: Empty file ensuring directory exists when repository is cloned
+
+### Analysis Tools
+
+#### `tools/large-pages/`
+- **Purpose**: Analysis tool for identifying largest pages in the wiki
+- **Contents**: 
+  - `large-pages.py`: Python script for XML analysis
+  - `large-pages.md`: Generated report with page size statistics
+  - `README.md`: Tool documentation and usage instructions
+
+#### `.gitignore`
+- **Purpose**: Defines files and patterns to exclude from Git tracking
+- **Key Exclusions**: Large XML data file, Python cache files, IDE settings
 
 ## Data Structure
 
