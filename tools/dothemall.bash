@@ -24,8 +24,8 @@ echo "✓ Large pages analysis completed"
 
 # Run namespace analysis
 echo "3. Running namespace analysis..."
-cd analyze
-python3 analyze.py
+cd namespaces
+python3 namespaces.py
 cd ..
 echo "✓ Namespace analysis completed"
 
@@ -42,5 +42,5 @@ echo ""
 echo "Generated files:"
 echo "- tools/contributors/contributors.md"
 echo "- tools/large-pages/large-pages.md"
-echo "- tools/analyze/analyze.md"
+echo "- tools/namespaces/namespaces.md"
 echo "- tools/random/index.html"

@@ -9,13 +9,13 @@ This tool processes the MediaWiki XML export and generates statistics showing ho
 ## Usage
 
 ```bash
-cd tools/analyze
-python3 analyze.py
+cd tools/namespaces
+python3 namespaces.py
 ```
 
 ## Output
 
-Generates `analyze.md` with:
+Generates `namespaces.md` with:
 - Summary statistics (total namespaces, pages, content size)
 - Detailed table with namespace, bytes, pages, average size, and percentage
 - Analysis of the largest namespaces by content size
@@ -29,7 +29,7 @@ Generates `analyze.md` with:
 | User | 8.1 MB | 12,433 | 682 B | 24.1% |
 | Talk | 4.7 MB | 8,921 | 551 B | 14.0% |
 
-See the generated analysis: [analyze.md](analyze.md)
+See the generated analysis: [namespaces.md](namespaces.md)
 
 ## Requirements
 
