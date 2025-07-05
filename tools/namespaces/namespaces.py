@@ -184,23 +184,6 @@ def generate_report(namespace_stats: Dict[str, Tuple[int, int]], namespace_sampl
     total_bytes = sum(bytes_count for bytes_count, _ in namespace_stats.values())
     total_pages = sum(page_count for _, page_count in namespace_stats.values())
     
-    # Generate report content
-    report_content = f"""# Namespace Analysis
-
-Analysis of content distribution across namespaces in the Googology Wiki XML export.
-
-## Summary
-
-- **Total namespaces analyzed**: {len(namespace_stats):,}
-- **Total pages**: {total_pages:,}
-- **Total content size**: {format_bytes(total_bytes)}
-
-## Namespace Breakdown
-
-| Namespace | MBytes | Pages | % | % after exclude | Examples |
-|-----------|--------|-------|---|-----------------|----------|
-"""
-    
     # Calculate total pages after exclusion (for % after exclude column)
     # This would be the subset of pages that would remain after applying exclude.md rules
     # For now, we'll use a simple heuristic - exclude known non-content namespaces
@@ -220,6 +203,31 @@ Analysis of content distribution across namespaces in the Googology Wiki XML exp
         page_count for namespace, (bytes_count, page_count) in sorted_namespaces 
         if namespace not in excluded_namespaces_for_calc
     )
+    
+    # Calculate excluded content size and pages
+    excluded_content_size = total_bytes - total_bytes_after_exclude
+    excluded_pages = total_pages - total_pages_after_exclude
+    
+    # Generate report content
+    report_content = f"""# Namespace Analysis
+
+Analysis of content distribution across namespaces in the Googology Wiki XML export.
+
+## Summary
+
+- **Total namespaces analyzed**: {len(namespace_stats):,}
+- **Total pages**: {total_pages:,}
+- **Total content size**: {format_bytes(total_bytes)}
+- **Excluded content size**: {format_bytes(excluded_content_size)}
+- **Excluded pages**: {excluded_pages:,}
+- **Total content size after exclude**: {format_bytes(total_bytes_after_exclude)}
+- **Total pages after exclude**: {total_pages_after_exclude:,}
+
+## Namespace Breakdown
+
+| Namespace | MBytes | Pages | % | % after exclude | Examples |
+|-----------|--------|-------|---|-----------------|----------|
+"""
     
     for namespace, (bytes_count, page_count) in sorted_namespaces:
         mbytes = bytes_count / (1024 * 1024)
