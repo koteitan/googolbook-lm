@@ -9,8 +9,9 @@ different types of wiki content.
 
 import xml.etree.ElementTree as ET
 import os
+import random
 from datetime import datetime
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 
 # Configuration
 XML_FILE = '../../data/googology_pages_current.xml'
@@ -62,15 +63,17 @@ def parse_namespaces(xml_file_path: str) -> Dict[str, str]:
     
     return namespace_map
 
-def analyze_namespaces(xml_file_path: str) -> Dict[str, Tuple[int, int]]:
+def analyze_namespaces(xml_file_path: str) -> Tuple[Dict[str, Tuple[int, int]], Dict[str, List[Tuple[str, str]]]]:
     """
-    Analyze XML file to extract namespace statistics.
+    Analyze XML file to extract namespace statistics and sample pages.
     
     Args:
         xml_file_path: Path to the MediaWiki XML export file
         
     Returns:
-        Dictionary mapping namespace names to (total_bytes, page_count) tuples
+        Tuple of (namespace_stats, namespace_samples)
+        - namespace_stats: Dictionary mapping namespace names to (total_bytes, page_count) tuples
+        - namespace_samples: Dictionary mapping namespace names to lists of (page_id, title) tuples
     """
     print(f"Analyzing {xml_file_path}...")
     
@@ -81,17 +84,21 @@ def analyze_namespaces(xml_file_path: str) -> Dict[str, Tuple[int, int]]:
     
     # Dictionary to store namespace data: namespace -> (total_bytes, page_count)
     namespace_stats = {}
+    # Dictionary to store sample pages: namespace -> list of (page_id, title)
+    namespace_samples = {}
     
     # Process XML file using iterparse for memory efficiency
     for event, elem in ET.iterparse(xml_file_path, events=('start', 'end')):
         if event == 'end' and elem.tag.endswith('}page'):
-            # Extract namespace and title
+            # Extract namespace, title, and page ID
             ns_elem = elem.find('.//{http://www.mediawiki.org/xml/export-0.11/}ns')
             title_elem = elem.find('.//{http://www.mediawiki.org/xml/export-0.11/}title')
+            id_elem = elem.find('.//{http://www.mediawiki.org/xml/export-0.11/}id')
             
-            if ns_elem is not None and title_elem is not None:
+            if ns_elem is not None and title_elem is not None and id_elem is not None:
                 ns_id = ns_elem.text
                 title = title_elem.text
+                page_id = id_elem.text
                 
                 # Get namespace name from parsed definitions
                 namespace_name = get_namespace_name(ns_id, title, namespace_map)
@@ -105,14 +112,18 @@ def analyze_namespaces(xml_file_path: str) -> Dict[str, Tuple[int, int]]:
                 # Update namespace statistics
                 if namespace_name not in namespace_stats:
                     namespace_stats[namespace_name] = (0, 0)
+                    namespace_samples[namespace_name] = []
                 
                 current_bytes, current_pages = namespace_stats[namespace_name]
                 namespace_stats[namespace_name] = (current_bytes + content_size, current_pages + 1)
+                
+                # Collect page samples for examples
+                namespace_samples[namespace_name].append((page_id, title))
             
             # Clear element to save memory
             elem.clear()
     
-    return namespace_stats
+    return namespace_stats, namespace_samples
 
 def get_namespace_name(ns_id: str, title: str, namespace_map: Dict[str, str]) -> str:
     """
@@ -151,12 +162,13 @@ def format_bytes(bytes_count: int) -> str:
         bytes_count /= 1024.0
     return f"{bytes_count:.1f} TB"
 
-def generate_report(namespace_stats: Dict[str, Tuple[int, int]], output_file: str):
+def generate_report(namespace_stats: Dict[str, Tuple[int, int]], namespace_samples: Dict[str, List[Tuple[str, str]]], output_file: str):
     """
     Generate markdown report from namespace statistics.
     
     Args:
         namespace_stats: Dictionary of namespace -> (bytes, pages) data
+        namespace_samples: Dictionary of namespace -> list of (page_id, title) samples
         output_file: Path to output markdown file
     """
     # Sort by total bytes (descending)
@@ -179,15 +191,31 @@ Analysis of content distribution across namespaces in the Googology Wiki XML exp
 
 ## Namespace Breakdown
 
-| Namespace | kBytes | Pages | Percentage |
-|-----------|--------|-------|------------|
+| Namespace | kBytes | Pages | Percentage | Examples |
+|-----------|--------|-------|------------|----------|
 """
     
     for namespace, (bytes_count, page_count) in sorted_namespaces:
         kbytes = bytes_count / 1024
         percentage = (bytes_count / total_bytes * 100) if total_bytes > 0 else 0
         
-        report_content += f"| {namespace} | {kbytes:.1f} | {page_count:,} | {percentage:.1f} |\n"
+        # Get random samples for examples
+        samples = namespace_samples.get(namespace, [])
+        if len(samples) >= 3:
+            random_samples = random.sample(samples, 3)
+        else:
+            random_samples = samples
+        
+        # Format examples as links
+        example_links = []
+        for page_id, title in random_samples:
+            # Truncate title if too long
+            display_title = title if len(title) <= 30 else title[:27] + "..."
+            example_links.append(f"[{page_id}](https://googology.fandom.com/?curid={page_id})")
+        
+        examples_str = ", ".join(example_links) if example_links else "—"
+        
+        report_content += f"| {namespace} | {kbytes:.1f} | {page_count:,} | {percentage:.1f} | {examples_str} |\n"
     
     # Add license and metadata
     report_content += f"""
@@ -242,10 +270,10 @@ def main():
         return
     
     # Analyze namespaces
-    namespace_stats = analyze_namespaces(XML_FILE)
+    namespace_stats, namespace_samples = analyze_namespaces(XML_FILE)
     
     # Generate report
-    generate_report(namespace_stats, OUTPUT_FILE)
+    generate_report(namespace_stats, namespace_samples, OUTPUT_FILE)
     
     print(f"\nAnalysis complete!")
     print(f"Found {len(namespace_stats)} namespaces")
