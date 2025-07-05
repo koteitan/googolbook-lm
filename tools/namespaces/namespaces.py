@@ -87,9 +87,15 @@ def analyze_namespaces(xml_file_path: str) -> Tuple[Dict[str, Tuple[int, int]], 
     # Dictionary to store sample pages: namespace -> list of (page_id, title)
     namespace_samples = {}
     
+    page_count = 0
+    
     # Process XML file using iterparse for memory efficiency
     for event, elem in ET.iterparse(xml_file_path, events=('start', 'end')):
         if event == 'end' and elem.tag.endswith('}page'):
+            page_count += 1
+            if page_count % 10000 == 0:
+                print(f"Processed {page_count} pages...")
+            
             # Extract namespace, title, and page ID
             ns_elem = elem.find('.//{http://www.mediawiki.org/xml/export-0.11/}ns')
             title_elem = elem.find('.//{http://www.mediawiki.org/xml/export-0.11/}title')
