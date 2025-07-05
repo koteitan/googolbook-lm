@@ -143,12 +143,25 @@ Analysis of token counts for the Googology Wiki MediaWiki XML export using tikto
 ## Summary
 
 - **File**: `data/googology_pages_current.xml`
-- **File size**: {format_bytes(file_size)}
-- **Character count**: {format_number(char_count)}
+- **Tokenizer**: OpenAI GPT-4 (tiktoken)
+
+## File Size Results
+
+| Metric | Value |
+|--------|-------|
+| **File size** | {format_bytes(file_size)} |
+| **File size after exclude** | {format_bytes(filtered_file_size)} |
+
 - **Excluded content size**: {format_bytes(file_size - filtered_file_size)}
+
+## Character Count Results
+
+| Metric | Value |
+|--------|-------|
+| **Character count** | {format_number(char_count)} |
+| **Character count after exclude** | {format_number(filtered_char_count)} |
+
 - **Excluded character count**: {format_number(char_count - filtered_char_count)}
-- **File size after exclude**: {format_bytes(filtered_file_size)}
-- **Character count after exclude**: {format_number(filtered_char_count)}
 
 ## Token Count Results
 
@@ -156,9 +169,9 @@ Analysis of token counts for the Googology Wiki MediaWiki XML export using tikto
 |--------|-------|
 | **Tokens** | {format_number(tiktoken_count)} |
 | **Tokens (after exclude)** | {format_number(filtered_tiktoken_count)} |
-| **Chars/Token** | {char_count / tiktoken_count:.2f} |
-| **Processing Time** | {tiktoken_time:.3f}s |
-| **Tokenizer** | OpenAI GPT-4 (tiktoken) |
+
+- **Chars/Token**: {char_count / tiktoken_count:.2f}
+- **Processing Time**: {tiktoken_time:.3f}s
 
 """
     
