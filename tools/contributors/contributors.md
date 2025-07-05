@@ -1,4 +1,4 @@
-# contributors
+# Contributors
 
 Analysis of contributors by page creation count in the Googology Wiki XML export.
 

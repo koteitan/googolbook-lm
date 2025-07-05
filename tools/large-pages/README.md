@@ -1,4 +1,4 @@
-# analysis large pages
+# Large Pages Analysis
 
 Analyzes the Googology Wiki XML export to identify the largest pages by content size.
 

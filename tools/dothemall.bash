@@ -22,8 +22,15 @@ python3 large-pages.py
 cd ..
 echo "✓ Large pages analysis completed"
 
+# Run namespace analysis
+echo "3. Running namespace analysis..."
+cd analyze
+python3 analyze.py
+cd ..
+echo "✓ Namespace analysis completed"
+
 # Run random check
-echo "3. Running random check..."
+echo "4. Running random check..."
 cd random
 python3 random-check.py
 cd ..
@@ -34,5 +41,6 @@ echo "All analysis tools completed successfully!"
 echo ""
 echo "Generated files:"
 echo "- tools/contributors/contributors.md"
-echo "- tools/large-pages/large-pages.md" 
+echo "- tools/large-pages/large-pages.md"
+echo "- tools/analyze/analyze.md"
 echo "- tools/random/index.html"

@@ -1,4 +1,4 @@
-# random page selector
+# Random Check for exclude.md
 
 Generates a random page selector for the Googology Wiki that creates an HTML page with a button to jump to random wiki pages.
 
