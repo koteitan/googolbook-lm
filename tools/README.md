@@ -5,6 +5,7 @@
 - **[contributors](contributors/README.md)** - Analyzes contributors by page creation count to identify the most active content creators in the Googology Wiki.
 - **[namespaces](namespaces/README.md)** - Analyzes content distribution across different namespaces, showing how wiki content is distributed by type (articles, user pages, talk pages, etc.).
 - **[random check](random/README.md)** - Generates an interactive HTML page with a button to jump to random Googology Wiki pages for content discovery.
+- **dothemall.bash** - Runs all analysis tools in sequence (contributors, large-pages, namespaces, random-check) after data has been fetched.
 
 ## Data Processing Flow
 
