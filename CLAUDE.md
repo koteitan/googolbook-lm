@@ -6,19 +6,78 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This repository contains XML data from the Googology Wiki, specifically wiki page exports in MediaWiki XML format. The project is focused on processing or analyzing googology-related content for LLM support.
 
+## File Structure
+
+```
+/
+├── data/                           # Data files
+│   ├── googology_pages_current.xml    # Main MediaWiki XML export (210MB)
+│   └── statistics-googology-wiki-fandom.html  # Wiki statistics page
+├── tool/                           # Future processing tools directory
+├── mediawiki.md                    # MediaWiki XML format documentation
+├── CLAUDE.md                       # This file
+├── README.md                       # Project description
+└── LICENSE                         # CC BY-SA 3.0 license
+```
+
 ## Data Specifications
 
-- **File**: `googology_pages_current.xml` (210MB, 3.6M lines)
+- **Primary Data**: `data/googology_pages_current.xml` (210MB, 3.6M lines)
 - **Format**: MediaWiki XML Export Schema version 0.11
 - **Source**: Googology Wiki (googology.fandom.com)
 - **Content**: Complete wiki dump including all namespaces and revision history
+- **Statistics**: HTML page with wiki metrics and usage data
 
 ## Architecture
 
 The repository follows a data-centric architecture:
-- **Raw Data**: MediaWiki XML export as single large file
+- **Raw Data**: MediaWiki XML export in `data/` directory
 - **Documentation**: Comprehensive MediaWiki format documentation in `mediawiki.md`
-- **Processing**: No code yet - designed for future XML processing and analysis tools
+- **Processing**: `tool/` directory prepared for future XML processing and analysis tools
+- **Licensing**: CC BY-SA 3.0 to comply with source content licensing
+
+## All Files Description
+
+### Core Data Files
+
+#### `data/googology_pages_current.xml`
+- **Size**: 210MB (3.6M lines)
+- **Content**: Complete MediaWiki XML export from Googology Wiki
+- **Structure**: Contains site metadata, page content, revision history, and contributor information
+- **Format**: MediaWiki XML Export Schema version 0.11 with UTF-8 encoding
+- **Usage**: Primary data source for googology concepts and mathematical content
+
+#### `data/statistics-googology-wiki-fandom.html`
+- **Size**: Large HTML file with embedded statistics
+- **Content**: Wiki statistics page from Fandom showing page counts, user activity, and site metrics
+- **Format**: HTML document with embedded JavaScript and CSS
+- **Usage**: Reference data for understanding wiki scale and activity patterns
+
+### Documentation Files
+
+#### `mediawiki.md`
+- **Content**: Comprehensive documentation of MediaWiki XML export format
+- **Details**: Schema specifications, element structures, processing guidelines
+- **Usage**: Essential reference for understanding XML data structure and parsing requirements
+
+#### `README.md`
+- **Content**: Brief project description
+- **Usage**: Basic project identification
+
+#### `CLAUDE.md` (this file)
+- **Content**: Guidance for Claude Code when working with this repository
+- **Usage**: Instructions for future AI assistance with data processing
+
+### Project Files
+
+#### `LICENSE`
+- **Content**: Creative Commons Attribution-ShareAlike 3.0 Unported License
+- **Purpose**: Ensures compliance with Googology Wiki source content licensing
+- **Requirements**: Attribution and ShareAlike for derivative works
+
+#### `tool/` directory
+- **Status**: Empty directory prepared for future development
+- **Purpose**: Intended for XML processing scripts, analysis tools, and utilities
 
 ## Data Structure
 
