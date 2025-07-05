@@ -4,7 +4,7 @@ Analyzes the Googology Wiki XML export to identify the largest pages by content 
 
 ## Overview
 
-Processes the MediaWiki XML export and generates a report of the largest pages ranked by character count.
+Processes the MediaWiki XML export and generates a report of the largest pages ranked by character count. Pages specified in the project's exclusion guidelines (exclude.md) are automatically filtered out from the analysis.
 
 ## Usage
 

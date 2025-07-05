@@ -17,10 +17,75 @@ from collections import defaultdict
 XML_FILE = '../../data/googology_pages_current.xml'
 OUTPUT_FILE = 'contributors.md'
 FETCH_LOG_FILE = '../../data/fetch_log.txt'
+EXCLUDE_FILE = '../../exclude.md'
 HIGH_VOLUME_THRESHOLD = 1000  # Minimum pages to be considered high-volume contributor
 
 
-def analyze_contributors(xml_file_path: str) -> Tuple[Dict[str, int], Dict[str, List[str]]]:
+def load_excluded_namespaces(exclude_file_path: str) -> Tuple[List[str], List[str]]:
+    """
+    Load excluded namespaces and usernames from exclude.md file.
+    
+    Args:
+        exclude_file_path: Path to the exclude.md file
+        
+    Returns:
+        Tuple of (excluded_namespaces, excluded_usernames)
+    """
+    excluded_namespaces = []
+    excluded_usernames = []
+    try:
+        with open(exclude_file_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith('- ') and ':' in line:
+                    if '<username>' in line and '</username>' in line:
+                        # Extract username from lines like "- FANDOM system pages: `<username>FANDOM</username>`"
+                        start = line.find('<username>') + len('<username>')
+                        end = line.find('</username>')
+                        if start > len('<username>') - 1 and end > start:
+                            username = line[start:end]
+                            excluded_usernames.append(username)
+                    else:
+                        # Extract namespace from lines like "- User talk: `<title>User talk:*</title>`"
+                        namespace = line.split(':')[0].replace('- ', '').strip()
+                        excluded_namespaces.append(namespace)
+    except Exception as e:
+        print(f"Warning: Could not load exclusions from {exclude_file_path}: {e}")
+    return excluded_namespaces, excluded_usernames
+
+
+def should_exclude_page(title: str, excluded_namespaces: List[str]) -> bool:
+    """
+    Check if a page should be excluded based on its title namespace.
+    
+    Args:
+        title: Page title
+        excluded_namespaces: List of excluded namespace prefixes
+        
+    Returns:
+        True if page should be excluded
+    """
+    if ':' in title:
+        namespace = title.split(':', 1)[0]
+        return namespace in excluded_namespaces
+    return False
+
+
+def should_exclude_contributor(contributor_name: str, excluded_usernames: List[str]) -> bool:
+    """
+    Check if a contributor should be excluded based on their username.
+    
+    Args:
+        contributor_name: Username of the contributor
+        excluded_usernames: List of excluded usernames
+        
+    Returns:
+        True if contributor should be excluded
+    """
+    return contributor_name in excluded_usernames
+
+
+def analyze_contributors(xml_file_path: str) -> Tuple[Dict[str, int], Dict[str, List[Tuple[str, str]]]]:
     """
     Analyze XML file to extract contributor page creation counts and page examples.
     
@@ -30,12 +95,19 @@ def analyze_contributors(xml_file_path: str) -> Tuple[Dict[str, int], Dict[str, 
     Returns:
         Tuple of (contributor_counts, contributor_pages) where:
         - contributor_counts: Dictionary mapping contributor names to page creation counts
-        - contributor_pages: Dictionary mapping contributor names to lists of page titles
+        - contributor_pages: Dictionary mapping contributor names to lists of (page_title, page_id) tuples
     """
     contributors = defaultdict(int)
     contributor_pages = defaultdict(list)
     
     print(f"Analyzing {xml_file_path}...")
+    
+    # Load excluded namespaces and usernames
+    excluded_namespaces, excluded_usernames = load_excluded_namespaces(EXCLUDE_FILE)
+    if excluded_namespaces:
+        print(f"Excluding namespaces: {excluded_namespaces}")
+    if excluded_usernames:
+        print(f"Excluding usernames: {excluded_usernames}")
     
     # Use iterparse for memory-efficient parsing of large XML files
     context = ET.iterparse(xml_file_path, events=('start', 'end'))
@@ -56,12 +128,19 @@ def analyze_contributors(xml_file_path: str) -> Tuple[Dict[str, int], Dict[str, 
             # Extract page information
             title_elem = elem.find(f'{namespace_uri}title')
             ns_elem = elem.find(f'{namespace_uri}ns')
+            id_elem = elem.find(f'{namespace_uri}id')
             
             # Find all revisions and get the earliest one (original creator)
             revisions = elem.findall(f'{namespace_uri}revision')
-            if revisions and title_elem is not None:
+            if revisions and title_elem is not None and id_elem is not None:
                 title = title_elem.text or "Unknown"
+                page_id = id_elem.text or "0"
                 namespace = ns_elem.text or "0"
+                
+                # Skip excluded pages
+                if should_exclude_page(title, excluded_namespaces):
+                    elem.clear()
+                    continue
                 
                 # Sort revisions by timestamp to find the first one
                 revision_data = []
@@ -89,8 +168,14 @@ def analyze_contributors(xml_file_path: str) -> Tuple[Dict[str, int], Dict[str, 
                 if revision_data:
                     revision_data.sort()  # Sort by timestamp
                     earliest_contributor = revision_data[0][1]
+                    
+                    # Skip excluded contributors
+                    if should_exclude_contributor(earliest_contributor, excluded_usernames):
+                        elem.clear()
+                        continue
+                    
                     contributors[earliest_contributor] += 1
-                    contributor_pages[earliest_contributor].append(title)
+                    contributor_pages[earliest_contributor].append((title, page_id))
             
             # Clear element to free memory
             elem.clear()
@@ -101,13 +186,13 @@ def analyze_contributors(xml_file_path: str) -> Tuple[Dict[str, int], Dict[str, 
     return dict(contributors), dict(contributor_pages)
 
 
-def generate_markdown_report(contributors_data: Dict[str, int], contributor_pages: Dict[str, List[str]], output_file: str, top_n: int = 100):
+def generate_markdown_report(contributors_data: Dict[str, int], contributor_pages: Dict[str, List[Tuple[str, str]]], output_file: str, top_n: int = 100):
     """
     Generate markdown report with top contributors by page creation count.
     
     Args:
         contributors_data: Dictionary of contributor names to page counts
-        contributor_pages: Dictionary of contributor names to page lists
+        contributor_pages: Dictionary of contributor names to lists of (title, id) tuples
         output_file: Path to output markdown file
         top_n: Number of top contributors to include in report
     """
@@ -124,7 +209,7 @@ def generate_markdown_report(contributors_data: Dict[str, int], contributor_page
     most_active = sorted_contributors[0] if sorted_contributors else ("Unknown", 0)
     
     # Generate markdown content
-    markdown_content = f"""# Contributors Analysis - Googology Wiki
+    markdown_content = f"""# contributors
 
 Analysis of contributors by page creation count in the Googology Wiki XML export.
 
@@ -132,9 +217,6 @@ Analysis of contributors by page creation count in the Googology Wiki XML export
 
 - **Total contributors analyzed**: {total_contributors:,}
 - **Total pages created**: {total_pages:,}
-- **Most active contributor**: {most_active[0]} ({most_active[1]:,} pages)
-- **Average pages per contributor**: {avg_pages:,}
-- **Top {min(top_n, len(top_contributors))} contributors shown below**
 
 ## Top Contributors by Page Creation Count
 
@@ -164,12 +246,11 @@ Analysis of contributors by page creation count in the Googology Wiki XML export
         else:
             example_pages = pages
         
-        # Create page title list with numbered links to wiki pages
+        # Create page ID links to wiki pages using curid
         linked_examples = []
-        for i, page in enumerate(example_pages[:10], 1):
-            encoded_page = urllib.parse.quote(page.replace(' ', '_'), safe=':/')
-            page_link = f"https://googology.fandom.com/wiki/{encoded_page}"
-            linked_examples.append(f"[{i}]({page_link})")
+        for title, page_id in example_pages[:10]:
+            page_link = f"https://googology.fandom.com/?curid={page_id}"
+            linked_examples.append(f"[{page_id}]({page_link})")
         
         examples_text = ", ".join(linked_examples)
         

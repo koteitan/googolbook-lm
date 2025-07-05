@@ -14,6 +14,48 @@ from typing import List, Tuple
 XML_FILE = '../../data/googology_pages_current.xml'
 OUTPUT_FILE = 'large-pages.md'
 FETCH_LOG_FILE = '../../data/fetch_log.txt'
+EXCLUDE_FILE = '../../exclude.md'
+
+
+def load_excluded_namespaces(exclude_file_path: str) -> List[str]:
+    """
+    Load excluded namespaces from exclude.md file.
+    
+    Args:
+        exclude_file_path: Path to the exclude.md file
+        
+    Returns:
+        List of excluded namespace prefixes
+    """
+    excluded = []
+    try:
+        with open(exclude_file_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith('- ') and ':' in line:
+                    # Extract namespace from lines like "- User talk: `<title>User talk:*</title>`"
+                    namespace = line.split(':')[0].replace('- ', '').strip()
+                    excluded.append(namespace)
+    except Exception as e:
+        print(f"Warning: Could not load exclusions from {exclude_file_path}: {e}")
+    return excluded
+
+
+def should_exclude_page(title: str, excluded_namespaces: List[str]) -> bool:
+    """
+    Check if a page should be excluded based on its title namespace.
+    
+    Args:
+        title: Page title
+        excluded_namespaces: List of excluded namespace prefixes
+        
+    Returns:
+        True if page should be excluded
+    """
+    if ':' in title:
+        namespace = title.split(':', 1)[0]
+        return namespace in excluded_namespaces
+    return False
 
 
 def analyze_xml_pages(xml_file_path: str) -> List[Tuple[int, str, str]]:
@@ -29,6 +71,11 @@ def analyze_xml_pages(xml_file_path: str) -> List[Tuple[int, str, str]]:
     pages_data = []
     
     print(f"Analyzing {xml_file_path}...")
+    
+    # Load excluded namespaces
+    excluded_namespaces = load_excluded_namespaces(EXCLUDE_FILE)
+    if excluded_namespaces:
+        print(f"Excluding namespaces: {excluded_namespaces}")
     
     # Use iterparse for memory-efficient parsing of large XML files
     context = ET.iterparse(xml_file_path, events=('start', 'end'))
@@ -54,6 +101,11 @@ def analyze_xml_pages(xml_file_path: str) -> List[Tuple[int, str, str]]:
             if title_elem is not None and revision_elem is not None:
                 title = title_elem.text or "Unknown"
                 namespace = ns_elem.text or "0"
+                
+                # Skip excluded pages
+                if should_exclude_page(title, excluded_namespaces):
+                    elem.clear()
+                    continue
                 
                 # Get text content from revision
                 text_elem = revision_elem.find(f'{namespace_uri}text')
