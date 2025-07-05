@@ -15,5 +15,5 @@ graph TD
     A[Googology Wiki] -->|fetch.py| B["data/{googology_pages_current.xml, fetch_log.txt}"]
     B -->|contributors.py| C[tools/contributors/contributors.md]
     B -->|large-pages.py| D[tools/large-pages/large-pages.md]
-    B -->|random.py| E[tools/random/index.html]
+    B -->|random-jump.py| E[tools/random/index.html]
 ```

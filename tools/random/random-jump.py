@@ -141,12 +141,28 @@ def generate_html_page(pages_data: List[Tuple[str, str, str]], output_file: str)
         pages_data: List of (page_id, page_title, namespace) tuples
         output_file: Path to output HTML file
     """
-    # Convert pages data to JavaScript array (only page IDs needed)
+    # Convert pages data to JavaScript array (page IDs only for button)
     js_pages = []
     for page_id, title, namespace in pages_data:
         js_pages.append(f'"{page_id}"')
     
     pages_js_array = '[' + ','.join(js_pages) + ']'
+    
+    # Generate random sample for links list with both ID and title
+    random_sample = random.sample(pages_data, min(20, len(pages_data)))
+    random_links_js = []
+    random_links_html = ""
+    for page_id, title, namespace in random_sample:
+        # For HTML display
+        escaped_title = title.replace('<', '&lt;').replace('>', '&gt;').replace('&', '&amp;')
+        random_links_html += f'<li><a href="https://googology.fandom.com/?curid={page_id}" target="_blank">{escaped_title}</a></li>\n            '
+        
+        # For JavaScript array (with both ID and title)
+        js_escaped_title = title.replace('\\', '\\\\').replace('"', '\\"').replace("'", "\\'")
+        random_links_js.append(f'["{page_id}", "{js_escaped_title}"]')
+    
+    random_links_html = random_links_html.rstrip('\n            ')
+    random_links_js_array = '[' + ','.join(random_links_js) + ']'
     
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
@@ -214,6 +230,46 @@ def generate_html_page(pages_data: List[Tuple[str, str, str]], output_file: str)
             color: #aecbfa;
             text-decoration: underline;
         }}
+        .random-links {{
+            margin-top: 30px;
+            text-align: left;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }}
+        .random-links h3 {{
+            color: #ffffff;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: 400;
+            font-size: 1.3em;
+        }}
+        .random-links ul {{
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }}
+        .random-links li {{
+            margin-bottom: 8px;
+            padding: 8px 12px;
+            background-color: #2a2a2a;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+            transition: all 0.2s ease;
+        }}
+        .random-links li:hover {{
+            background-color: #333;
+            transform: translateX(4px);
+        }}
+        .random-links a {{
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 14px;
+            display: block;
+        }}
+        .random-links a:hover {{
+            color: #ffffff;
+        }}
     </style>
 </head>
 <body>
@@ -224,21 +280,31 @@ def generate_html_page(pages_data: List[Tuple[str, str, str]], output_file: str)
         </div>
         
         <button class="random-button" onclick="goToRandomPage()">
-            🎯 Go to Random Page
+            🎯 Random Jump
         </button>
+        
+        <div class="random-links">
+            <h3>🎲 Random Page Samples</h3>
+            <ul>
+                {random_links_html}
+            </ul>
+        </div>
         
         <div class="stats">
             <strong>Statistics:</strong><br>
             📊 Total available pages: {len(pages_data):,}<br>
             🚫 Excluded {73776 - len(pages_data):,} pages by <a href="../../exclude.md" target="_blank">exclude.md</a><br>
             📅 Generated: {get_fetch_date()}<br>
-            🤖 Created by random.py
+            🤖 Created by random-jump.py
         </div>
     </div>
 
     <script>
-        // Array of all available page IDs
+        // Array of all available page IDs (for random button)
         const pages = {pages_js_array};
+        
+        // Array of random sample pages with titles (for display)
+        const randomLinks = {random_links_js_array};
         
         function goToRandomPage() {{
             if (pages.length === 0) {{

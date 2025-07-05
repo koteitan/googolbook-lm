@@ -10,7 +10,7 @@ Processes the MediaWiki XML export and generates an HTML page with JavaScript fu
 
 ```bash
 cd tools/random
-python3 random.py
+python3 random-jump.py
 ```
 
 ## Output
@@ -27,7 +27,7 @@ See the generated page: [index.html](index.html)
 
 ## Configuration
 
-File paths can be configured at the top of `random.py`:
+File paths can be configured at the top of `random-jump.py`:
 
 ```python
 # Configuration
