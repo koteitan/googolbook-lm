@@ -4,32 +4,75 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This repository contains XML data from the Googology Wiki, specifically wiki page exports in MediaWiki XML format. The project appears to be focused on processing or analyzing googology-related content.
+This repository contains XML data from the Googology Wiki, specifically wiki page exports in MediaWiki XML format. The project is focused on processing or analyzing googology-related content for LLM support.
 
-## File Structure
+## Data Specifications
 
-- `googology_pages_current.xml` - MediaWiki XML export containing Googology Wiki pages and content
-- `/llm/` - Working directory containing a copy of the XML data
+- **File**: `googology_pages_current.xml` (210MB, 3.6M lines)
+- **Format**: MediaWiki XML Export Schema version 0.11
+- **Source**: Googology Wiki (googology.fandom.com)
+- **Content**: Complete wiki dump including all namespaces and revision history
 
-## Data Format
+## Architecture
 
-The XML files follow MediaWiki export format (version 0.11) containing:
-- Site metadata and namespace definitions
-- Page content with titles, revisions, and wiki markup
-- Full wiki structure including talk pages, user pages, templates, etc.
+The repository follows a data-centric architecture:
+- **Raw Data**: MediaWiki XML export as single large file
+- **Documentation**: Comprehensive MediaWiki format documentation in `mediawiki.md`
+- **Processing**: No code yet - designed for future XML processing and analysis tools
 
-## Working with the Data
+## Data Structure
 
-When processing the XML data:
-- The files are large (200MB+) - use streaming or chunked processing
-- Content is in MediaWiki markup format
-- Pages include various namespaces (articles, talk pages, user pages, templates, etc.)
-- Each page has revision history and metadata
+The XML contains:
+- Site metadata (namespaces, configuration)
+- Page content with full revision history
+- MediaWiki markup in `<text>` elements
+- Contributor information and edit metadata
 
-## Common Operations
+### Key Namespaces in Data
+- 0: Main articles (googology concepts)
+- 1: Talk pages
+- 2: User pages
+- 4: Googology Wiki project pages
+- 6: File pages
+- 10: Template pages
+- 14: Category pages
 
-Since this is a data processing project with XML files, typical operations might include:
-- Parsing XML content with appropriate XML libraries
-- Extracting specific pages or content types
-- Converting MediaWiki markup to other formats
-- Analyzing wiki structure and relationships
+## Processing Considerations
+
+### Performance
+- **Memory**: File is 210MB - use streaming XML parsers
+- **Content**: 3.6M lines with very long lines (1637 chars max)
+- **Encoding**: UTF-8 with XML entities
+
+### Common Processing Patterns
+- Stream parsing with SAX/XMLReader for large file handling
+- Extract specific namespaces (e.g., main articles only)
+- Parse MediaWiki markup to extract mathematical concepts
+- Build indexes of googology terms and definitions
+- Analyze edit patterns and contributor activity
+
+## MediaWiki XML Format Details
+
+The repository includes comprehensive documentation of the MediaWiki XML export format in `mediawiki.md`. Key format details:
+
+### XML Structure
+- Root element: `<mediawiki>` with namespace declarations
+- Two main sections: `<siteinfo>` and `<page>` elements
+- Schema version 0.11 with UTF-8 encoding
+
+### Page Structure
+Each `<page>` contains:
+- `<title>`, `<ns>` (namespace), `<id>` (page ID)
+- `<revision>` with content, timestamps, contributors
+- `<text>` elements containing MediaWiki markup
+- SHA1 hashes for content verification
+
+### Processing Notes from mediawiki.md
+- Files use `xml:space="preserve"` to maintain whitespace
+- Contributor info includes usernames/IDs or IP addresses
+- Content model is typically "wikitext" format
+- Revision history is preserved chronologically
+
+## Reference Documentation
+
+See `mediawiki.md` for complete MediaWiki XML format specification including schema details, element structures, and processing guidelines.
