@@ -1,4 +1,4 @@
-# Googology Wiki Archive Fetcher
+# fetch
 
 Downloads and extracts the official Googology Wiki XML export archive.
 
@@ -18,6 +18,13 @@ python3 fetch.py
 
 - Python 3.x
 - `py7zr` library for 7z extraction
+
+## Output
+
+The script creates two files in the `data/` directory:
+
+- `googology_pages_current.xml` - Complete MediaWiki XML export (~210MB)
+- `fetch_log.txt` - Download timestamp and source URL
 
 ## Configuration
 

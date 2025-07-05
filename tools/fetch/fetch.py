@@ -11,12 +11,14 @@ import sys
 import urllib.request
 import urllib.error
 from pathlib import Path
+import datetime
 
 # Configuration
 ARCHIVE_URL = 'https://s3.amazonaws.com/wikia_xml_dumps/g/go/googology_pages_current.xml.7z'
 DATA_DIR = '../../data'
 ARCHIVE_FILE = 'googology_pages_current.xml.7z'
 XML_FILE = 'googology_pages_current.xml'
+FETCH_LOG_FILE = 'fetch_log.txt'
 
 
 def download_with_progress(url: str, filename: str) -> bool:
@@ -136,6 +138,27 @@ def cleanup_archive(archive_path: str) -> None:
         print(f"Warning: Could not remove archive file: {e}")
 
 
+def save_fetch_log(data_dir: Path) -> None:
+    """
+    Save fetch timestamp to log file.
+    
+    Args:
+        data_dir: Path to data directory
+    """
+    try:
+        log_file = data_dir / FETCH_LOG_FILE
+        timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
+        with open(log_file, 'w', encoding='utf-8') as f:
+            f.write(f"Archive fetched: {timestamp}\n")
+            f.write(f"Source: {ARCHIVE_URL}\n")
+        
+        print(f"Fetch log saved: {log_file}")
+        
+    except Exception as e:
+        print(f"Warning: Could not save fetch log: {e}")
+
+
 def main():
     """Main function to fetch and extract the Googology Wiki archive."""
     
@@ -183,6 +206,9 @@ def main():
     
     # Clean up the archive file
     cleanup_archive(str(archive_path))
+    
+    # Save fetch log
+    save_fetch_log(data_dir)
     
     print()
     print("SUCCESS: Googology Wiki XML archive has been downloaded and extracted")

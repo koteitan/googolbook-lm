@@ -1,4 +1,4 @@
-# Large Pages Analyzer
+# analysis large pages
 
 Analyzes the Googology Wiki XML export to identify the largest pages by content size.
 
@@ -12,6 +12,14 @@ Processes the MediaWiki XML export and generates a report of the largest pages r
 cd tools/large-pages
 python3 large-pages.py
 ```
+
+## Output
+
+Generates `large-pages.md` with:
+- Summary statistics and page counts
+- Top 100 largest pages with direct wiki links
+- Size distribution analysis
+- License and attribution information
 
 ## Example Results
 
