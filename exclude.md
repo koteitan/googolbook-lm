@@ -7,5 +7,6 @@ This document defines guidelines for excluding certain pages from search and ana
 - User talk: `<title>User talk:*</title>`
 - User blog comment: `<title>User blog comment:*</title>`
 - File: `<title>File:*</title>`
+- Template: `<title>Template:*</title>`
 - FANDOM system pages: `<username>FANDOM</username>`
 

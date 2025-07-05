@@ -1,6 +1,7 @@
 # Large data files
 data/googology_pages_current.xml
 data/fetch_log.txt
+random/index.html
 
 # Python cache
 __pycache__/
