@@ -7,11 +7,12 @@ using different tokenization methods and compares the results.
 """
 
 import tiktoken
+import xml.etree.ElementTree as ET
 import os
 import time
 import re
 from datetime import datetime
-from typing import List
+from typing import List, Tuple
 
 # Configuration
 XML_FILE = '../../data/googology_pages_current.xml'
@@ -42,37 +43,110 @@ def load_excluded_namespaces(exclude_file_path: str) -> List[str]:
         print(f"Warning: Could not load exclusions from {exclude_file_path}: {e}")
     return excluded_namespaces
 
-def filter_excluded_content(content: str, excluded_namespaces: List[str]) -> str:
-    """
-    Filter out content sections that match excluded namespaces.
-    This removes XML elements and sections that reference excluded namespace pages.
+def parse_namespaces(xml_file_path: str) -> dict:
+    """Parse namespace definitions from XML file."""
+    namespace_map = {}
     
-    Args:
-        content: XML content to filter
-        excluded_namespaces: List of excluded namespace prefixes
-        
+    for event, elem in ET.iterparse(xml_file_path, events=('start', 'end')):
+        if event == 'end' and elem.tag.endswith('}namespace'):
+            key = elem.get('key')
+            name = elem.text
+            if key is not None:
+                # Handle main namespace (key="0" has no text content)
+                if name is None or name.strip() == '':
+                    namespace_map[key] = 'Main'
+                else:
+                    namespace_map[key] = name
+            elem.clear()
+        elif event == 'end' and elem.tag.endswith('}page'):
+            # Stop parsing after first page (namespaces are defined before pages)
+            break
+    
+    return namespace_map
+
+def get_namespace_name(ns_id: str, title: str, namespace_map: dict) -> str:
+    """Get human-readable namespace name from namespace ID and title."""
+    # Handle special cases for user blogs
+    if ':' in title:
+        prefix = title.split(':', 1)[0]
+        if prefix == 'User blog':
+            return 'User blog'
+    
+    # Use the namespace map parsed from XML
+    return namespace_map.get(ns_id, f'Namespace {ns_id}')
+
+def should_exclude_page(title: str, excluded_namespaces: List[str]) -> bool:
+    """Check if a page should be excluded based on its title namespace."""
+    if ':' in title:
+        namespace = title.split(':', 1)[0]
+        # Check both original and space-normalized versions
+        namespace_normalized = namespace.replace('_', ' ')
+        return namespace in excluded_namespaces or namespace_normalized in excluded_namespaces
+    return False
+
+def filter_and_analyze_xml(xml_file_path: str, excluded_namespaces: List[str]) -> Tuple[str, int, str, int]:
+    """
+    Filter XML content by excluding pages from specified namespaces.
+    
     Returns:
-        Filtered content with excluded sections removed
+        Tuple of (original_content, original_page_count, filtered_content, filtered_page_count)
     """
-    if not excluded_namespaces:
-        return content
+    print("Parsing XML and filtering content...")
     
-    lines = content.split('\n')
-    filtered_lines = []
+    # Parse namespace definitions
+    namespace_map = parse_namespaces(xml_file_path)
     
-    for line in lines:
-        # Check if line contains references to excluded namespaces
-        should_exclude = False
-        for namespace in excluded_namespaces:
-            # Look for namespace references in various formats
-            if f"{namespace}:" in line or f"{namespace} " in line:
-                should_exclude = True
-                break
-        
-        if not should_exclude:
-            filtered_lines.append(line)
+    original_pages = []
+    filtered_pages = []
     
-    return '\n'.join(filtered_lines)
+    # Build XML header
+    xml_header = """<?xml version="1.0" encoding="UTF-8"?>
+<mediawiki xmlns="http://www.mediawiki.org/xml/export-0.11/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mediawiki.org/xml/export-0.11/ http://www.mediawiki.org/xml/export-0.11.xsd" version="0.11" xml:lang="en">
+"""
+    
+    # Process pages
+    page_count = 0
+    filtered_page_count = 0
+    
+    for event, elem in ET.iterparse(xml_file_path, events=('start', 'end')):
+        if event == 'end' and elem.tag.endswith('}page'):
+            page_count += 1
+            if page_count % 10000 == 0:
+                print(f"Processed {page_count} pages...")
+            
+            # Extract namespace and title
+            ns_elem = elem.find('.//{http://www.mediawiki.org/xml/export-0.11/}ns')
+            title_elem = elem.find('.//{http://www.mediawiki.org/xml/export-0.11/}title')
+            
+            if ns_elem is not None and title_elem is not None:
+                ns_id = ns_elem.text
+                title = title_elem.text
+                
+                # Get namespace name
+                namespace_name = get_namespace_name(ns_id, title, namespace_map)
+                
+                # Store original page content
+                page_xml = ET.tostring(elem, encoding='unicode')
+                original_pages.append(page_xml)
+                
+                # Check if page should be excluded
+                if not should_exclude_page(title, excluded_namespaces) and namespace_name not in excluded_namespaces:
+                    filtered_pages.append(page_xml)
+                    filtered_page_count += 1
+            
+            elem.clear()
+    
+    # Build complete XML content
+    xml_footer = "</mediawiki>"
+    
+    original_content = xml_header + "".join(original_pages) + xml_footer
+    filtered_content = xml_header + "".join(filtered_pages) + xml_footer
+    
+    print(f"Total pages: {page_count}")
+    print(f"Filtered pages: {filtered_page_count}")
+    print(f"Excluded pages: {page_count - filtered_page_count}")
+    
+    return original_content, page_count, filtered_content, filtered_page_count
 
 def get_fetch_date() -> str:
     """
@@ -90,15 +164,6 @@ def get_fetch_date() -> str:
         pass
     return 'Unknown'
 
-def read_xml_file(file_path):
-    """Read the XML file and return its content."""
-    try:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-        return content
-    except Exception as e:
-        print(f"Error reading file: {e}")
-        return None
 
 def count_tokens_tiktoken(text):
     """Count tokens using tiktoken (OpenAI GPT-4)."""
@@ -131,8 +196,8 @@ def format_bytes(bytes_count: int) -> str:
         bytes_count /= 1024.0
     return f"{bytes_count:.1f} TB"
 
-def generate_report(file_size, char_count, tiktoken_count, tiktoken_time, 
-                   filtered_file_size, filtered_char_count, filtered_tiktoken_count):
+def generate_report(file_size, char_count, page_count, tiktoken_count, tiktoken_time, 
+                   filtered_file_size, filtered_char_count, filtered_page_count, filtered_tiktoken_count):
     """Generate markdown report from token analysis results."""
     
     # Generate report content
@@ -144,6 +209,15 @@ Analysis of token counts for the Googology Wiki MediaWiki XML export using tikto
 
 - **File**: `data/googology_pages_current.xml`
 - **Tokenizer**: OpenAI GPT-4 (tiktoken)
+
+## Page Count Results
+
+| Metric | Value |
+|--------|-------|
+| **Pages** | {format_number(page_count)} |
+| **Pages (after exclude)** | {format_number(filtered_page_count)} |
+
+- **Excluded pages**: {format_number(page_count - filtered_page_count)}
 
 ## File Size Results
 
@@ -206,31 +280,22 @@ def main():
         print("Please run the fetch tool first to download the data.")
         return
     
-    # Read XML file
-    print(f"Reading file: {XML_FILE}")
-    content = read_xml_file(XML_FILE)
-    
-    if not content:
-        print("Failed to read XML file")
-        return
-    
-    # File info
-    file_size = len(content.encode('utf-8'))
-    char_count = len(content)
-    
-    print(f"File size: {format_number(file_size)} bytes")
-    print(f"Character count: {format_number(char_count)} characters")
-    print()
-    
     # Load exclusions and filter content
     print("Loading exclusions...")
     excluded_namespaces = load_excluded_namespaces(EXCLUDE_FILE)
     print(f"Found {len(excluded_namespaces)} excluded namespaces")
     
-    filtered_content = filter_excluded_content(content, excluded_namespaces)
+    # Filter XML content properly by excluding entire pages
+    content, page_count, filtered_content, filtered_page_count = filter_and_analyze_xml(XML_FILE, excluded_namespaces)
+    
+    # File info
+    file_size = len(content.encode('utf-8'))
+    char_count = len(content)
     filtered_file_size = len(filtered_content.encode('utf-8'))
     filtered_char_count = len(filtered_content)
     
+    print(f"File size: {format_number(file_size)} bytes")
+    print(f"Character count: {format_number(char_count)} characters")
     print(f"Filtered file size: {format_number(filtered_file_size)} bytes")
     print(f"Filtered character count: {format_number(filtered_char_count)} characters")
     print()
@@ -251,8 +316,8 @@ def main():
     
     # Generate report
     report_content = generate_report(
-        file_size, char_count, tiktoken_count, tiktoken_time,
-        filtered_file_size, filtered_char_count, filtered_tiktoken_count
+        file_size, char_count, page_count, tiktoken_count, tiktoken_time,
+        filtered_file_size, filtered_char_count, filtered_page_count, filtered_tiktoken_count
     )
     
     # Write report to file
