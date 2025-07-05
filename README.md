@@ -9,10 +9,6 @@ Before using this project, install the required Python dependencies:
 pip install requests beautifulsoup4 py7zr
 ```
 
-- **requests**: HTTP library for downloading XML data from Fandom servers
-- **beautifulsoup4**: HTML/XML parsing library for extracting metadata from statistics pages
-- **py7zr**: 7-Zip archive extraction library for processing compressed XML exports
-
 ## Features
 
 - **[fetch](tools/fetch/README.md)** - Downloads and extracts the official Googology Wiki XML export archive from the Wikia/Fandom servers.
