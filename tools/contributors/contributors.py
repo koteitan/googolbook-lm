@@ -37,17 +37,18 @@ def load_excluded_namespaces(exclude_file_path: str) -> Tuple[List[str], List[st
         with open(exclude_file_path, 'r', encoding='utf-8') as f:
             for line in f:
                 line = line.strip()
-                if line.startswith('- ') and ':' in line:
-                    if '<username>' in line and '</username>' in line:
-                        # Extract username from lines like "- FANDOM system pages: `<username>FANDOM</username>`"
-                        start = line.find('<username>') + len('<username>')
-                        end = line.find('</username>')
+                if line.startswith('- `') and line.endswith('`'):
+                    content = line[3:-1]  # Remove "- `" and "`"
+                    if '<username>' in content and '</username>' in content:
+                        # Extract username from lines like "- `<username>FANDOM</username>`"
+                        start = content.find('<username>') + len('<username>')
+                        end = content.find('</username>')
                         if start > len('<username>') - 1 and end > start:
-                            username = line[start:end]
+                            username = content[start:end]
                             excluded_usernames.append(username)
-                    else:
-                        # Extract namespace from lines like "- User talk: `<title>User talk:*</title>`"
-                        namespace = line.split(':')[0].replace('- ', '').strip()
+                    elif content.endswith(':'):
+                        # Extract namespace from lines like "- `User talk:`"
+                        namespace = content[:-1]  # Remove trailing ":"
                         excluded_namespaces.append(namespace)
     except Exception as e:
         print(f"Warning: Could not load exclusions from {exclude_file_path}: {e}")
@@ -67,7 +68,10 @@ def should_exclude_page(title: str, excluded_namespaces: List[str]) -> bool:
     """
     if ':' in title:
         namespace = title.split(':', 1)[0]
-        return namespace in excluded_namespaces
+        # Check both original and space-normalized versions
+        # MediaWiki may use either spaces or underscores in namespace names
+        namespace_normalized = namespace.replace('_', ' ')
+        return namespace in excluded_namespaces or namespace_normalized in excluded_namespaces
     return False
 
 

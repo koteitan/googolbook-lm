@@ -32,9 +32,9 @@ def load_excluded_namespaces(exclude_file_path: str) -> List[str]:
         with open(exclude_file_path, 'r', encoding='utf-8') as f:
             for line in f:
                 line = line.strip()
-                if line.startswith('- ') and ':' in line:
-                    # Extract namespace from lines like "- User talk: `<title>User talk:*</title>`"
-                    namespace = line.split(':')[0].replace('- ', '').strip()
+                if line.startswith('- `') and line.endswith(':`'):
+                    # Extract namespace from lines like "- `User talk:`"
+                    namespace = line[3:-2]  # Remove "- `" and "`:"
                     excluded.append(namespace)
     except Exception as e:
         print(f"Warning: Could not load exclusions from {exclude_file_path}: {e}")
@@ -54,7 +54,10 @@ def should_exclude_page(title: str, excluded_namespaces: List[str]) -> bool:
     """
     if ':' in title:
         namespace = title.split(':', 1)[0]
-        return namespace in excluded_namespaces
+        # Check both original and space-normalized versions
+        # MediaWiki may use either spaces or underscores in namespace names
+        namespace_normalized = namespace.replace('_', ' ')
+        return namespace in excluded_namespaces or namespace_normalized in excluded_namespaces
     return False
 
 
