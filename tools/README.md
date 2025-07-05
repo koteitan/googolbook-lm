@@ -1,6 +1,11 @@
 # Tools
 
+## Archive Fetching
+
 - **[fetch](fetch/README.md)** - Downloads and extracts the official Googology Wiki XML export archive from the Wikia/Fandom servers.
+
+## Page Analysis
+
 - **[large pages](large-pages/README.md)** - Identifies and analyzes the largest pages in the Googology Wiki by content size, providing detailed statistics and direct links to original wiki pages.
 - **[contributors](contributors/README.md)** - Analyzes contributors by page creation count to identify the most active content creators in the Googology Wiki.
 - **[namespaces](namespaces/README.md)** - Analyzes content distribution across different namespaces, showing how wiki content is distributed by type (articles, user pages, talk pages, etc.).
