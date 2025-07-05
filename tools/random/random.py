@@ -153,56 +153,72 @@ def generate_html_page(pages_data: List[Tuple[str, str, str]], output_file: str)
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Random Googology Wiki Page</title>
+    <title>Random Jump - Googology Wiki</title>
     <style>
         body {{
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #f5f5f5;
+            background-color: #121212;
+            color: #e0e0e0;
         }}
         .container {{
-            background-color: white;
+            background-color: #1e1e1e;
             padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
             text-align: center;
+            border: 1px solid #333;
         }}
         h1 {{
-            color: #333;
+            color: #ffffff;
             margin-bottom: 20px;
+            font-weight: 300;
+            font-size: 2.5em;
         }}
         .description {{
-            color: #666;
+            color: #b0b0b0;
             margin-bottom: 30px;
             line-height: 1.6;
+            font-size: 16px;
         }}
         .random-button {{
-            background-color: #4CAF50;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 15px 30px;
             font-size: 18px;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }}
         .random-button:hover {{
-            background-color: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
         }}
         .stats {{
             margin-top: 30px;
             padding-top: 20px;
-            border-top: 1px solid #eee;
+            border-top: 1px solid #333;
             color: #888;
             font-size: 14px;
+        }}
+        .stats a {{
+            color: #8ab4f8;
+            text-decoration: none;
+        }}
+        .stats a:hover {{
+            color: #aecbfa;
+            text-decoration: underline;
         }}
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎲 Random Googology Wiki Page</h1>
+        <h1>🎲 Random Jump</h1>
         <div class="description">
             Discover random pages from the Googology Wiki! Click the button below to jump to a randomly selected page from the wiki's vast collection of mathematical concepts and large numbers.
         </div>
