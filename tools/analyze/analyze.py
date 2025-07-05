@@ -191,13 +191,40 @@ Analysis of content distribution across namespaces in the Googology Wiki XML exp
 
 ## Namespace Breakdown
 
-| Namespace | kBytes | Pages | Percentage | Examples |
-|-----------|--------|-------|------------|----------|
+| Namespace | MBytes | Pages | % | % after exclude | Examples |
+|-----------|--------|-------|---|-----------------|----------|
 """
     
+    # Calculate total pages after exclusion (for % after exclude column)
+    # This would be the subset of pages that would remain after applying exclude.md rules
+    # For now, we'll use a simple heuristic - exclude known non-content namespaces
+    excluded_namespaces_for_calc = {
+        'File', 'Template', 'User blog comment', 'Category', 'GeoJson', 'Module', 
+        'Map', 'Help', 'Forum', 'MediaWiki', 'Special', 'Template talk', 
+        'User talk', 'Googology Wiki talk', 'Category talk', 'MediaWiki talk', 
+        'File talk', 'Forum talk', 'Module talk', 'GeoJson talk'
+    }
+    
+    # Calculate total bytes and pages after exclusion
+    total_bytes_after_exclude = sum(
+        bytes_count for namespace, (bytes_count, page_count) in sorted_namespaces 
+        if namespace not in excluded_namespaces_for_calc
+    )
+    total_pages_after_exclude = sum(
+        page_count for namespace, (bytes_count, page_count) in sorted_namespaces 
+        if namespace not in excluded_namespaces_for_calc
+    )
+    
     for namespace, (bytes_count, page_count) in sorted_namespaces:
-        kbytes = bytes_count / 1024
+        mbytes = bytes_count / (1024 * 1024)
         percentage = (bytes_count / total_bytes * 100) if total_bytes > 0 else 0
+        
+        # Calculate percentage after exclude (only for non-excluded namespaces)
+        if namespace in excluded_namespaces_for_calc:
+            percentage_after_exclude_str = "—"
+        else:
+            percentage_after_exclude = (bytes_count / total_bytes_after_exclude * 100) if total_bytes_after_exclude > 0 else 0
+            percentage_after_exclude_str = f"{percentage_after_exclude:.1f}"
         
         # Get random samples for examples
         samples = namespace_samples.get(namespace, [])
@@ -215,7 +242,7 @@ Analysis of content distribution across namespaces in the Googology Wiki XML exp
         
         examples_str = ", ".join(example_links) if example_links else "—"
         
-        report_content += f"| {namespace} | {kbytes:.1f} | {page_count:,} | {percentage:.1f} | {examples_str} |\n"
+        report_content += f"| {namespace} | {mbytes:.1f} | {page_count:,} | {percentage:.1f} | {percentage_after_exclude_str} | {examples_str} |\n"
     
     # Add license and metadata
     report_content += f"""
