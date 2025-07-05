@@ -214,7 +214,7 @@ def generate_html_page(pages_data: List[Tuple[str, str, str]], output_file: str)
         <div class="stats">
             <strong>Statistics:</strong><br>
             📊 Total available pages: {len(pages_data):,}<br>
-            🚫 Excluded system/talk/file pages as per exclude.md<br>
+            🚫 Excluded {73776 - len(pages_data):,} pages by <a href="../../exclude.md" target="_blank">exclude.md</a><br>
             📅 Generated: {get_fetch_date()}<br>
             🤖 Created by random.py
         </div>
