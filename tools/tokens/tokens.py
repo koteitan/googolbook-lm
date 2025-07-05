@@ -216,6 +216,7 @@ Analysis of token counts for the Googology Wiki MediaWiki XML export using tikto
 |--------|-------|
 | **Pages** | {format_number(page_count)} |
 | **Pages (after exclude)** | {format_number(filtered_page_count)} |
+| **Filtered rate** | {(filtered_page_count / page_count * 100):.1f}% |
 
 - **Excluded pages**: {format_number(page_count - filtered_page_count)}
 
@@ -225,6 +226,7 @@ Analysis of token counts for the Googology Wiki MediaWiki XML export using tikto
 |--------|-------|
 | **File size** | {format_bytes(file_size)} |
 | **File size after exclude** | {format_bytes(filtered_file_size)} |
+| **Filtered rate** | {(filtered_file_size / file_size * 100):.1f}% |
 
 - **Excluded content size**: {format_bytes(file_size - filtered_file_size)}
 
@@ -234,6 +236,7 @@ Analysis of token counts for the Googology Wiki MediaWiki XML export using tikto
 |--------|-------|
 | **Character count** | {format_number(char_count)} |
 | **Character count after exclude** | {format_number(filtered_char_count)} |
+| **Filtered rate** | {(filtered_char_count / char_count * 100):.1f}% |
 
 - **Excluded character count**: {format_number(char_count - filtered_char_count)}
 
@@ -243,6 +246,7 @@ Analysis of token counts for the Googology Wiki MediaWiki XML export using tikto
 |--------|-------|
 | **Tokens** | {format_number(tiktoken_count)} |
 | **Tokens (after exclude)** | {format_number(filtered_tiktoken_count)} |
+| **Filtered rate** | {(filtered_tiktoken_count / tiktoken_count * 100):.1f}% |
 
 - **Chars/Token**: {char_count / tiktoken_count:.2f}
 - **Processing Time**: {tiktoken_time:.3f}s
