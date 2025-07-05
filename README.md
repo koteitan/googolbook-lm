@@ -1,4 +1,4 @@
-# googolbook-lm
+# GoogolBook LM
 Googology Wiki LLM support
 
 ## Features
