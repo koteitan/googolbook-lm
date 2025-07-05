@@ -93,7 +93,7 @@ def analyze_xml_pages(xml_file_path: str) -> List[Tuple[int, str, str]]:
     for event, elem in context:
         if event == 'end' and elem.tag == f'{namespace_uri}page':
             page_count += 1
-            if page_count % 1000 == 0:
+            if page_count % 10000 == 0:
                 print(f"Processed {page_count} pages...")
             
             # Extract page information
