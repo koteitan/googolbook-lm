@@ -4,8 +4,8 @@ Site-specific configuration for 巨大数研究 Wiki (Japanese).
 
 # Site information
 SITE_NAME = '巨大数研究 Wiki'
-SITE_URL = 'ja.googology.fandom.com'
-SITE_BASE_URL = 'https://ja.googology.fandom.com'
+SITE_URL = 'googology.fandom.com/ja'
+SITE_BASE_URL = 'https://googology.fandom.com/ja'
 ARCHIVE_URL = 'https://s3.amazonaws.com/wikia_xml_dumps/j/ja/jagoogology_pages_current.xml.7z'
 
 # License information

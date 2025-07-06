@@ -1,7 +1,6 @@
-# Large data files
-data/googology_pages_current.xml
-data/fetch_log.txt
-tools/random/index.html
+# Intermediaire repository for the site
+data/ja-googology-wiki/jagoogology_pages_current.xml
+data/googology-wiki/googology_pages_current.xml
 
 # Python cache
 __pycache__/

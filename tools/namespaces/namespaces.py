@@ -21,8 +21,8 @@ from lib.formatting import format_number, format_bytes
 from lib.io_utils import get_fetch_date, check_xml_exists, get_xml_file
 from lib.reporting import generate_license_footer, write_markdown_report
 
-# Local configuration
-OUTPUT_FILE = 'namespaces.md'
+# Local configuration - output to site-specific data directory
+OUTPUT_FILE = str(config.DATA_DIR / 'namespaces.md')
 
 # Removed - now imported from lib.io_utils
 

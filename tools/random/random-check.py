@@ -17,8 +17,8 @@ from typing import List, Tuple
 sys.path.append('../../')
 import config
 
-# Configuration
-OUTPUT_FILE = 'index.html'
+# Configuration - output to site-specific data directory
+OUTPUT_FILE = str(config.DATA_DIR / 'random.html')
 RANDOM_LINKS_COUNT = 50  # Number of random links to display
 
 
@@ -347,7 +347,7 @@ def get_fetch_date() -> str:
         Fetch date string, or 'Unknown' if not available
     """
     try:
-        with open(FETCH_LOG_FILE, 'r', encoding='utf-8') as f:
+        with open(config.FETCH_LOG_FILE, 'r', encoding='utf-8') as f:
             first_line = f.readline().strip()
             if first_line.startswith('Archive fetched: '):
                 return first_line.replace('Archive fetched: ', '')
