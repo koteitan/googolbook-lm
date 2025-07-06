@@ -19,7 +19,7 @@ import config
 from lib.exclusions import load_excluded_namespaces, should_exclude_page
 from lib.xml_parser import parse_namespaces, get_namespace_name, extract_page_elements, iterate_pages
 from lib.formatting import format_number, format_bytes
-from lib.io_utils import get_fetch_date
+from lib.io_utils import get_fetch_date, check_xml_exists
 from lib.reporting import generate_license_footer, write_markdown_report
 
 # Local configuration
@@ -165,9 +165,7 @@ def main():
     print("=" * 50)
     
     # Check if XML file exists
-    if not os.path.exists(config.XML_FILE):
-        print(f"Error: XML file not found at {config.XML_FILE}")
-        print("Please run the fetch tool first to download the data.")
+    if not check_xml_exists():
         return
     
     # Load exclusions and filter content

@@ -28,18 +28,21 @@ def get_fetch_date() -> str:
     return 'Unknown'
 
 
-def check_xml_exists(xml_file_path: str) -> bool:
+def check_xml_exists() -> bool:
     """
     Check if XML file exists and provide helpful error message if not.
     
-    Args:
-        xml_file_path: Path to the MediaWiki XML export file
-        
     Returns:
         True if file exists, False otherwise
     """
-    if not os.path.exists(xml_file_path):
-        print(f"Error: XML file not found at {xml_file_path}")
-        print("Please run the fetch tool first to download the data.")
+    if not config.XML_FILE:
+        print("Error: XML file not found")
+        print(config.get_xml_file_error_message())
         return False
+    
+    if not os.path.exists(config.XML_FILE):
+        print(f"Error: XML file not found at {config.XML_FILE}")
+        print("The file may have been moved or deleted.")
+        return False
+    
     return True
