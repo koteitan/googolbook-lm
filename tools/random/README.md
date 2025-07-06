@@ -1,10 +1,10 @@
 # Random Check for exclude.md
 
-Generates a random page selector for the Googology Wiki that creates an HTML page with a button to jump to random wiki pages.
+Generates a random page selector that creates an HTML page with a button to jump to random wiki pages.
 
 ## Overview
 
-Processes the MediaWiki XML export and generates an HTML page with JavaScript functionality to randomly select and navigate to Googology Wiki pages. Pages specified in the project's exclusion guidelines (exclude.md) are automatically filtered out from the random selection.
+Processes MediaWiki XML exports and generates an HTML page with JavaScript functionality to randomly select and navigate to wiki pages. Pages specified in the project's exclusion guidelines (exclude.md) are automatically filtered out from the random selection.
 
 ## Usage
 

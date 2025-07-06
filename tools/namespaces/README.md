@@ -1,6 +1,6 @@
 # Namespace Analysis
 
-Analyzes the Googology Wiki XML export to show content distribution across different namespaces.
+Analyzes MediaWiki XML exports to show content distribution across different namespaces.
 
 ## Description
 

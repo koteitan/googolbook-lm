@@ -1,10 +1,10 @@
 # contributors
 
-Analyzes the Googology Wiki XML export to identify contributors with the highest page creation counts.
+Analyzes MediaWiki XML exports to identify contributors with the highest page creation counts.
 
 ## Overview
 
-Processes the complete MediaWiki XML export to identify users who have created the most pages, helping with content curation decisions. Pages and contributors specified in the project's exclusion guidelines (exclude.md) are automatically filtered out from the analysis.
+Processes MediaWiki XML exports to identify users who have created the most pages, helping with content curation decisions. Pages and contributors specified in the project's exclusion guidelines (exclude.md) are automatically filtered out from the analysis.
 
 ## Usage
 

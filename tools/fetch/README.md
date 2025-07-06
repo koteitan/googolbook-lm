@@ -1,10 +1,10 @@
 # fetch
 
-Downloads and extracts the official Googology Wiki XML export archive.
+Downloads and extracts MediaWiki XML export archives from various sources.
 
 ## Overview
 
-Automatically downloads the complete MediaWiki XML export from the official archive and extracts it to the data directory.
+Automatically downloads MediaWiki XML exports from archives and extracts them to the data directory. Supports various sources including Wikia/Fandom servers.
 
 ## Usage
 
@@ -21,9 +21,9 @@ python3 fetch.py
 
 ## Output
 
-The script creates two files in the `data/` directory:
+The script creates files in the `data/` directory:
 
-- `googology_pages_current.xml` - Complete MediaWiki XML export (~210MB)
+- `*.xml` - Complete MediaWiki XML export (size varies by wiki)
 - `fetch_log.txt` - Download timestamp and source URL
 
 ## License

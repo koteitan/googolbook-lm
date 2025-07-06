@@ -1,6 +1,6 @@
 # Token Analysis Tool
 
-This tool analyzes token counts for the Googology Wiki MediaWiki XML export using tiktoken (OpenAI GPT-4).
+This tool analyzes token counts for MediaWiki XML exports using tiktoken (OpenAI GPT-4).
 
 ## Overview
 
