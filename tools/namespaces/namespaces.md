@@ -16,31 +16,31 @@ Analysis of content distribution across namespaces in the Googology Wiki XML exp
 
 | Namespace | MBytes | Pages | % | % after exclude | Examples |
 |-----------|--------|-------|---|-----------------|----------|
-| User blog | 43.6 | 7,354 | 32.2 | 36.9 | [22025](https://googology.fandom.com/?curid=22025), [71956](https://googology.fandom.com/?curid=71956), [51993](https://googology.fandom.com/?curid=51993) |
-| Main | 35.4 | 27,370 | 26.2 | 29.9 | [30932](https://googology.fandom.com/?curid=30932), [41645](https://googology.fandom.com/?curid=41645), [76981](https://googology.fandom.com/?curid=76981) |
-| User | 34.4 | 3,897 | 25.4 | 29.1 | [49801](https://googology.fandom.com/?curid=49801), [54645](https://googology.fandom.com/?curid=54645), [56667](https://googology.fandom.com/?curid=56667) |
-| User blog comment | 9.5 | 27,729 | 7.0 | — | [16885](https://googology.fandom.com/?curid=16885), [60507](https://googology.fandom.com/?curid=60507), [51693](https://googology.fandom.com/?curid=51693) |
-| User talk | 4.4 | 1,668 | 3.3 | — | [2563](https://googology.fandom.com/?curid=2563), [13321](https://googology.fandom.com/?curid=13321), [78491](https://googology.fandom.com/?curid=78491) |
-| Talk | 3.2 | 1,669 | 2.4 | 2.7 | [26885](https://googology.fandom.com/?curid=26885), [64482](https://googology.fandom.com/?curid=64482), [2893](https://googology.fandom.com/?curid=2893) |
-| Googology Wiki | 1.7 | 357 | 1.2 | 1.4 | [15006](https://googology.fandom.com/?curid=15006), [14478](https://googology.fandom.com/?curid=14478), [14873](https://googology.fandom.com/?curid=14873) |
-| Template | 1.4 | 594 | 1.0 | — | [83871](https://googology.fandom.com/?curid=83871), [4522](https://googology.fandom.com/?curid=4522), [84727](https://googology.fandom.com/?curid=84727) |
-| Forum | 0.5 | 183 | 0.4 | — | [26637](https://googology.fandom.com/?curid=26637), [20276](https://googology.fandom.com/?curid=20276), [75289](https://googology.fandom.com/?curid=75289) |
-| Googology Wiki talk | 0.4 | 39 | 0.3 | — | [14863](https://googology.fandom.com/?curid=14863), [65610](https://googology.fandom.com/?curid=65610), [45210](https://googology.fandom.com/?curid=45210) |
-| File | 0.2 | 1,861 | 0.2 | — | [70849](https://googology.fandom.com/?curid=70849), [88709](https://googology.fandom.com/?curid=88709), [55205](https://googology.fandom.com/?curid=55205) |
-| Category talk | 0.2 | 100 | 0.2 | — | [6024](https://googology.fandom.com/?curid=6024), [40330](https://googology.fandom.com/?curid=40330), [72967](https://googology.fandom.com/?curid=72967) |
-| Category | 0.1 | 647 | 0.1 | — | [70653](https://googology.fandom.com/?curid=70653), [73299](https://googology.fandom.com/?curid=73299), [73381](https://googology.fandom.com/?curid=73381) |
-| Template talk | 0.1 | 91 | 0.1 | — | [7395](https://googology.fandom.com/?curid=7395), [79387](https://googology.fandom.com/?curid=79387), [5847](https://googology.fandom.com/?curid=5847) |
-| GeoJson | 0.1 | 14 | 0.1 | — | [87928](https://googology.fandom.com/?curid=87928), [87668](https://googology.fandom.com/?curid=87668), [87758](https://googology.fandom.com/?curid=87758) |
-| MediaWiki talk | 0.1 | 11 | 0.0 | — | [7665](https://googology.fandom.com/?curid=7665), [10836](https://googology.fandom.com/?curid=10836), [11890](https://googology.fandom.com/?curid=11890) |
-| File talk | 0.1 | 103 | 0.0 | — | [88204](https://googology.fandom.com/?curid=88204), [73113](https://googology.fandom.com/?curid=73113), [73269](https://googology.fandom.com/?curid=73269) |
-| MediaWiki | 0.0 | 45 | 0.0 | — | [71818](https://googology.fandom.com/?curid=71818), [7634](https://googology.fandom.com/?curid=7634), [2512](https://googology.fandom.com/?curid=2512) |
-| Module | 0.0 | 9 | 0.0 | — | [88902](https://googology.fandom.com/?curid=88902), [88890](https://googology.fandom.com/?curid=88890), [88892](https://googology.fandom.com/?curid=88892) |
+| User blog | 43.6 | 7,354 | 32.2 | 36.9 | [73403](https://googology.fandom.com/?curid=73403), [46898](https://googology.fandom.com/?curid=46898), [73214](https://googology.fandom.com/?curid=73214) |
+| Main | 35.4 | 27,370 | 26.2 | 29.9 | [7347](https://googology.fandom.com/?curid=7347), [78702](https://googology.fandom.com/?curid=78702), [7420](https://googology.fandom.com/?curid=7420) |
+| User | 34.4 | 3,897 | 25.4 | 29.1 | [58692](https://googology.fandom.com/?curid=58692), [52146](https://googology.fandom.com/?curid=52146), [56659](https://googology.fandom.com/?curid=56659) |
+| User blog comment | 9.5 | 27,729 | 7.0 | — | [30722](https://googology.fandom.com/?curid=30722), [52441](https://googology.fandom.com/?curid=52441), [10779](https://googology.fandom.com/?curid=10779) |
+| User talk | 4.4 | 1,668 | 3.3 | — | [72730](https://googology.fandom.com/?curid=72730), [75470](https://googology.fandom.com/?curid=75470), [18566](https://googology.fandom.com/?curid=18566) |
+| Talk | 3.2 | 1,669 | 2.4 | 2.7 | [12389](https://googology.fandom.com/?curid=12389), [5785](https://googology.fandom.com/?curid=5785), [41789](https://googology.fandom.com/?curid=41789) |
+| Googology Wiki | 1.7 | 357 | 1.2 | 1.4 | [14012](https://googology.fandom.com/?curid=14012), [14953](https://googology.fandom.com/?curid=14953), [14539](https://googology.fandom.com/?curid=14539) |
+| Template | 1.4 | 594 | 1.0 | — | [85360](https://googology.fandom.com/?curid=85360), [73023](https://googology.fandom.com/?curid=73023), [6337](https://googology.fandom.com/?curid=6337) |
+| Forum | 0.5 | 183 | 0.4 | — | [37696](https://googology.fandom.com/?curid=37696), [13247](https://googology.fandom.com/?curid=13247), [21996](https://googology.fandom.com/?curid=21996) |
+| Googology Wiki talk | 0.4 | 39 | 0.3 | — | [37158](https://googology.fandom.com/?curid=37158), [67225](https://googology.fandom.com/?curid=67225), [74592](https://googology.fandom.com/?curid=74592) |
+| File | 0.2 | 1,861 | 0.2 | — | [70802](https://googology.fandom.com/?curid=70802), [8138](https://googology.fandom.com/?curid=8138), [71786](https://googology.fandom.com/?curid=71786) |
+| Category talk | 0.2 | 100 | 0.2 | — | [30225](https://googology.fandom.com/?curid=30225), [67332](https://googology.fandom.com/?curid=67332), [65609](https://googology.fandom.com/?curid=65609) |
+| Category | 0.1 | 647 | 0.1 | — | [3520](https://googology.fandom.com/?curid=3520), [34237](https://googology.fandom.com/?curid=34237), [49895](https://googology.fandom.com/?curid=49895) |
+| Template talk | 0.1 | 91 | 0.1 | — | [70650](https://googology.fandom.com/?curid=70650), [30972](https://googology.fandom.com/?curid=30972), [5762](https://googology.fandom.com/?curid=5762) |
+| GeoJson | 0.1 | 14 | 0.1 | — | [87800](https://googology.fandom.com/?curid=87800), [87876](https://googology.fandom.com/?curid=87876), [87668](https://googology.fandom.com/?curid=87668) |
+| MediaWiki talk | 0.1 | 11 | 0.0 | — | [69864](https://googology.fandom.com/?curid=69864), [7665](https://googology.fandom.com/?curid=7665), [71523](https://googology.fandom.com/?curid=71523) |
+| File talk | 0.1 | 103 | 0.0 | — | [85533](https://googology.fandom.com/?curid=85533), [74773](https://googology.fandom.com/?curid=74773), [73089](https://googology.fandom.com/?curid=73089) |
+| MediaWiki | 0.0 | 45 | 0.0 | — | [2099](https://googology.fandom.com/?curid=2099), [2632](https://googology.fandom.com/?curid=2632), [69863](https://googology.fandom.com/?curid=69863) |
+| Module | 0.0 | 9 | 0.0 | — | [45211](https://googology.fandom.com/?curid=45211), [88901](https://googology.fandom.com/?curid=88901), [88893](https://googology.fandom.com/?curid=88893) |
 | Map | 0.0 | 1 | 0.0 | — | [75820](https://googology.fandom.com/?curid=75820) |
-| Help | 0.0 | 4 | 0.0 | — | [2573](https://googology.fandom.com/?curid=2573), [2575](https://googology.fandom.com/?curid=2575), [2572](https://googology.fandom.com/?curid=2572) |
-| Blog | 0.0 | 6 | 0.0 | 0.0 | [4342](https://googology.fandom.com/?curid=4342), [73848](https://googology.fandom.com/?curid=73848), [2699](https://googology.fandom.com/?curid=2699) |
-| Message Wall | 0.0 | 9 | 0.0 | 0.0 | [49095](https://googology.fandom.com/?curid=49095), [45213](https://googology.fandom.com/?curid=45213), [43669](https://googology.fandom.com/?curid=43669) |
-| Forum talk | 0.0 | 5 | 0.0 | — | [53057](https://googology.fandom.com/?curid=53057), [48968](https://googology.fandom.com/?curid=48968), [39141](https://googology.fandom.com/?curid=39141) |
-| Namespace 2000 | 0.0 | 5 | 0.0 | 0.0 | [6281](https://googology.fandom.com/?curid=6281), [6279](https://googology.fandom.com/?curid=6279), [6277](https://googology.fandom.com/?curid=6277) |
+| Help | 0.0 | 4 | 0.0 | — | [2575](https://googology.fandom.com/?curid=2575), [2572](https://googology.fandom.com/?curid=2572), [2574](https://googology.fandom.com/?curid=2574) |
+| Blog | 0.0 | 6 | 0.0 | 0.0 | [87922](https://googology.fandom.com/?curid=87922), [4342](https://googology.fandom.com/?curid=4342), [84721](https://googology.fandom.com/?curid=84721) |
+| Message Wall | 0.0 | 9 | 0.0 | 0.0 | [14073](https://googology.fandom.com/?curid=14073), [49095](https://googology.fandom.com/?curid=49095), [44713](https://googology.fandom.com/?curid=44713) |
+| Forum talk | 0.0 | 5 | 0.0 | — | [42866](https://googology.fandom.com/?curid=42866), [48968](https://googology.fandom.com/?curid=48968), [53057](https://googology.fandom.com/?curid=53057) |
+| Namespace 2000 | 0.0 | 5 | 0.0 | 0.0 | [6278](https://googology.fandom.com/?curid=6278), [6281](https://googology.fandom.com/?curid=6281), [6280](https://googology.fandom.com/?curid=6280) |
 | Module talk | 0.0 | 1 | 0.0 | — | [88894](https://googology.fandom.com/?curid=88894) |
 | GeoJson talk | 0.0 | 1 | 0.0 | — | [87661](https://googology.fandom.com/?curid=87661) |
 | Message Wall Greeting | 0.0 | 2 | 0.0 | 0.0 | [30534](https://googology.fandom.com/?curid=30534), [38503](https://googology.fandom.com/?curid=38503) |
@@ -76,4 +76,4 @@ This analysis contains content from the **Googology Wiki** (googology.fandom.com
 
 *Archive fetched: 2025-07-06 01:33:43*  
 *Generated by namespaces.py*  
-*Analysis date: 2025-07-06 07:32:43*
+*Analysis date: 2025-07-06 19:18:31*

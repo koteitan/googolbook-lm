@@ -3,7 +3,10 @@ Exclusion handling utilities for Googology Wiki analysis tools.
 """
 
 from typing import List, Tuple
-from .config import EXCLUDE_FILE
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+import config
 
 
 def load_excluded_namespaces(exclude_file_path: str = None) -> List[str]:
@@ -17,7 +20,7 @@ def load_excluded_namespaces(exclude_file_path: str = None) -> List[str]:
         List of excluded namespace prefixes
     """
     if exclude_file_path is None:
-        exclude_file_path = EXCLUDE_FILE
+        exclude_file_path = config.EXCLUDE_FILE
         
     excluded_namespaces = []
     try:
@@ -44,7 +47,7 @@ def load_excluded_usernames(exclude_file_path: str = None) -> List[str]:
         List of excluded usernames
     """
     if exclude_file_path is None:
-        exclude_file_path = EXCLUDE_FILE
+        exclude_file_path = config.EXCLUDE_FILE
         
     excluded_usernames = []
     try:

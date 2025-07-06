@@ -15,7 +15,7 @@ from typing import Dict, Tuple, List
 # Import shared library modules
 import sys
 sys.path.append('../../')
-from lib.config import XML_FILE
+import config
 from lib.xml_parser import parse_namespaces, get_namespace_name, iterate_pages
 from lib.formatting import format_number, format_bytes
 from lib.io_utils import get_fetch_date
@@ -202,13 +202,13 @@ def main():
     print("Starting namespace analysis...")
     
     # Check if XML file exists
-    if not os.path.exists(XML_FILE):
-        print(f"Error: XML file not found at {XML_FILE}")
+    if not os.path.exists(config.XML_FILE):
+        print(f"Error: XML file not found at {config.XML_FILE}")
         print("Please run the fetch tool first to download the data.")
         return
     
     # Analyze namespaces
-    namespace_stats, namespace_samples = analyze_namespaces(XML_FILE)
+    namespace_stats, namespace_samples = analyze_namespaces(config.XML_FILE)
     
     # Generate report
     generate_report(namespace_stats, namespace_samples, OUTPUT_FILE)

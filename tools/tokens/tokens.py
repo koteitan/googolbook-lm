@@ -15,7 +15,7 @@ from typing import List, Tuple
 # Import shared library modules
 import sys
 sys.path.append('../../')
-from lib.config import XML_FILE, EXCLUDE_FILE
+import config
 from lib.exclusions import load_excluded_namespaces, should_exclude_page
 from lib.xml_parser import parse_namespaces, get_namespace_name, extract_page_elements, iterate_pages
 from lib.formatting import format_number, format_bytes
@@ -165,8 +165,8 @@ def main():
     print("=" * 50)
     
     # Check if XML file exists
-    if not os.path.exists(XML_FILE):
-        print(f"Error: XML file not found at {XML_FILE}")
+    if not os.path.exists(config.XML_FILE):
+        print(f"Error: XML file not found at {config.XML_FILE}")
         print("Please run the fetch tool first to download the data.")
         return
     
@@ -176,7 +176,7 @@ def main():
     print(f"Found {len(excluded_namespaces)} excluded namespaces")
     
     # Filter XML content properly by excluding entire pages
-    content, page_count, filtered_content, filtered_page_count = filter_and_analyze_xml(XML_FILE, excluded_namespaces)
+    content, page_count, filtered_content, filtered_page_count = filter_and_analyze_xml(config.XML_FILE, excluded_namespaces)
     
     # File info
     file_size = len(content.encode('utf-8'))

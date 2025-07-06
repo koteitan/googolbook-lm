@@ -4,7 +4,10 @@ XML parsing utilities for MediaWiki exports.
 
 import xml.etree.ElementTree as ET
 from typing import Dict, Generator, Optional, Tuple
-from .config import MEDIAWIKI_NS, PROGRESS_INTERVAL
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+import config
 
 
 def parse_namespaces(xml_file_path: str) -> Dict[str, str]:
@@ -73,23 +76,23 @@ def extract_page_elements(page_elem) -> Dict[str, Optional[str]]:
     
     # Extract basic page information
     elements['id'] = None
-    id_elem = page_elem.find(f'.//{MEDIAWIKI_NS}id')
+    id_elem = page_elem.find(f'.//{config.MEDIAWIKI_NS}id')
     if id_elem is not None:
         elements['id'] = id_elem.text
     
     elements['title'] = None
-    title_elem = page_elem.find(f'.//{MEDIAWIKI_NS}title')
+    title_elem = page_elem.find(f'.//{config.MEDIAWIKI_NS}title')
     if title_elem is not None:
         elements['title'] = title_elem.text
     
     elements['ns'] = None
-    ns_elem = page_elem.find(f'.//{MEDIAWIKI_NS}ns')
+    ns_elem = page_elem.find(f'.//{config.MEDIAWIKI_NS}ns')
     if ns_elem is not None:
         elements['ns'] = ns_elem.text
     
     # Extract latest revision text
     elements['text'] = None
-    text_elem = page_elem.find(f'.//{MEDIAWIKI_NS}text')
+    text_elem = page_elem.find(f'.//{config.MEDIAWIKI_NS}text')
     if text_elem is not None:
         elements['text'] = text_elem.text
     
@@ -97,20 +100,20 @@ def extract_page_elements(page_elem) -> Dict[str, Optional[str]]:
     elements['contributor'] = None
     elements['contributor_id'] = None
     
-    revision_elem = page_elem.find(f'.//{MEDIAWIKI_NS}revision')
+    revision_elem = page_elem.find(f'.//{config.MEDIAWIKI_NS}revision')
     if revision_elem is not None:
-        contributor_elem = revision_elem.find(f'.//{MEDIAWIKI_NS}contributor')
+        contributor_elem = revision_elem.find(f'.//{config.MEDIAWIKI_NS}contributor')
         if contributor_elem is not None:
-            username_elem = contributor_elem.find(f'.//{MEDIAWIKI_NS}username')
+            username_elem = contributor_elem.find(f'.//{config.MEDIAWIKI_NS}username')
             if username_elem is not None:
                 elements['contributor'] = username_elem.text
             
-            id_elem = contributor_elem.find(f'.//{MEDIAWIKI_NS}id')
+            id_elem = contributor_elem.find(f'.//{config.MEDIAWIKI_NS}id')
             if id_elem is not None:
                 elements['contributor_id'] = id_elem.text
             
             # Handle IP contributors
-            ip_elem = contributor_elem.find(f'.//{MEDIAWIKI_NS}ip')
+            ip_elem = contributor_elem.find(f'.//{config.MEDIAWIKI_NS}ip')
             if ip_elem is not None:
                 elements['contributor'] = ip_elem.text
     
@@ -134,7 +137,7 @@ def iterate_pages(xml_file_path: str, show_progress: bool = True) -> Generator[T
         if event == 'end' and elem.tag.endswith('}page'):
             page_count += 1
             
-            if show_progress and page_count % PROGRESS_INTERVAL == 0:
+            if show_progress and page_count % config.PROGRESS_INTERVAL == 0:
                 print(f"Processed {page_count:,} pages...")
             
             # Extract page elements

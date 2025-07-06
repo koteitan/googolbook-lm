@@ -9,13 +9,14 @@ contributors with the highest page creation counts for content curation purposes
 import os
 import random
 import urllib.parse
+import xml.etree.ElementTree as ET
 from typing import List, Tuple, Dict
 from collections import defaultdict
 
 # Import shared library modules
 import sys
 sys.path.append('../../')
-from lib.config import XML_FILE, EXCLUDE_FILE
+import config
 from lib.exclusions import load_exclusions, should_exclude_page, should_exclude_contributor
 from lib.xml_parser import iterate_pages, extract_page_elements
 from lib.formatting import format_number
@@ -276,7 +277,7 @@ def get_fetch_date() -> str:
         Fetch date string, or 'Unknown' if not available
     """
     try:
-        with open(FETCH_LOG_FILE, 'r', encoding='utf-8') as f:
+        with open(config.FETCH_LOG_FILE, 'r', encoding='utf-8') as f:
             first_line = f.readline().strip()
             if first_line.startswith('Archive fetched: '):
                 return first_line.replace('Archive fetched: ', '')
@@ -288,7 +289,7 @@ def get_fetch_date() -> str:
 def main():
     """Main function to run the contributor analysis."""
     # Use configuration from top of file
-    xml_file = XML_FILE
+    xml_file = config.XML_FILE
     output_file = OUTPUT_FILE
     
     # Check if XML file exists
