@@ -9,7 +9,8 @@ import sys
 from pathlib import Path
 
 # Current site configuration (change this to switch sites)
-CURRENT_SITE = 'googology-wiki'  # Options: 'googology-wiki', 'ja-googology-wiki'
+CURRENT_SITE = 'googology-wiki'
+#CURRENT_SITE = 'ja-googology-wiki'
 
 # Load site-specific configuration
 PROJECT_ROOT = Path(__file__).parent.resolve()
