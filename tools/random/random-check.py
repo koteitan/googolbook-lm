@@ -10,13 +10,15 @@ to random wiki pages (excluding pages specified in exclude.md).
 import xml.etree.ElementTree as ET
 import os
 import random
+import sys
 from typing import List, Tuple
 
+# Add parent directory to path for imports
+sys.path.append('../../')
+import config
+
 # Configuration
-XML_FILE = '../../data/googology_pages_current.xml'
 OUTPUT_FILE = 'index.html'
-FETCH_LOG_FILE = '../../data/fetch_log.txt'
-EXCLUDE_FILE = '../../exclude.md'
 RANDOM_LINKS_COUNT = 50  # Number of random links to display
 
 
@@ -89,7 +91,7 @@ def extract_random_pages(xml_file_path: str) -> List[Tuple[str, str, str]]:
     print(f"Extracting pages from {xml_file_path}...")
     
     # Load excluded namespaces
-    excluded_namespaces, excluded_usernames = load_excluded_namespaces(EXCLUDE_FILE)
+    excluded_namespaces, excluded_usernames = load_excluded_namespaces(config.EXCLUDE_FILE)
     if excluded_namespaces:
         print(f"Excluding namespaces: {excluded_namespaces}")
     if excluded_usernames:
@@ -153,7 +155,7 @@ def generate_html_page(pages_data: List[Tuple[str, str, str]], output_file: str)
     for page_id, title, namespace in random_sample:
         # For HTML display
         escaped_title = title.replace('<', '&lt;').replace('>', '&gt;').replace('&', '&amp;')
-        random_links_html += f'<li><a href="https://googology.fandom.com/?curid={page_id}" target="_blank">{escaped_title}</a></li>\n            '
+        random_links_html += f'<li><a href="{config.SITE_BASE_URL}/?curid={page_id}" target="_blank">{escaped_title}</a></li>\n            '
         
         # For JavaScript array (with both ID and title)
         js_escaped_title = title.replace('\\', '\\\\').replace('"', '\\"').replace("'", "\\'")
@@ -356,14 +358,14 @@ def get_fetch_date() -> str:
 
 def main():
     """Main function to run the random page generator."""
-    # Use configuration from top of file
-    xml_file = XML_FILE
+    # Use configuration from config.py
+    from lib.io_utils import get_xml_file, check_xml_exists
+    
+    xml_file = get_xml_file()
     output_file = OUTPUT_FILE
     
     # Check if XML file exists
-    if not os.path.exists(xml_file):
-        print(f"Error: XML file not found: {xml_file}")
-        print("Please run tools/fetch/fetch.py to download the XML data first.")
+    if not check_xml_exists():
         return
     
     try:

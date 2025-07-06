@@ -193,7 +193,7 @@ Analysis of contributors by page creation count in the {config.SITE_NAME} XML ex
         else:
             # For registered users, create link to user page
             encoded_contributor = urllib.parse.quote(contributor.replace(' ', '_'), safe=':/')
-            user_link = f"https://googology.fandom.com/wiki/User:{encoded_contributor}"
+            user_link = f"{config.SITE_BASE_URL}/wiki/User:{encoded_contributor}"
             linked_contributor = f"[{escaped_contributor}]({user_link})"
         
         # Get random page examples
@@ -206,7 +206,7 @@ Analysis of contributors by page creation count in the {config.SITE_NAME} XML ex
         # Create page ID links to wiki pages using curid
         linked_examples = []
         for title, page_id in example_pages[:10]:
-            page_link = f"https://googology.fandom.com/?curid={page_id}"
+            page_link = f"{config.SITE_BASE_URL}/?curid={page_id}"
             linked_examples.append(f"[{page_id}]({page_link})")
         
         examples_text = ", ".join(linked_examples)

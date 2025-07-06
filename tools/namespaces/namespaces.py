@@ -164,7 +164,7 @@ Analysis of content distribution across namespaces in the {config.SITE_NAME} XML
         for page_id, title in random_samples:
             # Truncate title if too long
             display_title = title if len(title) <= 30 else title[:27] + "..."
-            example_links.append(f"[{page_id}](https://googology.fandom.com/?curid={page_id})")
+            example_links.append(f"[{page_id}]({config.SITE_BASE_URL}/?curid={page_id})")
         
         examples_str = ", ".join(example_links) if example_links else "—"
         
@@ -185,7 +185,7 @@ The top 5 namespaces by total content size:
     
     report_content += f"""
 ### Content Distribution
-- **Main articles** represent the core googology content
+- **Main articles** represent the core wiki content
 - **User pages** include individual contributor pages and user blogs
 - **Talk pages** contain discussion and collaboration content
 - **Template and Category pages** support wiki structure and organization
