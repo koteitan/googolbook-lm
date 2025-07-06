@@ -7,20 +7,10 @@ Constants only - no functions.
 
 from pathlib import Path
 
-# Get project root directory (where this config.py file is located)
-PROJECT_ROOT = Path(__file__).parent.resolve()
-
 # Site information
 SITE_NAME = 'Googology Wiki'
 SITE_URL = 'googology.fandom.com'
 SITE_BASE_URL = 'https://googology.fandom.com'
-
-# File paths (absolute paths based on project root)
-DATA_DIR = PROJECT_ROOT / 'data'
-FETCH_LOG_FILE = str(PROJECT_ROOT / 'data' / 'fetch_log.txt')
-EXCLUDE_FILE = str(PROJECT_ROOT / 'exclude.md')
-
-# Archive source
 ARCHIVE_URL = 'https://s3.amazonaws.com/wikia_xml_dumps/g/go/googology_pages_current.xml.7z'
 
 # License information
@@ -30,6 +20,12 @@ LICENSE_SHORT = 'CC BY-SA 3.0'
 
 # MediaWiki XML namespace URI
 MEDIAWIKI_NS = '{http://www.mediawiki.org/xml/export-0.11/}'
+
+# File paths
+PROJECT_ROOT = Path(__file__).parent.resolve()
+DATA_DIR = PROJECT_ROOT / 'data'
+FETCH_LOG_FILE = str(PROJECT_ROOT / 'data' / 'fetch_log.txt')
+EXCLUDE_FILE = str(PROJECT_ROOT / 'exclude.md')
 
 # Progress reporting interval
 PROGRESS_INTERVAL = 10000
