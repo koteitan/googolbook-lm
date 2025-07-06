@@ -17,10 +17,10 @@
 
 ```mermaid
 graph TD
-    A[MediaWiki XML Export] -->|fetch.py| B["data/{*.xml, fetch_log.txt}"]
-    B -->|contributors.py| C[tools/contributors/contributors.md]
-    B -->|large-pages.py| D[tools/large-pages/large-pages.md]
-    B -->|namespaces.py| E[tools/namespaces/namespaces.md]
-    B -->|random-check.py| F[tools/random/index.html]
-    B -->|tokens.py| G[tools/tokens/tokens.md]
+    A[MediaWiki XML Export] -->|fetch.py| B["data/[config]/{*.xml, fetch_log.txt}"]
+    B -->|contributors.py| C["data/[config]/analysis/contributors.md"]
+    B -->|large-pages.py| D["data/[config]/analysis/large-pages.md"]
+    B -->|namespaces.py| E["data/[config]/analysis/namespaces.md"]
+    B -->|random-check.py| F["data/[config]/analysis/random.html"]
+    B -->|tokens.py| G["data/[config]/analysis/tokens.md"]
 ```

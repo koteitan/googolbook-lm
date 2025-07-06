@@ -85,32 +85,7 @@ The repository follows a modular, library-based architecture:
 
 ### Shared Library (`lib/`)
 
-#### `lib/xml_parser.py`
-- **Purpose**: MediaWiki XML parsing utilities
-- **Functions**: `parse_namespaces()`, `get_namespace_name()`, `extract_page_elements()`, `iterate_pages()`
-- **Key Feature**: Handles XML namespace URI `{http://www.mediawiki.org/xml/export-0.11/}` for accurate element extraction
-- **Usage**: Provides streaming XML parsing with memory efficiency for large files
-
-#### `lib/exclusions.py`
-- **Purpose**: Namespace and user exclusion utilities
-- **Functions**: `should_exclude_page_by_namespace_id()`, `convert_excluded_namespaces_to_ids()`, `load_excluded_namespaces()`
-- **Key Feature**: Unified namespace ID-based exclusion system with string-to-ID mapping
-- **Usage**: Converts exclude.md string settings to accurate namespace ID filtering
-
-#### `lib/formatting.py`
-- **Purpose**: Number and text formatting utilities
-- **Functions**: `format_number()`, `format_bytes()`, `generate_wiki_url()`
-- **Usage**: Consistent formatting across all analysis reports
-
-#### `lib/io_utils.py`
-- **Purpose**: File I/O and XML detection utilities
-- **Functions**: `find_xml_file()`, `get_xml_file()`, `check_xml_exists()`, `get_fetch_date()`
-- **Usage**: Automatic XML file detection and path handling
-
-#### `lib/reporting.py`
-- **Purpose**: Report generation utilities
-- **Functions**: `generate_license_footer()`, `write_markdown_report()`
-- **Usage**: Standardized markdown report generation with licensing compliance
+See **[lib/README.md](lib/README.md)** for detailed documentation of all library modules and their functions.
 
 ### Analysis Tools (`tools/`)
 
