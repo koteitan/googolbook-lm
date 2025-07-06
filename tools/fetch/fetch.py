@@ -13,11 +13,9 @@ import urllib.error
 from pathlib import Path
 import datetime
 
-# Configuration
-ARCHIVE_URL = 'https://s3.amazonaws.com/wikia_xml_dumps/g/go/googology_pages_current.xml.7z'
-DATA_DIR = '../../data'
-ARCHIVE_FILE = 'googology_pages_current.xml.7z'
-XML_FILE = 'googology_pages_current.xml'
+# Add parent directory to path for imports
+sys.path.append('../../')
+import config
 FETCH_LOG_FILE = 'fetch_log.txt'
 
 
@@ -146,12 +144,12 @@ def save_fetch_log(data_dir: Path) -> None:
         data_dir: Path to data directory
     """
     try:
-        log_file = data_dir / FETCH_LOG_FILE
+        log_file = data_dir / config.FETCH_LOG_FILE.split('/')[-1]  # Get filename only
         timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         
         with open(log_file, 'w', encoding='utf-8') as f:
             f.write(f"Archive fetched: {timestamp}\n")
-            f.write(f"Source: {ARCHIVE_URL}\n")
+            f.write(f"Source: {config.ARCHIVE_URL}\n")
         
         print(f"Fetch log saved: {log_file}")
         
@@ -164,9 +162,11 @@ def main():
     
     # Setup paths
     script_dir = Path(__file__).parent
-    data_dir = (script_dir / DATA_DIR).resolve()
-    archive_path = data_dir / ARCHIVE_FILE
-    xml_path = data_dir / XML_FILE
+    data_dir = config.DATA_DIR
+    archive_filename = Path(config.ARCHIVE_URL).name
+    xml_filename = archive_filename.replace('.7z', '')
+    archive_path = data_dir / archive_filename
+    xml_path = data_dir / xml_filename
     
     # Create data directory if it doesn't exist
     data_dir.mkdir(parents=True, exist_ok=True)
@@ -181,12 +181,12 @@ def main():
     
     print(f"Fetching {config.SITE_NAME} XML Archive")
     print("=" * 40)
-    print(f"Source: {ARCHIVE_URL}")
+    print(f"Source: {config.ARCHIVE_URL}")
     print(f"Target: {xml_path}")
     print()
     
     # Download the archive
-    if not download_with_progress(ARCHIVE_URL, str(archive_path)):
+    if not download_with_progress(config.ARCHIVE_URL, str(archive_path)):
         print("Failed to download archive")
         sys.exit(1)
     

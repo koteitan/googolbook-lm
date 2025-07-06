@@ -8,13 +8,15 @@ pages with large content sizes and generates a markdown report.
 
 import xml.etree.ElementTree as ET
 import os
+import sys
 from typing import List, Tuple
 
+# Add parent directory to path for imports
+sys.path.append('../../')
+import config
+
 # Configuration
-XML_FILE = '../../data/googology_pages_current.xml'
 OUTPUT_FILE = 'large-pages.md'
-FETCH_LOG_FILE = '../../data/fetch_log.txt'
-EXCLUDE_FILE = '../../exclude.md'
 
 
 def load_excluded_namespaces(exclude_file_path: str) -> List[str]:
@@ -76,7 +78,7 @@ def analyze_xml_pages(xml_file_path: str) -> List[Tuple[int, str, str]]:
     print(f"Analyzing {xml_file_path}...")
     
     # Load excluded namespaces
-    excluded_namespaces = load_excluded_namespaces(EXCLUDE_FILE)
+    excluded_namespaces = load_excluded_namespaces(config.EXCLUDE_FILE)
     if excluded_namespaces:
         print(f"Excluding namespaces: {excluded_namespaces}")
     
@@ -167,7 +169,7 @@ Analysis of the largest pages in the {config.SITE_NAME} XML export.
         # URL encode the title for the wiki link
         import urllib.parse
         encoded_title = urllib.parse.quote(title.replace(' ', '_'), safe=':/')
-        wiki_link = f"https://googology.fandom.com/wiki/{encoded_title}"
+        wiki_link = f"{config.SITE_BASE_URL}/wiki/{encoded_title}"
         linked_title = f"[{escaped_title}]({wiki_link})"
         
         markdown_content += f"| {i} | {size:,} | {linked_title} | {namespace_name} |\n"
@@ -249,7 +251,7 @@ def get_fetch_date() -> str:
         Fetch date string, or 'Unknown' if not available
     """
     try:
-        with open(FETCH_LOG_FILE, 'r', encoding='utf-8') as f:
+        with open(config.FETCH_LOG_FILE, 'r', encoding='utf-8') as f:
             first_line = f.readline().strip()
             if first_line.startswith('Archive fetched: '):
                 return first_line.replace('Archive fetched: ', '')
@@ -260,13 +262,14 @@ def get_fetch_date() -> str:
 
 def main():
     """Main function to run the analysis."""
-    # Use configuration from top of file
-    xml_file = XML_FILE
+    # Use configuration from config.py
+    from lib.io_utils import get_xml_file, check_xml_exists
+    
+    xml_file = get_xml_file()
     output_file = OUTPUT_FILE
     
     # Check if XML file exists
-    if not os.path.exists(xml_file):
-        print(f"Error: XML file not found: {xml_file}")
+    if not check_xml_exists():
         return
     
     try:
