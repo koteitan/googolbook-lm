@@ -17,8 +17,8 @@ from typing import List, Tuple
 sys.path.append('../../')
 import config
 
-# Configuration - output to site-specific data directory
-OUTPUT_FILE = str(config.DATA_DIR / 'random.html')
+# Configuration - output to site-specific analysis directory
+OUTPUT_FILE = str(config.DATA_DIR / 'analysis' / 'random.html')
 RANDOM_LINKS_COUNT = 50  # Number of random links to display
 
 

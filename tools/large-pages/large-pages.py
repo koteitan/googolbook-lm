@@ -15,8 +15,8 @@ from typing import List, Tuple
 sys.path.append('../../')
 import config
 
-# Configuration - output to site-specific data directory
-OUTPUT_FILE = str(config.DATA_DIR / 'large-pages.md')
+# Configuration - output to site-specific analysis directory
+OUTPUT_FILE = str(config.DATA_DIR / 'analysis' / 'large-pages.md')
 
 
 def load_excluded_namespaces(exclude_file_path: str) -> List[str]:

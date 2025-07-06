@@ -23,8 +23,8 @@ from lib.formatting import format_number
 from lib.io_utils import get_fetch_date, get_xml_file, check_xml_exists
 from lib.reporting import generate_license_footer, write_markdown_report
 
-# Local configuration - output to site-specific data directory
-OUTPUT_FILE = str(config.DATA_DIR / 'contributors.md')
+# Local configuration - output to site-specific analysis directory
+OUTPUT_FILE = str(config.DATA_DIR / 'analysis' / 'contributors.md')
 HIGH_VOLUME_THRESHOLD = 1000  # Minimum pages to be considered high-volume contributor
 
 
