@@ -38,7 +38,9 @@ EXCLUDED_NAMESPACES = [
     'ファイル・トーク',  # File talk
     'フォーラム・トーク',  # Forum talk
     'モジュール・トーク',  # Module talk
-    'GeoJson talk'  # GeoJson talk
+    'GeoJson talk', # GeoJson talk
+    'Board Thread',
+    'メッセージウォール'
 ]
 
 # Excluded usernames (usernames to exclude from analysis)
