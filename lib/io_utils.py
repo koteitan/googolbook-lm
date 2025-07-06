@@ -45,6 +45,7 @@ def get_latest_xml_info():
             line = line.strip()
             if line.startswith('XML path: '):
                 xml_relative_path = line.replace('XML path: ', '')
+                # XML path is now relative to the site's data directory
                 info['xml_path'] = str(config.DATA_DIR / xml_relative_path)
             elif line.startswith('Site subdirectory: '):
                 info['subdirectory'] = line.replace('Site subdirectory: ', '')

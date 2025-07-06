@@ -136,27 +136,24 @@ def cleanup_archive(archive_path: str) -> None:
         print(f"Warning: Could not remove archive file: {e}")
 
 
-def save_fetch_log(data_dir: Path, site_subdirectory: str, archive_filename: str, xml_filename: str) -> None:
+def save_fetch_log(data_dir: Path, xml_filename: str) -> None:
     """
     Save fetch timestamp and site information to log file.
     
     Args:
-        data_dir: Path to data directory
-        site_subdirectory: Name of site-specific subdirectory
-        archive_filename: Name of downloaded archive file
+        data_dir: Path to site's data directory
         xml_filename: Name of extracted XML file
     """
     try:
-        log_file = data_dir / config.FETCH_LOG_FILE.split('/')[-1]  # Get filename only
+        log_file = data_dir / 'fetch_log.txt'
         timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         
         with open(log_file, 'w', encoding='utf-8') as f:
             f.write(f"Archive fetched: {timestamp}\n")
             f.write(f"Source: {config.ARCHIVE_URL}\n")
-            f.write(f"Archive file: {archive_filename}\n")
+            f.write(f"Archive file: {Path(config.ARCHIVE_URL).name}\n")
             f.write(f"XML file: {xml_filename}\n")
-            f.write(f"Site subdirectory: {site_subdirectory}\n")
-            f.write(f"XML path: {site_subdirectory}/{xml_filename}\n")
+            f.write(f"XML path: {xml_filename}\n")
         
         print(f"Fetch log saved: {log_file}")
         
@@ -167,22 +164,16 @@ def save_fetch_log(data_dir: Path, site_subdirectory: str, archive_filename: str
 def main():
     """Main function to fetch and extract the MediaWiki archive."""
     
-    # Setup paths
-    script_dir = Path(__file__).parent
+    # Setup paths - data is now stored directly in site's config directory
     data_dir = config.DATA_DIR
     archive_filename = Path(config.ARCHIVE_URL).name
     xml_filename = archive_filename.replace('.7z', '')
     
-    # Create site-specific subdirectory based on archive name
-    site_subdirectory = xml_filename.replace('.xml', '')  # e.g., "googology_pages_current" or "jagoogology_pages_current"
-    site_data_dir = data_dir / site_subdirectory
-    
     archive_path = data_dir / archive_filename
-    xml_path = site_data_dir / xml_filename
+    xml_path = data_dir / xml_filename
     
-    # Create data directories if they don't exist
+    # Create data directory if it doesn't exist
     data_dir.mkdir(parents=True, exist_ok=True)
-    site_data_dir.mkdir(parents=True, exist_ok=True)
     
     # Check if XML file already exists
     if xml_path.exists():
@@ -205,8 +196,8 @@ def main():
     
     print(f"Archive downloaded: {archive_path}")
     
-    # Extract the archive to site-specific directory
-    if not extract_7z_archive(str(archive_path), str(site_data_dir)):
+    # Extract the archive to data directory
+    if not extract_7z_archive(str(archive_path), str(data_dir)):
         print("Failed to extract archive")
         cleanup_archive(str(archive_path))
         sys.exit(1)
@@ -220,8 +211,8 @@ def main():
     # Clean up the archive file
     cleanup_archive(str(archive_path))
     
-    # Save fetch log with site information
-    save_fetch_log(data_dir, site_subdirectory, archive_filename, xml_filename)
+    # Save fetch log
+    save_fetch_log(data_dir, xml_filename)
     
     print()
     print(f"SUCCESS: {config.SITE_NAME} XML archive has been downloaded and extracted")
