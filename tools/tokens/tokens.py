@@ -98,7 +98,7 @@ def count_tokens_tiktoken(text):
 # Removed - now imported from lib.formatting
 
 def generate_report(file_size, char_count, page_count, tiktoken_count, tiktoken_time, 
-                   filtered_file_size, filtered_char_count, filtered_page_count, filtered_tiktoken_count):
+                   filtered_file_size, filtered_char_count, filtered_page_count, filtered_tiktoken_count, xml_file):
     """Generate markdown report from token analysis results."""
     
     # Generate report content
@@ -108,7 +108,7 @@ Analysis of token counts for the {config.SITE_NAME} MediaWiki XML export using t
 
 ## Summary
 
-- **File**: `data/googology_pages_current.xml`
+- **File**: `{xml_file.replace(str(config.PROJECT_ROOT) + '/', '')}`
 - **Tokenizer**: OpenAI GPT-4 (tiktoken)
 
 ## Page Count Results
@@ -206,7 +206,7 @@ def main():
     # Generate report
     report_content = generate_report(
         file_size, char_count, page_count, tiktoken_count, tiktoken_time,
-        filtered_file_size, filtered_char_count, filtered_page_count, filtered_tiktoken_count
+        filtered_file_size, filtered_char_count, filtered_page_count, filtered_tiktoken_count, xml_file
     )
     
     # Write report to file
