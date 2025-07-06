@@ -28,6 +28,60 @@ def get_fetch_date() -> str:
     return 'Unknown'
 
 
+def find_xml_file():
+    """
+    Find the first XML file in the data directory.
+    
+    Returns:
+        str: Path to the XML file if found, None otherwise
+    """
+    data_dir = config.DATA_DIR
+    
+    # Check if data directory exists
+    if not data_dir.exists():
+        return None
+    
+    # Find all XML files in the data directory
+    xml_files = list(data_dir.glob('*.xml'))
+    
+    if xml_files:
+        # Return the first XML file found
+        return str(xml_files[0])
+    
+    return None
+
+
+def get_xml_file_error_message():
+    """
+    Get a helpful error message when no XML file is found.
+    
+    Returns:
+        str: Error message explaining how to obtain the XML file
+    """
+    data_dir = config.DATA_DIR
+    
+    if not data_dir.exists():
+        return (
+            f"Data directory '{data_dir}' does not exist. "
+            f"Please create the directory and place the XML file there."
+        )
+    
+    return (
+        f"No XML files found in '{data_dir}'. "
+        f"Please download and extract the XML file from: {config.ARCHIVE_URL}"
+    )
+
+
+def get_xml_file():
+    """
+    Get the XML file path, finding it dynamically if needed.
+    
+    Returns:
+        str: Path to the XML file if found, None otherwise
+    """
+    return find_xml_file()
+
+
 def check_xml_exists() -> bool:
     """
     Check if XML file exists and provide helpful error message if not.
@@ -35,13 +89,15 @@ def check_xml_exists() -> bool:
     Returns:
         True if file exists, False otherwise
     """
-    if not config.XML_FILE:
+    xml_file = get_xml_file()
+    
+    if not xml_file:
         print("Error: XML file not found")
-        print(config.get_xml_file_error_message())
+        print(get_xml_file_error_message())
         return False
     
-    if not os.path.exists(config.XML_FILE):
-        print(f"Error: XML file not found at {config.XML_FILE}")
+    if not os.path.exists(xml_file):
+        print(f"Error: XML file not found at {xml_file}")
         print("The file may have been moved or deleted.")
         return False
     

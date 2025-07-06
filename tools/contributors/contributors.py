@@ -20,7 +20,7 @@ import config
 from lib.exclusions import load_exclusions, should_exclude_page, should_exclude_contributor
 from lib.xml_parser import iterate_pages, extract_page_elements
 from lib.formatting import format_number
-from lib.io_utils import get_fetch_date
+from lib.io_utils import get_fetch_date, get_xml_file, check_xml_exists
 from lib.reporting import generate_license_footer, write_markdown_report
 
 # Local configuration
@@ -289,13 +289,11 @@ def get_fetch_date() -> str:
 def main():
     """Main function to run the contributor analysis."""
     # Use configuration from top of file
-    xml_file = config.XML_FILE
+    xml_file = get_xml_file()
     output_file = OUTPUT_FILE
     
     # Check if XML file exists
-    if not os.path.exists(xml_file):
-        print(f"Error: XML file not found: {xml_file}")
-        print("Please run tools/fetch/fetch.py to download the XML data first.")
+    if not check_xml_exists():
         return
     
     try:

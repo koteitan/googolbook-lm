@@ -18,7 +18,7 @@ sys.path.append('../../')
 import config
 from lib.xml_parser import parse_namespaces, get_namespace_name, iterate_pages
 from lib.formatting import format_number, format_bytes
-from lib.io_utils import get_fetch_date
+from lib.io_utils import get_fetch_date, check_xml_exists, get_xml_file
 from lib.reporting import generate_license_footer, write_markdown_report
 
 # Local configuration
@@ -202,13 +202,12 @@ def main():
     print("Starting namespace analysis...")
     
     # Check if XML file exists
-    if not os.path.exists(config.XML_FILE):
-        print(f"Error: XML file not found at {config.XML_FILE}")
-        print("Please run the fetch tool first to download the data.")
+    if not check_xml_exists():
         return
     
     # Analyze namespaces
-    namespace_stats, namespace_samples = analyze_namespaces(config.XML_FILE)
+    xml_file = get_xml_file()
+    namespace_stats, namespace_samples = analyze_namespaces(xml_file)
     
     # Generate report
     generate_report(namespace_stats, namespace_samples, OUTPUT_FILE)

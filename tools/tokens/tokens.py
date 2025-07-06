@@ -19,7 +19,7 @@ import config
 from lib.exclusions import load_excluded_namespaces, should_exclude_page
 from lib.xml_parser import parse_namespaces, get_namespace_name, extract_page_elements, iterate_pages
 from lib.formatting import format_number, format_bytes
-from lib.io_utils import get_fetch_date, check_xml_exists
+from lib.io_utils import get_fetch_date, check_xml_exists, get_xml_file
 from lib.reporting import generate_license_footer, write_markdown_report
 
 # Local configuration
@@ -174,7 +174,8 @@ def main():
     print(f"Found {len(excluded_namespaces)} excluded namespaces")
     
     # Filter XML content properly by excluding entire pages
-    content, page_count, filtered_content, filtered_page_count = filter_and_analyze_xml(config.XML_FILE, excluded_namespaces)
+    xml_file = get_xml_file()
+    content, page_count, filtered_content, filtered_page_count = filter_and_analyze_xml(xml_file, excluded_namespaces)
     
     # File info
     file_size = len(content.encode('utf-8'))
