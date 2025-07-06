@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Large Page Analyzer for Googology Wiki XML Export
+Large Page Analyzer for MediaWiki XML Export
 
-This script analyzes the MediaWiki XML export from Googology Wiki to identify
+This script analyzes MediaWiki XML exports to identify
 pages with large content sizes and generates a markdown report.
 """
 
@@ -141,9 +141,9 @@ def generate_markdown_report(pages_data: List[Tuple[int, str, str]], output_file
     top_pages = sorted_pages[:top_n]
     
     # Generate markdown content
-    markdown_content = f"""# Large Pages Analysis - Googology Wiki
+    markdown_content = f"""# Large Pages Analysis - {config.SITE_NAME}
 
-Analysis of the largest pages in the Googology Wiki XML export.
+Analysis of the largest pages in the {config.SITE_NAME} XML export.
 
 ## Summary
 
@@ -163,7 +163,7 @@ Analysis of the largest pages in the Googology Wiki XML export.
         escaped_title = title.replace('|', '\\|')
         namespace_name = get_namespace_name(namespace)
         
-        # Create link to Googology Wiki page
+        # Create link to wiki page
         # URL encode the title for the wiki link
         import urllib.parse
         encoded_title = urllib.parse.quote(title.replace(' ', '_'), safe=':/')
@@ -199,11 +199,11 @@ Analysis of the largest pages in the Googology Wiki XML export.
 
 ## License and Attribution
 
-This analysis contains content from the **Googology Wiki** (googology.fandom.com), which is licensed under the [Creative Commons Attribution-ShareAlike 3.0 Unported License](https://creativecommons.org/licenses/by-sa/3.0/).
+This analysis contains content from the **{config.SITE_NAME}** ({config.SITE_URL}), which is licensed under the [{config.LICENSE_NAME}]({config.LICENSE_URL}).
 
-- **Original Source**: [Googology Wiki](https://googology.fandom.com)
-- **License**: [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)
-- **Attribution**: Content creators and contributors of the Googology Wiki
+- **Original Source**: [{config.SITE_NAME}]({config.SITE_BASE_URL})
+- **License**: [{config.LICENSE_SHORT}]({config.LICENSE_URL})
+- **Attribution**: Content creators and contributors of the {config.SITE_NAME}
 - **Modifications**: This analysis extracts and reorganizes data from the original wiki content
 
 *Archive fetched: {get_fetch_date()}*  

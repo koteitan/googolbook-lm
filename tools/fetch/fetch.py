@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Googology Wiki Archive Fetcher
+MediaWiki Archive Fetcher
 
-This script downloads and extracts the Googology Wiki XML export from the
+This script downloads and extracts MediaWiki XML exports from
 official archive location and places it in the data directory.
 """
 
@@ -160,7 +160,7 @@ def save_fetch_log(data_dir: Path) -> None:
 
 
 def main():
-    """Main function to fetch and extract the Googology Wiki archive."""
+    """Main function to fetch and extract the MediaWiki archive."""
     
     # Setup paths
     script_dir = Path(__file__).parent
@@ -179,7 +179,7 @@ def main():
             print("Skipping download.")
             return
     
-    print("Fetching Googology Wiki XML Archive")
+    print(f"Fetching {config.SITE_NAME} XML Archive")
     print("=" * 40)
     print(f"Source: {ARCHIVE_URL}")
     print(f"Target: {xml_path}")
@@ -211,7 +211,7 @@ def main():
     save_fetch_log(data_dir)
     
     print()
-    print("SUCCESS: Googology Wiki XML archive has been downloaded and extracted")
+    print(f"SUCCESS: {config.SITE_NAME} XML archive has been downloaded and extracted")
     print(f"Location: {xml_path}")
     print()
     print("You can now run analysis tools that require the XML data.")

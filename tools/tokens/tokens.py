@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Token Counter for Googology Wiki MediaWiki XML
+Token Counter for MediaWiki XML
 
-This script analyzes the Googology Wiki MediaWiki XML export to count tokens
+This script analyzes MediaWiki XML exports to count tokens
 using different tokenization methods and compares the results.
 """
 
@@ -104,7 +104,7 @@ def generate_report(file_size, char_count, page_count, tiktoken_count, tiktoken_
     # Generate report content
     report_content = f"""# Token Analysis
 
-Analysis of token counts for the Googology Wiki MediaWiki XML export using tiktoken (OpenAI GPT-4).
+Analysis of token counts for the {config.SITE_NAME} MediaWiki XML export using tiktoken (OpenAI GPT-4).
 
 ## Summary
 
@@ -161,7 +161,7 @@ Analysis of token counts for the Googology Wiki MediaWiki XML export using tikto
 
 def main():
     """Main function to run the token analysis."""
-    print("Token Counter for Googology Wiki MediaWiki XML")
+    print(f"Token Counter for {config.SITE_NAME} MediaWiki XML")
     print("=" * 50)
     
     # Check if XML file exists

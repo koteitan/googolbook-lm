@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Random Page Selector for Googology Wiki XML Export
+Random Page Selector for MediaWiki XML Export
 
-This script analyzes the MediaWiki XML export from Googology Wiki to create
+This script analyzes MediaWiki XML exports to create
 a random page selector that generates an HTML page with a button to jump
 to random wiki pages (excluding pages specified in exclude.md).
 """
@@ -167,7 +167,7 @@ def generate_html_page(pages_data: List[Tuple[str, str, str]], output_file: str)
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Random Check - Googology Wiki</title>
+    <title>Random Check - {config.SITE_NAME}</title>
     <style>
         body {{
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -299,7 +299,7 @@ def generate_html_page(pages_data: List[Tuple[str, str, str]], output_file: str)
     <div class="container">
         <h1>🎲 Random Check</h1>
         <div class="description">
-            This tool displays random pages from the Googology Wiki to verify that exclude.md exclusion rules are working correctly.
+            This tool displays random pages from the {config.SITE_NAME} to verify that exclude.md exclusion rules are working correctly.
         </div>
         
         
@@ -319,7 +319,7 @@ def generate_html_page(pages_data: List[Tuple[str, str, str]], output_file: str)
         </div>
         
         <div class="license">
-            <p><strong>License:</strong> This content is derived from the <a href="https://googology.fandom.com/" target="_blank">Googology Wiki</a>, which is licensed under <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank">CC BY-SA 3.0</a>. Any derivative work must maintain the same license.</p>
+            <p><strong>License:</strong> This content is derived from the <a href="{config.SITE_BASE_URL}" target="_blank">{config.SITE_NAME}</a>, which is licensed under <a href="{config.LICENSE_URL}" target="_blank">{config.LICENSE_SHORT}</a>. Any derivative work must maintain the same license.</p>
         </div>
     </div>
 

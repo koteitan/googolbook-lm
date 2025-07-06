@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Namespace Analysis for Googology Wiki XML Export
+Namespace Analysis for MediaWiki XML Export
 
-This script analyzes the MediaWiki XML export from Googology Wiki to break down
+This script analyzes MediaWiki XML exports to break down
 content by namespace, showing the distribution of bytes and pages across
 different types of wiki content.
 """
@@ -102,7 +102,7 @@ def generate_report(namespace_stats: Dict[str, Tuple[int, int]], namespace_sampl
     excluded_namespaces_for_calc = {
         'File', 'Template', 'User blog comment', 'Category', 'GeoJson', 'Module', 
         'Map', 'Help', 'Forum', 'MediaWiki', 'Special', 'Template talk', 
-        'User talk', 'Googology Wiki talk', 'Category talk', 'MediaWiki talk', 
+        'User talk', 'Project talk', 'Category talk', 'MediaWiki talk', 
         'File talk', 'Forum talk', 'Module talk', 'GeoJson talk'
     }
     
@@ -123,7 +123,7 @@ def generate_report(namespace_stats: Dict[str, Tuple[int, int]], namespace_sampl
     # Generate report content
     report_content = f"""# Namespace Analysis
 
-Analysis of content distribution across namespaces in the Googology Wiki XML export.
+Analysis of content distribution across namespaces in the {config.SITE_NAME} XML export.
 
 ## Summary
 

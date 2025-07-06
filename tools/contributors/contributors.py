@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Contributors Analyzer for Googology Wiki XML Export
+Contributors Analyzer for MediaWiki XML Export
 
-This script analyzes the MediaWiki XML export from Googology Wiki to identify
+This script analyzes MediaWiki XML exports to identify
 contributors with the highest page creation counts for content curation purposes.
 """
 
@@ -168,7 +168,7 @@ def generate_markdown_report(contributors_data: Dict[str, int], contributor_page
     # Generate markdown content
     markdown_content = f"""# contributors
 
-Analysis of contributors by page creation count in the Googology Wiki XML export.
+Analysis of contributors by page creation count in the {config.SITE_NAME} XML export.
 
 ## Summary
 
@@ -255,11 +255,11 @@ Contributors who created more than {HIGH_VOLUME_THRESHOLD} pages may warrant rev
 
 ## License and Attribution
 
-This analysis contains content from the **Googology Wiki** (googology.fandom.com), which is licensed under the [Creative Commons Attribution-ShareAlike 3.0 Unported License](https://creativecommons.org/licenses/by-sa/3.0/).
+This analysis contains content from the **{config.SITE_NAME}** ({config.SITE_URL}), which is licensed under the [{config.LICENSE_NAME}]({config.LICENSE_URL}).
 
-- **Original Source**: [Googology Wiki](https://googology.fandom.com)
-- **License**: [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)
-- **Attribution**: Content creators and contributors of the Googology Wiki
+- **Original Source**: [{config.SITE_NAME}]({config.SITE_BASE_URL})
+- **License**: [{config.LICENSE_SHORT}]({config.LICENSE_URL})
+- **Attribution**: Content creators and contributors of the {config.SITE_NAME}
 - **Modifications**: This analysis extracts and reorganizes data from the original wiki content
 
 *Archive fetched: {get_fetch_date()}*  
