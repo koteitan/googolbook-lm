@@ -6,87 +6,34 @@ This script analyzes the MediaWiki XML export from Googology Wiki to identify
 contributors with the highest page creation counts for content curation purposes.
 """
 
-import xml.etree.ElementTree as ET
 import os
 import random
 import urllib.parse
 from typing import List, Tuple, Dict
 from collections import defaultdict
 
-# Configuration
-XML_FILE = '../../data/googology_pages_current.xml'
+# Import shared library modules
+import sys
+sys.path.append('../../')
+from lib.config import XML_FILE, EXCLUDE_FILE
+from lib.exclusions import load_exclusions, should_exclude_page, should_exclude_contributor
+from lib.xml_parser import iterate_pages, extract_page_elements
+from lib.formatting import format_number
+from lib.io_utils import get_fetch_date
+from lib.reporting import generate_license_footer, write_markdown_report
+
+# Local configuration
 OUTPUT_FILE = 'contributors.md'
-FETCH_LOG_FILE = '../../data/fetch_log.txt'
-EXCLUDE_FILE = '../../exclude.md'
 HIGH_VOLUME_THRESHOLD = 1000  # Minimum pages to be considered high-volume contributor
 
 
-def load_excluded_namespaces(exclude_file_path: str) -> Tuple[List[str], List[str]]:
-    """
-    Load excluded namespaces and usernames from exclude.md file.
-    
-    Args:
-        exclude_file_path: Path to the exclude.md file
-        
-    Returns:
-        Tuple of (excluded_namespaces, excluded_usernames)
-    """
-    excluded_namespaces = []
-    excluded_usernames = []
-    try:
-        with open(exclude_file_path, 'r', encoding='utf-8') as f:
-            for line in f:
-                line = line.strip()
-                if line.startswith('- `') and line.endswith('`'):
-                    content = line[3:-1]  # Remove "- `" and "`"
-                    if '<username>' in content and '</username>' in content:
-                        # Extract username from lines like "- `<username>FANDOM</username>`"
-                        start = content.find('<username>') + len('<username>')
-                        end = content.find('</username>')
-                        if start > len('<username>') - 1 and end > start:
-                            username = content[start:end]
-                            excluded_usernames.append(username)
-                    elif content.endswith(':'):
-                        # Extract namespace from lines like "- `User talk:`"
-                        namespace = content[:-1]  # Remove trailing ":"
-                        excluded_namespaces.append(namespace)
-    except Exception as e:
-        print(f"Warning: Could not load exclusions from {exclude_file_path}: {e}")
-    return excluded_namespaces, excluded_usernames
+# Removed - now imported from lib.exclusions
 
 
-def should_exclude_page(title: str, excluded_namespaces: List[str]) -> bool:
-    """
-    Check if a page should be excluded based on its title namespace.
-    
-    Args:
-        title: Page title
-        excluded_namespaces: List of excluded namespace prefixes
-        
-    Returns:
-        True if page should be excluded
-    """
-    if ':' in title:
-        namespace = title.split(':', 1)[0]
-        # Check both original and space-normalized versions
-        # MediaWiki may use either spaces or underscores in namespace names
-        namespace_normalized = namespace.replace('_', ' ')
-        return namespace in excluded_namespaces or namespace_normalized in excluded_namespaces
-    return False
+# Removed - now imported from lib.exclusions
 
 
-def should_exclude_contributor(contributor_name: str, excluded_usernames: List[str]) -> bool:
-    """
-    Check if a contributor should be excluded based on their username.
-    
-    Args:
-        contributor_name: Username of the contributor
-        excluded_usernames: List of excluded usernames
-        
-    Returns:
-        True if contributor should be excluded
-    """
-    return contributor_name in excluded_usernames
+# Removed - now imported from lib.exclusions
 
 
 def analyze_contributors(xml_file_path: str) -> Tuple[Dict[str, int], Dict[str, List[Tuple[str, str]]]]:
@@ -107,7 +54,7 @@ def analyze_contributors(xml_file_path: str) -> Tuple[Dict[str, int], Dict[str, 
     print(f"Analyzing {xml_file_path}...")
     
     # Load excluded namespaces and usernames
-    excluded_namespaces, excluded_usernames = load_excluded_namespaces(EXCLUDE_FILE)
+    excluded_namespaces, excluded_usernames = load_exclusions()
     if excluded_namespaces:
         print(f"Excluding namespaces: {excluded_namespaces}")
     if excluded_usernames:

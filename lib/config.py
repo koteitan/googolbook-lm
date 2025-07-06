@@ -1,5 +1,5 @@
 """
-Configuration constants for Googology Wiki analysis tools.
+Generic MediaWiki analysis configuration constants.
 """
 
 # File paths

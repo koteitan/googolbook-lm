@@ -1,21 +1,21 @@
 """
-XML parsing utilities for MediaWiki XML exports.
+XML parsing utilities for MediaWiki exports.
 """
 
 import xml.etree.ElementTree as ET
-from typing import Dict, Generator, Tuple, Optional
+from typing import Dict, Generator, Optional, Tuple
 from .config import MEDIAWIKI_NS, PROGRESS_INTERVAL
 
 
 def parse_namespaces(xml_file_path: str) -> Dict[str, str]:
     """
-    Parse namespace definitions from MediaWiki XML.
+    Parse namespace definitions from MediaWiki XML file.
     
     Args:
         xml_file_path: Path to the MediaWiki XML export file
         
     Returns:
-        Dictionary mapping namespace keys to namespace names
+        Dictionary mapping namespace IDs to names
     """
     namespace_map = {}
     
@@ -31,66 +31,20 @@ def parse_namespaces(xml_file_path: str) -> Dict[str, str]:
                     namespace_map[key] = name
             elem.clear()
         elif event == 'end' and elem.tag.endswith('}page'):
-            break  # Stop after siteinfo section
-            
+            # Stop parsing after first page (namespaces are defined before pages)
+            break
+    
     return namespace_map
-
-
-def iterate_pages(xml_file_path: str, show_progress: bool = True) -> Generator[ET.Element, None, None]:
-    """
-    Iterate through pages in MediaWiki XML with memory management.
-    
-    Args:
-        xml_file_path: Path to the MediaWiki XML export file
-        show_progress: Whether to show progress reports
-        
-    Yields:
-        Page elements from the XML
-    """
-    page_count = 0
-    
-    for event, elem in ET.iterparse(xml_file_path, events=('start', 'end')):
-        if event == 'end' and elem.tag == f'{MEDIAWIKI_NS}page':
-            page_count += 1
-            
-            if show_progress and page_count % PROGRESS_INTERVAL == 0:
-                print(f"Processed {page_count:,} pages...")
-            
-            yield elem
-            elem.clear()
-
-
-def extract_page_elements(page_elem: ET.Element) -> Dict[str, Optional[str]]:
-    """
-    Extract common elements from a page element.
-    
-    Args:
-        page_elem: Page element from MediaWiki XML
-        
-    Returns:
-        Dictionary with extracted page data
-    """
-    ns_elem = page_elem.find(f'.//{MEDIAWIKI_NS}ns')
-    title_elem = page_elem.find(f'.//{MEDIAWIKI_NS}title')
-    id_elem = page_elem.find(f'.//{MEDIAWIKI_NS}id')
-    text_elem = page_elem.find(f'.//{MEDIAWIKI_NS}text')
-    
-    return {
-        'ns': ns_elem.text if ns_elem is not None else None,
-        'title': title_elem.text if title_elem is not None else None,
-        'id': id_elem.text if id_elem is not None else None,
-        'text': text_elem.text if text_elem is not None else None
-    }
 
 
 def get_namespace_name(ns_id: str, title: str, namespace_map: Dict[str, str]) -> str:
     """
-    Get the namespace name for a page.
+    Get human-readable namespace name from namespace ID and title.
     
     Args:
-        ns_id: Namespace ID from XML
+        ns_id: Namespace ID as string
         title: Page title
-        namespace_map: Namespace mapping from parse_namespaces()
+        namespace_map: Mapping of namespace IDs to names from XML
         
     Returns:
         Human-readable namespace name
@@ -103,3 +57,90 @@ def get_namespace_name(ns_id: str, title: str, namespace_map: Dict[str, str]) ->
     
     # Use the namespace map parsed from XML
     return namespace_map.get(ns_id, f'Namespace {ns_id}')
+
+
+def extract_page_elements(page_elem) -> Dict[str, Optional[str]]:
+    """
+    Extract common elements from a page XML element.
+    
+    Args:
+        page_elem: XML element representing a page
+        
+    Returns:
+        Dictionary with extracted elements (id, title, ns, text, etc.)
+    """
+    elements = {}
+    
+    # Extract basic page information
+    elements['id'] = None
+    id_elem = page_elem.find(f'.//{MEDIAWIKI_NS}id')
+    if id_elem is not None:
+        elements['id'] = id_elem.text
+    
+    elements['title'] = None
+    title_elem = page_elem.find(f'.//{MEDIAWIKI_NS}title')
+    if title_elem is not None:
+        elements['title'] = title_elem.text
+    
+    elements['ns'] = None
+    ns_elem = page_elem.find(f'.//{MEDIAWIKI_NS}ns')
+    if ns_elem is not None:
+        elements['ns'] = ns_elem.text
+    
+    # Extract latest revision text
+    elements['text'] = None
+    text_elem = page_elem.find(f'.//{MEDIAWIKI_NS}text')
+    if text_elem is not None:
+        elements['text'] = text_elem.text
+    
+    # Extract revision information
+    elements['contributor'] = None
+    elements['contributor_id'] = None
+    
+    revision_elem = page_elem.find(f'.//{MEDIAWIKI_NS}revision')
+    if revision_elem is not None:
+        contributor_elem = revision_elem.find(f'.//{MEDIAWIKI_NS}contributor')
+        if contributor_elem is not None:
+            username_elem = contributor_elem.find(f'.//{MEDIAWIKI_NS}username')
+            if username_elem is not None:
+                elements['contributor'] = username_elem.text
+            
+            id_elem = contributor_elem.find(f'.//{MEDIAWIKI_NS}id')
+            if id_elem is not None:
+                elements['contributor_id'] = id_elem.text
+            
+            # Handle IP contributors
+            ip_elem = contributor_elem.find(f'.//{MEDIAWIKI_NS}ip')
+            if ip_elem is not None:
+                elements['contributor'] = ip_elem.text
+    
+    return elements
+
+
+def iterate_pages(xml_file_path: str, show_progress: bool = True) -> Generator[Tuple[int, Dict[str, Optional[str]]], None, None]:
+    """
+    Iterator over pages in MediaWiki XML file with progress reporting.
+    
+    Args:
+        xml_file_path: Path to the MediaWiki XML export file
+        show_progress: Whether to show progress messages
+        
+    Yields:
+        Tuple of (page_count, extracted_elements_dict)
+    """
+    page_count = 0
+    
+    for event, elem in ET.iterparse(xml_file_path, events=('start', 'end')):
+        if event == 'end' and elem.tag.endswith('}page'):
+            page_count += 1
+            
+            if show_progress and page_count % PROGRESS_INTERVAL == 0:
+                print(f"Processed {page_count:,} pages...")
+            
+            # Extract page elements
+            elements = extract_page_elements(elem)
+            
+            yield page_count, elements
+            
+            # Clear element to save memory
+            elem.clear()

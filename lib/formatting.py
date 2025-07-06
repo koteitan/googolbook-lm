@@ -1,8 +1,14 @@
 """
-Formatting utilities for Googology Wiki analysis tools.
+Formatting utilities for MediaWiki analysis tools.
 """
 
 import urllib.parse
+import sys
+from pathlib import Path
+
+# Import site-specific config from project root
+sys.path.insert(0, str(Path(__file__).parent.parent))
+import config
 
 
 def format_number(num: int) -> str:
@@ -37,7 +43,7 @@ def format_bytes(bytes_count: int) -> str:
 
 def generate_wiki_url(title: str) -> str:
     """
-    Generate a Googology Wiki URL from a page title.
+    Generate a wiki URL from a page title.
     
     Args:
         title: Page title
@@ -46,12 +52,12 @@ def generate_wiki_url(title: str) -> str:
         Complete wiki URL
     """
     encoded_title = urllib.parse.quote(title.replace(' ', '_'))
-    return f"https://googology.fandom.com/wiki/{encoded_title}"
+    return f"{config.SITE_BASE_URL}/wiki/{encoded_title}"
 
 
 def generate_curid_url(page_id: str) -> str:
     """
-    Generate a Googology Wiki URL using page ID (curid).
+    Generate a wiki URL using page ID (curid).
     
     Args:
         page_id: Page ID
@@ -59,4 +65,4 @@ def generate_curid_url(page_id: str) -> str:
     Returns:
         Complete wiki URL with curid parameter
     """
-    return f"https://googology.fandom.com/?curid={page_id}"
+    return f"{config.SITE_BASE_URL}/?curid={page_id}"

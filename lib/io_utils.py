@@ -1,9 +1,14 @@
 """
-File I/O utilities for Googology Wiki analysis tools.
+File I/O utilities for MediaWiki analysis tools.
 """
 
 import os
-from .config import FETCH_LOG_FILE
+import sys
+from pathlib import Path
+
+# Import site-specific config from project root
+sys.path.insert(0, str(Path(__file__).parent.parent))
+import config
 
 
 def get_fetch_date() -> str:
@@ -14,7 +19,7 @@ def get_fetch_date() -> str:
         Fetch date string, or 'Unknown' if not available
     """
     try:
-        with open(FETCH_LOG_FILE, 'r', encoding='utf-8') as f:
+        with open(config.FETCH_LOG_FILE, 'r', encoding='utf-8') as f:
             first_line = f.readline().strip()
             if first_line.startswith('Archive fetched: '):
                 return first_line.replace('Archive fetched: ', '')

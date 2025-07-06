@@ -7,61 +7,26 @@ content by namespace, showing the distribution of bytes and pages across
 different types of wiki content.
 """
 
-import xml.etree.ElementTree as ET
 import os
 import random
 from datetime import datetime
 from typing import Dict, Tuple, List
 
-# Configuration
-XML_FILE = '../../data/googology_pages_current.xml'
+# Import shared library modules
+import sys
+sys.path.append('../../')
+from lib.config import XML_FILE
+from lib.xml_parser import parse_namespaces, get_namespace_name, iterate_pages
+from lib.formatting import format_number, format_bytes
+from lib.io_utils import get_fetch_date
+from lib.reporting import generate_license_footer, write_markdown_report
+
+# Local configuration
 OUTPUT_FILE = 'namespaces.md'
-FETCH_LOG_FILE = '../../data/fetch_log.txt'
 
-def get_fetch_date() -> str:
-    """
-    Get the fetch date from the fetch log file.
-    
-    Returns:
-        Fetch date string, or 'Unknown' if not available
-    """
-    try:
-        with open(FETCH_LOG_FILE, 'r', encoding='utf-8') as f:
-            first_line = f.readline().strip()
-            if first_line.startswith('Archive fetched: '):
-                return first_line.replace('Archive fetched: ', '')
-    except Exception:
-        pass
-    return 'Unknown'
+# Removed - now imported from lib.io_utils
 
-def parse_namespaces(xml_file_path: str) -> Dict[str, str]:
-    """
-    Parse namespace definitions from XML file.
-    
-    Args:
-        xml_file_path: Path to the MediaWiki XML export file
-        
-    Returns:
-        Dictionary mapping namespace IDs to names
-    """
-    namespace_map = {}
-    
-    for event, elem in ET.iterparse(xml_file_path, events=('start', 'end')):
-        if event == 'end' and elem.tag.endswith('}namespace'):
-            key = elem.get('key')
-            name = elem.text
-            if key is not None:
-                # Handle main namespace (key="0" has no text content)
-                if name is None or name.strip() == '':
-                    namespace_map[key] = 'Main'
-                else:
-                    namespace_map[key] = name
-            elem.clear()
-        elif event == 'end' and elem.tag.endswith('}page'):
-            # Stop parsing after first page (namespaces are defined before pages)
-            break
-    
-    return namespace_map
+# Removed - now imported from lib.xml_parser
 
 def analyze_namespaces(xml_file_path: str) -> Tuple[Dict[str, Tuple[int, int]], Dict[str, List[Tuple[str, str]]]]:
     """
@@ -87,86 +52,33 @@ def analyze_namespaces(xml_file_path: str) -> Tuple[Dict[str, Tuple[int, int]], 
     # Dictionary to store sample pages: namespace -> list of (page_id, title)
     namespace_samples = {}
     
-    page_count = 0
-    
-    # Process XML file using iterparse for memory efficiency
-    for event, elem in ET.iterparse(xml_file_path, events=('start', 'end')):
-        if event == 'end' and elem.tag.endswith('}page'):
-            page_count += 1
-            if page_count % 10000 == 0:
-                print(f"Processed {page_count} pages...")
+    # Process XML file using shared iterator
+    for page_count, elements in iterate_pages(xml_file_path):
+        if elements['ns'] and elements['title'] and elements['id']:
+            # Get namespace name from parsed definitions
+            namespace_name = get_namespace_name(elements['ns'], elements['title'], namespace_map)
             
-            # Extract namespace, title, and page ID
-            ns_elem = elem.find('.//{http://www.mediawiki.org/xml/export-0.11/}ns')
-            title_elem = elem.find('.//{http://www.mediawiki.org/xml/export-0.11/}title')
-            id_elem = elem.find('.//{http://www.mediawiki.org/xml/export-0.11/}id')
+            # Get page content size
+            content_size = 0
+            if elements['text']:
+                content_size = len(elements['text'].encode('utf-8'))
             
-            if ns_elem is not None and title_elem is not None and id_elem is not None:
-                ns_id = ns_elem.text
-                title = title_elem.text
-                page_id = id_elem.text
-                
-                # Get namespace name from parsed definitions
-                namespace_name = get_namespace_name(ns_id, title, namespace_map)
-                
-                # Get page content size
-                text_elem = elem.find('.//{http://www.mediawiki.org/xml/export-0.11/}text')
-                content_size = 0
-                if text_elem is not None and text_elem.text is not None:
-                    content_size = len(text_elem.text.encode('utf-8'))
-                
-                # Update namespace statistics
-                if namespace_name not in namespace_stats:
-                    namespace_stats[namespace_name] = (0, 0)
-                    namespace_samples[namespace_name] = []
-                
-                current_bytes, current_pages = namespace_stats[namespace_name]
-                namespace_stats[namespace_name] = (current_bytes + content_size, current_pages + 1)
-                
-                # Collect page samples for examples
-                namespace_samples[namespace_name].append((page_id, title))
+            # Update namespace statistics
+            if namespace_name not in namespace_stats:
+                namespace_stats[namespace_name] = (0, 0)
+                namespace_samples[namespace_name] = []
             
-            # Clear element to save memory
-            elem.clear()
+            current_bytes, current_pages = namespace_stats[namespace_name]
+            namespace_stats[namespace_name] = (current_bytes + content_size, current_pages + 1)
+            
+            # Collect page samples for examples
+            namespace_samples[namespace_name].append((elements['id'], elements['title']))
     
     return namespace_stats, namespace_samples
 
-def get_namespace_name(ns_id: str, title: str, namespace_map: Dict[str, str]) -> str:
-    """
-    Get human-readable namespace name from namespace ID and title.
-    
-    Args:
-        ns_id: Namespace ID as string
-        title: Page title
-        namespace_map: Mapping of namespace IDs to names from XML
-        
-    Returns:
-        Human-readable namespace name
-    """
-    # Handle special cases for user blogs
-    if ':' in title:
-        prefix = title.split(':', 1)[0]
-        if prefix == 'User blog':
-            return 'User blog'
-    
-    # Use the namespace map parsed from XML
-    return namespace_map.get(ns_id, f'Namespace {ns_id}')
+# Removed - now imported from lib.xml_parser
 
-def format_bytes(bytes_count: int) -> str:
-    """
-    Format byte count in human-readable format.
-    
-    Args:
-        bytes_count: Number of bytes
-        
-    Returns:
-        Formatted string with appropriate unit
-    """
-    for unit in ['B', 'KB', 'MB', 'GB']:
-        if bytes_count < 1024.0:
-            return f"{bytes_count:.1f} {unit}"
-        bytes_count /= 1024.0
-    return f"{bytes_count:.1f} TB"
+# Removed - now imported from lib.formatting
 
 def generate_report(namespace_stats: Dict[str, Tuple[int, int]], namespace_samples: Dict[str, List[Tuple[str, str]]], output_file: str):
     """
@@ -277,28 +189,13 @@ The top 5 namespaces by total content size:
 - **User pages** include individual contributor pages and user blogs
 - **Talk pages** contain discussion and collaboration content
 - **Template and Category pages** support wiki structure and organization
-
----
-
-## License and Attribution
-
-This analysis contains content from the **Googology Wiki** (googology.fandom.com), which is licensed under the [Creative Commons Attribution-ShareAlike 3.0 Unported License](https://creativecommons.org/licenses/by-sa/3.0/).
-
-- **Original Source**: [Googology Wiki](https://googology.fandom.com)
-- **License**: [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)
-- **Attribution**: Content creators and contributors of the Googology Wiki
-- **Modifications**: This analysis extracts and reorganizes data from the original wiki content
-
-*Archive fetched: {get_fetch_date()}*  
-*Generated by namespaces.py*  
-*Analysis date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*
 """
     
-    # Write report to file
-    with open(output_file, 'w', encoding='utf-8') as f:
-        f.write(report_content)
+    # Add license footer
+    report_content += generate_license_footer('namespaces.py')
     
-    print(f"Report generated: {output_file}")
+    # Write report to file
+    write_markdown_report(output_file, report_content)
 
 def main():
     """Main function to run the namespace analysis."""
