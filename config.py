@@ -9,8 +9,8 @@ import sys
 from pathlib import Path
 
 # Current site configuration (change this to switch sites)
-CURRENT_SITE = 'googology-wiki'
-#CURRENT_SITE = 'ja-googology-wiki'
+#CURRENT_SITE = 'googology-wiki'
+CURRENT_SITE = 'ja-googology-wiki'
 
 # Load site-specific configuration
 PROJECT_ROOT = Path(__file__).parent.resolve()
@@ -40,11 +40,12 @@ LICENSE_NAME = site_config.LICENSE_NAME
 LICENSE_URL = site_config.LICENSE_URL
 LICENSE_SHORT = site_config.LICENSE_SHORT
 MEDIAWIKI_NS = site_config.MEDIAWIKI_NS
+EXCLUDED_NAMESPACES = site_config.EXCLUDED_NAMESPACES
+EXCLUDED_USERNAMES = site_config.EXCLUDED_USERNAMES
 
 # Site-specific paths (calculated in root config)
 DATA_DIR = PROJECT_ROOT / 'data' / CURRENT_SITE
 FETCH_LOG_FILE = str(DATA_DIR / 'fetch_log.txt')
-EXCLUDE_FILE = str(DATA_DIR / 'exclude.md')
 
 # Progress reporting interval (shared)
 PROGRESS_INTERVAL = 10000

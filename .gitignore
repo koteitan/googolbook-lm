@@ -1,6 +1,8 @@
 # Intermediaire repository for the site
 data/ja-googology-wiki/jagoogology_pages_current.xml
+data/ja-googology-wiki/fetch_log.txt
 data/googology-wiki/googology_pages_current.xml
+data/googology-wiki/fetch_log.txt
 
 # Python cache
 __pycache__/

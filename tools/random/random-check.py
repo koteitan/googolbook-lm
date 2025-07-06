@@ -4,7 +4,7 @@ Random Page Selector for MediaWiki XML Export
 
 This script analyzes MediaWiki XML exports to create
 a random page selector that generates an HTML page with a button to jump
-to random wiki pages (excluding pages specified in exclude.md).
+to random wiki pages (excluding pages specified in site configuration).
 """
 
 import xml.etree.ElementTree as ET
@@ -22,38 +22,14 @@ OUTPUT_FILE = str(config.DATA_DIR / 'random.html')
 RANDOM_LINKS_COUNT = 50  # Number of random links to display
 
 
-def load_excluded_namespaces(exclude_file_path: str) -> Tuple[List[str], List[str]]:
+def load_excluded_namespaces() -> Tuple[List[str], List[str]]:
     """
-    Load excluded namespaces and usernames from exclude.md file.
+    Load excluded namespaces and usernames from site configuration.
     
-    Args:
-        exclude_file_path: Path to the exclude.md file
-        
     Returns:
         Tuple of (excluded_namespaces, excluded_usernames)
     """
-    excluded_namespaces = []
-    excluded_usernames = []
-    try:
-        with open(exclude_file_path, 'r', encoding='utf-8') as f:
-            for line in f:
-                line = line.strip()
-                if line.startswith('- `') and line.endswith('`'):
-                    content = line[3:-1]  # Remove "- `" and "`"
-                    if '<username>' in content and '</username>' in content:
-                        # Extract username from lines like "- `<username>FANDOM</username>`"
-                        start = content.find('<username>') + len('<username>')
-                        end = content.find('</username>')
-                        if start > len('<username>') - 1 and end > start:
-                            username = content[start:end]
-                            excluded_usernames.append(username)
-                    elif content.endswith(':'):
-                        # Extract namespace from lines like "- `User talk:`"
-                        namespace = content[:-1]  # Remove trailing ":"
-                        excluded_namespaces.append(namespace)
-    except Exception as e:
-        print(f"Warning: Could not load exclusions from {exclude_file_path}: {e}")
-    return excluded_namespaces, excluded_usernames
+    return config.EXCLUDED_NAMESPACES, config.EXCLUDED_USERNAMES
 
 
 def should_exclude_page(title: str, excluded_namespaces: List[str]) -> bool:
@@ -91,7 +67,7 @@ def extract_random_pages(xml_file_path: str) -> List[Tuple[str, str, str]]:
     print(f"Extracting pages from {xml_file_path}...")
     
     # Load excluded namespaces
-    excluded_namespaces, excluded_usernames = load_excluded_namespaces(config.EXCLUDE_FILE)
+    excluded_namespaces, excluded_usernames = load_excluded_namespaces()
     if excluded_namespaces:
         print(f"Excluding namespaces: {excluded_namespaces}")
     if excluded_usernames:
@@ -301,7 +277,7 @@ def generate_html_page(pages_data: List[Tuple[str, str, str]], output_file: str)
     <div class="container">
         <h1>🎲 Random Check</h1>
         <div class="description">
-            This tool displays random pages from the {config.SITE_NAME} to verify that exclude.md exclusion rules are working correctly.
+            This tool displays random pages from the {config.SITE_NAME} to verify that site configuration exclusion rules are working correctly.
         </div>
         
         
@@ -315,7 +291,7 @@ def generate_html_page(pages_data: List[Tuple[str, str, str]], output_file: str)
         <div class="stats">
             <strong>Statistics:</strong><br>
             📊 Total available pages: {len(pages_data):,}<br>
-            🚫 Excluded {73776 - len(pages_data):,} pages by <a href="../../exclude.md" target="_blank">exclude.md</a><br>
+            🚫 Excluded {73776 - len(pages_data):,} pages by site configuration rules<br>
             📅 Generated: {get_fetch_date()}<br>
             🤖 Created by random-check.py
         </div>

@@ -11,76 +11,43 @@ import config
 
 def load_excluded_namespaces(exclude_file_path: str = None) -> List[str]:
     """
-    Load excluded namespaces from exclude.md file.
+    Load excluded namespaces from site configuration.
     
     Args:
-        exclude_file_path: Path to the exclude.md file (defaults to config value)
+        exclude_file_path: DEPRECATED - kept for compatibility, ignored
         
     Returns:
-        List of excluded namespace prefixes
+        List of excluded namespace prefixes from site configuration
     """
-    if exclude_file_path is None:
-        exclude_file_path = config.EXCLUDE_FILE
-        
-    excluded_namespaces = []
-    try:
-        with open(exclude_file_path, 'r', encoding='utf-8') as f:
-            for line in f:
-                line = line.strip()
-                if line.startswith('- `') and line.endswith(':`'):
-                    # Extract namespace from lines like "- `User talk:`"
-                    namespace = line[3:-2]  # Remove "- `" and "`:"
-                    excluded_namespaces.append(namespace)
-    except Exception as e:
-        print(f"Warning: Could not load exclusions from {exclude_file_path}: {e}")
-    return excluded_namespaces
+    return config.EXCLUDED_NAMESPACES
 
 
 def load_excluded_usernames(exclude_file_path: str = None) -> List[str]:
     """
-    Load excluded usernames from exclude.md file.
+    Load excluded usernames from site configuration.
     
     Args:
-        exclude_file_path: Path to the exclude.md file (defaults to config value)
+        exclude_file_path: DEPRECATED - kept for compatibility, ignored
         
     Returns:
-        List of excluded usernames
+        List of excluded usernames from site configuration
     """
-    if exclude_file_path is None:
-        exclude_file_path = config.EXCLUDE_FILE
-        
-    excluded_usernames = []
-    try:
-        with open(exclude_file_path, 'r', encoding='utf-8') as f:
-            for line in f:
-                line = line.strip()
-                if line.startswith('- `') and line.endswith('`'):
-                    content = line[3:-1]  # Remove "- `" and "`"
-                    if '<username>' in content and '</username>' in content:
-                        # Extract username from lines like "- `<username>FANDOM</username>`"
-                        start = content.find('<username>') + len('<username>')
-                        end = content.find('</username>')
-                        if start > len('<username>') - 1 and end > start:
-                            username = content[start:end]
-                            excluded_usernames.append(username)
-    except Exception as e:
-        print(f"Warning: Could not load username exclusions from {exclude_file_path}: {e}")
-    return excluded_usernames
+    return config.EXCLUDED_USERNAMES
 
 
 def load_exclusions(exclude_file_path: str = None) -> Tuple[List[str], List[str]]:
     """
-    Load both excluded namespaces and usernames from exclude.md file.
+    Load both excluded namespaces and usernames from site configuration.
     
     Args:
-        exclude_file_path: Path to the exclude.md file (defaults to config value)
+        exclude_file_path: DEPRECATED - kept for compatibility, ignored
         
     Returns:
         Tuple of (excluded_namespaces, excluded_usernames)
     """
     return (
-        load_excluded_namespaces(exclude_file_path),
-        load_excluded_usernames(exclude_file_path)
+        load_excluded_namespaces(),
+        load_excluded_usernames()
     )
 
 
@@ -170,7 +137,7 @@ def convert_excluded_namespaces_to_ids(excluded_namespaces: List[str], namespace
         if namespace_string in string_to_id:
             excluded_ids.append(string_to_id[namespace_string])
         else:
-            print(f"Warning: Unknown namespace '{namespace_string}' in exclude.md")
+            print(f"Warning: Unknown namespace '{namespace_string}' in site configuration")
             
     return excluded_ids
 

@@ -15,3 +15,34 @@ LICENSE_SHORT = 'CC BY-SA 3.0'
 
 # MediaWiki XML namespace URI
 MEDIAWIKI_NS = '{http://www.mediawiki.org/xml/export-0.11/}'
+
+# Exclusion rules (converted from exclude.md)
+# Excluded namespaces (namespace prefixes to exclude from analysis)
+EXCLUDED_NAMESPACES = [
+    'ファイル',  # File
+    'テンプレート',  # Template
+    'ユーザーブログ・コメント',  # User blog comment
+    'カテゴリ',  # Category
+    'GeoJson',
+    'モジュール',  # Module
+    'Map',
+    'ヘルプ',  # Help
+    'フォーラム',  # Forum
+    'MediaWiki',
+    'Special',
+    'テンプレート・トーク',  # Template talk
+    'ユーザー・トーク',  # User talk
+    '巨大数研究 Wiki・トーク',  # Googology Wiki talk
+    'カテゴリ・トーク',  # Category talk
+    'MediaWiki・トーク',  # MediaWiki talk
+    'ファイル・トーク',  # File talk
+    'フォーラム・トーク',  # Forum talk
+    'モジュール・トーク',  # Module talk
+    'GeoJson talk'  # GeoJson talk
+]
+
+# Excluded usernames (usernames to exclude from analysis)
+EXCLUDED_USERNAMES = [
+    'FANDOM',
+    'Wikia'
+]

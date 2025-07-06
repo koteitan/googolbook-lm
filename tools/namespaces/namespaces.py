@@ -96,15 +96,8 @@ def generate_report(namespace_stats: Dict[str, Tuple[int, int]], namespace_sampl
     total_bytes = sum(bytes_count for bytes_count, _ in namespace_stats.values())
     total_pages = sum(page_count for _, page_count in namespace_stats.values())
     
-    # Calculate total pages after exclusion (for % after exclude column)
-    # This would be the subset of pages that would remain after applying exclude.md rules
-    # For now, we'll use a simple heuristic - exclude known non-content namespaces
-    excluded_namespaces_for_calc = {
-        'File', 'Template', 'User blog comment', 'Category', 'GeoJson', 'Module', 
-        'Map', 'Help', 'Forum', 'MediaWiki', 'Special', 'Template talk', 
-        'User talk', 'Project talk', 'Category talk', 'MediaWiki talk', 
-        'File talk', 'Forum talk', 'Module talk', 'GeoJson talk'
-    }
+    # Calculate total pages after exclusion using proper exclusion system
+    excluded_namespaces_for_calc = set(config.EXCLUDED_NAMESPACES)
     
     # Calculate total bytes and pages after exclusion
     total_bytes_after_exclude = sum(
