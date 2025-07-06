@@ -34,7 +34,6 @@ See the generated analysis: [namespaces.md](namespaces.md)
 ## Requirements
 
 - Python 3.6+
-- MediaWiki XML export file at `../../data/googology_pages_current.xml`
 
 ## License
 

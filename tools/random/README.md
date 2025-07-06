@@ -25,23 +25,6 @@ Generates `index.html` with:
 
 See the generated page: [index.html](index.html)
 
-## Configuration
-
-File paths can be configured at the top of `random-jump.py`:
-
-```python
-# Configuration
-XML_FILE = '../../data/googology_pages_current.xml'
-OUTPUT_FILE = 'index.html'
-```
-
-## Requirements
-
-- Python 3.x
-- No additional packages required
-
 ## License
 
-This analysis tool and its output contain content from the Googology Wiki, which is licensed under the [Creative Commons Attribution-ShareAlike 3.0 Unported License](https://creativecommons.org/licenses/by-sa/3.0/).
-
-All output includes proper attribution to the original content creators and contributors of the Googology Wiki.
+[Creative Commons Attribution-ShareAlike 3.0 Unported License](https://creativecommons.org/licenses/by-sa/3.0/).

@@ -32,7 +32,7 @@ python3 tokens.py
 
 ### Input
 
-- `data/googology_pages_current.xml` - Googology Wiki MediaWiki XML export
+- `data/*.xml` - MediaWiki XML export
 
 ### Output
 

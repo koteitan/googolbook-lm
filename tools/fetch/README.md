@@ -26,15 +26,6 @@ The script creates two files in the `data/` directory:
 - `googology_pages_current.xml` - Complete MediaWiki XML export (~210MB)
 - `fetch_log.txt` - Download timestamp and source URL
 
-## Configuration
-
-Archive URL and paths can be configured at the top of `fetch.py`:
-
-```python
-ARCHIVE_URL = 'https://s3.amazonaws.com/wikia_xml_dumps/g/go/googology_pages_current.xml.7z'
-DATA_DIR = '../../data'
-```
-
 ## License
 
-This fetcher tool respects the original content licensing. The downloaded Googology Wiki content is licensed under [Creative Commons Attribution-ShareAlike 3.0 Unported License](https://creativecommons.org/licenses/by-sa/3.0/).
+[Creative Commons Attribution-ShareAlike 3.0 Unported License](https://creativecommons.org/licenses/by-sa/3.0/).
