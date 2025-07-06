@@ -35,19 +35,15 @@ SITE_NAME = site_config.SITE_NAME
 SITE_URL = site_config.SITE_URL
 SITE_BASE_URL = site_config.SITE_BASE_URL
 ARCHIVE_URL = site_config.ARCHIVE_URL
-DATA_DIR = site_config.DATA_DIR
-FETCH_LOG_FILE = site_config.FETCH_LOG_FILE
+LICENSE_NAME = site_config.LICENSE_NAME
+LICENSE_URL = site_config.LICENSE_URL
+LICENSE_SHORT = site_config.LICENSE_SHORT
+MEDIAWIKI_NS = site_config.MEDIAWIKI_NS
 
-# License information (shared across all sites)
-LICENSE_NAME = 'Creative Commons Attribution-ShareAlike 3.0 Unported License'
-LICENSE_URL = 'https://creativecommons.org/licenses/by-sa/3.0/'
-LICENSE_SHORT = 'CC BY-SA 3.0'
-
-# MediaWiki XML namespace URI (shared)
-MEDIAWIKI_NS = '{http://www.mediawiki.org/xml/export-0.11/}'
-
-# Global paths
-EXCLUDE_FILE = str(PROJECT_ROOT / 'exclude.md')
+# Site-specific paths (calculated in root config)
+DATA_DIR = PROJECT_ROOT / 'data' / CURRENT_SITE
+FETCH_LOG_FILE = str(DATA_DIR / 'fetch_log.txt')
+EXCLUDE_FILE = str(DATA_DIR / 'exclude.md')
 
 # Progress reporting interval (shared)
 PROGRESS_INTERVAL = 10000
