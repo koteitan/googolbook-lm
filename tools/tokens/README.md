@@ -56,3 +56,7 @@ See [tokens.md](tokens.md) for the complete analysis report.
 - tiktoken provides accurate token counts that match OpenAI API consumption
 - Processing large XML files may take several seconds depending on file size
 - Exclusion filtering can significantly reduce token counts for analysis purposes
+
+## License
+
+[Creative Commons Attribution-ShareAlike 3.0 Unported License](https://creativecommons.org/licenses/by-sa/3.0/).

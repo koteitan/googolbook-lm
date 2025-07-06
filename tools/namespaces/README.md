@@ -37,4 +37,4 @@ See the generated analysis: [namespaces.md](namespaces.md)
 
 ## License
 
-CC BY-SA 3.0 (matches source content from Googology Wiki)
+[Creative Commons Attribution-ShareAlike 3.0 Unported License](https://creativecommons.org/licenses/by-sa/3.0/).
