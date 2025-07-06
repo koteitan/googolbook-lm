@@ -17,7 +17,7 @@ from collections import defaultdict
 import sys
 sys.path.append('../../')
 import config
-from lib.exclusions import load_exclusions, should_exclude_page, should_exclude_contributor
+from lib.exclusions import load_exclusions, should_exclude_page_by_namespace_id, convert_excluded_namespaces_to_ids, should_exclude_contributor
 from lib.xml_parser import iterate_pages, extract_page_elements
 from lib.formatting import format_number
 from lib.io_utils import get_fetch_date, get_xml_file, check_xml_exists
@@ -61,6 +61,11 @@ def analyze_contributors(xml_file_path: str) -> Tuple[Dict[str, int], Dict[str, 
     if excluded_usernames:
         print(f"Excluding usernames: {excluded_usernames}")
     
+    # Parse namespace definitions for ID conversion
+    from lib.xml_parser import parse_namespaces
+    namespace_map = parse_namespaces(xml_file_path)
+    excluded_namespace_ids = convert_excluded_namespaces_to_ids(excluded_namespaces, namespace_map)
+    
     # Use iterparse for memory-efficient parsing of large XML files
     context = ET.iterparse(xml_file_path, events=('start', 'end'))
     context = iter(context)
@@ -89,8 +94,8 @@ def analyze_contributors(xml_file_path: str) -> Tuple[Dict[str, int], Dict[str, 
                 page_id = id_elem.text or "0"
                 namespace = ns_elem.text or "0"
                 
-                # Skip excluded pages
-                if should_exclude_page(title, excluded_namespaces):
+                # Skip excluded pages using namespace ID
+                if should_exclude_page_by_namespace_id(namespace, excluded_namespace_ids):
                     elem.clear()
                     continue
                 

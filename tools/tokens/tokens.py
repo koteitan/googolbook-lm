@@ -16,7 +16,7 @@ from typing import List, Tuple
 import sys
 sys.path.append('../../')
 import config
-from lib.exclusions import load_excluded_namespaces, should_exclude_page
+from lib.exclusions import load_excluded_namespaces, should_exclude_page_by_namespace_id, convert_excluded_namespaces_to_ids
 from lib.xml_parser import parse_namespaces, get_namespace_name, extract_page_elements, iterate_pages
 from lib.formatting import format_number, format_bytes
 from lib.io_utils import get_fetch_date, check_xml_exists, get_xml_file
@@ -45,6 +45,9 @@ def filter_and_analyze_xml(xml_file_path: str, excluded_namespaces: List[str]) -
     # Parse namespace definitions
     namespace_map = parse_namespaces(xml_file_path)
     
+    # Convert excluded namespace strings to IDs
+    excluded_namespace_ids = convert_excluded_namespaces_to_ids(excluded_namespaces, namespace_map)
+    
     original_pages = []
     filtered_pages = []
     
@@ -58,16 +61,13 @@ def filter_and_analyze_xml(xml_file_path: str, excluded_namespaces: List[str]) -
     
     for page_count, elements in iterate_pages(xml_file_path):
         if elements['title'] and elements['ns']:
-            # Get namespace name
-            namespace_name = get_namespace_name(elements['ns'], elements['title'], namespace_map)
-            
             # Store original page content (simplified - would need full page XML)
             # For now, just use the text content for token counting
             page_text = elements['text'] or ''
             original_pages.append(page_text)
             
-            # Check if page should be excluded
-            if not should_exclude_page(elements['title'], excluded_namespaces) and namespace_name not in excluded_namespaces:
+            # Check if page should be excluded using namespace ID
+            if not should_exclude_page_by_namespace_id(elements['ns'], excluded_namespace_ids):
                 filtered_pages.append(page_text)
                 filtered_page_count += 1
     
