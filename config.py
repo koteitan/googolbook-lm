@@ -8,10 +8,19 @@ Constants only - no functions.
 from pathlib import Path
 
 # Site information
+## Googology Wiki
 SITE_NAME = 'Googology Wiki'
 SITE_URL = 'googology.fandom.com'
 SITE_BASE_URL = 'https://googology.fandom.com'
 ARCHIVE_URL = 'https://s3.amazonaws.com/wikia_xml_dumps/g/go/googology_pages_current.xml.7z'
+
+"""
+## Japanese Googology Wiki
+SITE_NAME = '巨大数研究 Wiki'
+SITE_URL = 'googology.fandom.com/ja'
+SITE_BASE_URL = 'https://googology.fandom.com/ja'
+ARCHIVE_URL = 'https://s3.amazonaws.com/wikia_xml_dumps/j/ja/jagoogology_pages_current.xml.7z'
+"""
 
 # License information
 LICENSE_NAME = 'Creative Commons Attribution-ShareAlike 3.0 Unported License'
