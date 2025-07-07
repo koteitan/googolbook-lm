@@ -99,7 +99,7 @@ The RAG system uses a two-step process:
 First, create the vector store from the XML data:
 
 ```bash
-python tools/rag/xml2vec.py
+python3 tools/rag/xml2vec.py
 ```
 
 This will:
@@ -111,7 +111,7 @@ This will:
 #### Vector Store Creation Options
 
 ```bash
-python tools/rag/xml2vec.py [options]
+python3 tools/rag/xml2vec.py [options]
 
 Options:
   --xml-file PATH         Path to XML file (auto-detected if not specified)
@@ -128,13 +128,13 @@ Options:
 Once the vector store is created, you can perform fast searches:
 
 ```bash
-python tools/rag/rag_search.py "What is Graham's Number?"
+python3 tools/rag/rag_search.py "What is Graham's Number?"
 ```
 
 #### Search Options
 
 ```bash
-python tools/rag/rag_search.py [query] [options]
+python3 tools/rag/rag_search.py [query] [options]
 
 Options:
   --cache PATH            Path to vector store file (default: data/googology-wiki/vector_store.pkl)
@@ -146,17 +146,17 @@ Options:
 
 Create vector store with custom settings:
 ```bash
-python tools/rag/xml2vec.py --chunk-size 500 --chunk-overlap 100
+python3 tools/rag/xml2vec.py --chunk-size 500 --chunk-overlap 100
 ```
 
 Search with custom parameters:
 ```bash
-python tools/rag/rag_search.py "TREE(3)" --top-k 10
+python3 tools/rag/rag_search.py "TREE(3)" --top-k 10
 ```
 
 Search with score threshold:
 ```bash
-python tools/rag/rag_search.py "Fast-growing hierarchy" --score-threshold 0.5
+python3 tools/rag/rag_search.py "Fast-growing hierarchy" --score-threshold 0.5
 ```
 
 ## Implementation Notes
