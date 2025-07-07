@@ -6,12 +6,16 @@ The LangChain RAG system follows a clear data processing pipeline from MediaWiki
 
 ```mermaid
 graph TD
-    A[xml] -->|MWDumpLoader.load| B[Document documents]
-    B -->|RecursiveCharacterTextSplitter.split_documents| C[Document chunks]
-    C -->|FAISS.from_documents| D[vector_store]
+    subgraph xml2vec["xml2vec.py"]
+        A[xml] -->|MWDumpLoader.load| B[Document documents]
+        B -->|RecursiveCharacterTextSplitter.split_documents| C[Document chunks]
+        C -->|FAISS.from_documents| D[vector_store]
+    end
     
-    E[query] -->|vector_store.similarity_search_with_score| F[results]
-    D -->|vector_store.similarity_search_with_score| F
+    subgraph rag_search["rag_search.py"]
+        E[query] -->|vector_store.similarity_search_with_score| F[results]
+        D -->|vector_store.similarity_search_with_score| F
+    end
 ```
 
 ### Function References
@@ -76,44 +80,79 @@ pip install langchain langchain-community langchain-text-splitters langchain-ope
 pip install faiss-cpu  # or faiss-gpu for GPU support
 pip install sentence-transformers  # For HuggingFace embeddings
 pip install lxml  # For XML parsing
+pip install mwxml  # For MediaWiki XML parsing
 ```
 
 ## Usage
 
-### Basic Usage
+The RAG system uses a two-step process:
 
-Search for information about Graham's Number:
+1. **Create vector store** (one-time setup, may take several minutes)
+2. **Search** (fast, interactive queries)
+
+### Step 1: Create Vector Store
+
+First, create the vector store from the XML data:
+
+```bash
+python tools/rag/xml2vec.py
+```
+
+This will:
+- Load and process the MediaWiki XML file
+- Split documents into chunks
+- Create embeddings for all chunks
+- Save the vector store to `cache/vector_store.pkl`
+
+#### Vector Store Creation Options
+
+```bash
+python tools/rag/xml2vec.py [options]
+
+Options:
+  --xml-file PATH         Path to XML file (auto-detected if not specified)
+  --output PATH           Output path for vector store (default: cache/vector_store.pkl)
+  --chunk-size SIZE       Chunk size for text splitting (default: 1000)
+  --chunk-overlap SIZE    Chunk overlap for text splitting (default: 200)
+  --use-openai            Use OpenAI embeddings (requires OPENAI_API_KEY)
+  --embedding-model MODEL HuggingFace model (default: all-MiniLM-L6-v2)
+  --force                 Overwrite existing vector store
+```
+
+### Step 2: Search
+
+Once the vector store is created, you can perform fast searches:
 
 ```bash
 python tools/rag/rag_search.py "What is Graham's Number?"
 ```
 
-### Command Line Options
+#### Search Options
 
 ```bash
 python tools/rag/rag_search.py [query] [options]
 
 Options:
-  --xml-file PATH         Path to XML file (auto-detected if not specified)
-  --cache PATH            Path to cache file for vector store (default: cache/vector_store.pkl)
-  --no-cache              Disable caching
-  --rebuild               Force rebuild of vector store even if cache exists
-  --chunk-size SIZE       Chunk size for text splitting (default: 1000)
-  --chunk-overlap SIZE    Chunk overlap for text splitting (default: 200)
+  --cache PATH            Path to vector store file (default: cache/vector_store.pkl)
   --top-k K               Number of results to return (default: 5)
   --score-threshold SCORE Minimum similarity score threshold
 ```
 
 ### Examples
 
-Search with custom parameters:
+Create vector store with custom settings:
 ```bash
-python tools/rag/rag_search.py "TREE(3)" --top-k 10 --chunk-size 500
+python tools/rag/xml2vec.py --chunk-size 500 --chunk-overlap 100
 ```
 
-Rebuild vector store:
+Search with custom parameters:
 ```bash
-python tools/rag/rag_search.py "Fast-growing hierarchy" --rebuild
+python tools/rag/rag_search.py "TREE(3)" --top-k 10
+```
+
+Search with score threshold:
+```bash
+python tools/rag/rag_search.py "Fast-growing hierarchy" --score-threshold 0.5
 ```
 
 ## Implementation Notes
