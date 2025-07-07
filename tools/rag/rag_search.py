@@ -10,6 +10,8 @@ import os
 import sys
 import argparse
 import pickle
+import time
+import threading
 from typing import Optional
 from pathlib import Path
 
@@ -27,14 +29,39 @@ from lib.formatting import format_number
 import config
 
 
+def show_loading_spinner():
+    """Display a rotating loading spinner."""
+    spinner = ['-', '\\', '|', '/']
+    i = 0
+    while not getattr(show_loading_spinner, 'stop', False):
+        sys.stdout.write(f'\rLoading {spinner[i % len(spinner)]}')
+        sys.stdout.flush()
+        time.sleep(0.1)
+        i += 1
+
+
 def load_vector_store(cache_path: str) -> object:
     """Load vector store from cache file."""
     if not os.path.exists(cache_path):
         raise FileNotFoundError(f"Vector store not found: {cache_path}")
     
-    print(f"Loading vector store from: {cache_path}")
-    with open(cache_path, 'rb') as f:
-        return pickle.load(f)
+    # Start spinner thread
+    show_loading_spinner.stop = False
+    spinner_thread = threading.Thread(target=show_loading_spinner)
+    spinner_thread.daemon = True
+    spinner_thread.start()
+    
+    try:
+        with open(cache_path, 'rb') as f:
+            result = pickle.load(f)
+    finally:
+        # Stop spinner
+        show_loading_spinner.stop = True
+        spinner_thread.join(timeout=0.2)
+        sys.stdout.write('\r' + ' ' * 20 + '\r')  # Clear loading line
+        sys.stdout.flush()
+    
+    return result
 
 
 def format_search_results(results):
@@ -82,8 +109,8 @@ def main():
     parser.add_argument(
         '--top-k',
         type=int,
-        default=5,
-        help='Number of results to return (default: 5)'
+        default=10,
+        help='Number of results to return (default: 10)'
     )
     parser.add_argument(
         '--score-threshold',
@@ -99,7 +126,6 @@ def main():
         
         # Single query mode if argument provided
         if args.query is not None:
-            print(f"\nSearching for: {args.query}")
             results = search_documents(
                 vector_store,
                 args.query,
@@ -110,26 +136,21 @@ def main():
             if not results:
                 print("No results found.")
             else:
-                print(f"\nFound {len(results)} results:")
                 print(format_search_results(results))
         
         # Interactive mode if no argument
         else:
-            print(f"\nInteractive RAG search for {config.SITE_NAME}")
-            print("Type 'quit' or 'exit' to stop, or press Ctrl+C/Ctrl+D\n")
             
             while True:
                 try:
-                    query = input("Enter search query: ").strip()
+                    query = input("> ").strip()
                     
                     if not query:
                         continue
                     
                     if query.lower() in ['quit', 'exit']:
-                        print("Goodbye!")
                         break
                     
-                    print(f"\nSearching for: {query}")
                     results = search_documents(
                         vector_store,
                         query,
@@ -140,16 +161,13 @@ def main():
                     if not results:
                         print("No results found.")
                     else:
-                        print(f"\nFound {len(results)} results:")
                         print(format_search_results(results))
                     
                     print()  # Empty line before next prompt
                     
                 except KeyboardInterrupt:
-                    print("\nGoodbye!")
                     break
                 except EOFError:
-                    print("\nGoodbye!")
                     break
             
     except FileNotFoundError as e:

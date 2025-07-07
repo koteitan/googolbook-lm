@@ -82,14 +82,14 @@ def main():
     parser.add_argument(
         '--chunk-size',
         type=int,
-        default=1000,
-        help='Chunk size for text splitting (default: 1000)'
+        default=1200,
+        help='Chunk size for text splitting (default: 1200, optimized for Googology Wiki)'
     )
     parser.add_argument(
         '--chunk-overlap',
         type=int,
-        default=200,
-        help='Chunk overlap for text splitting (default: 200)'
+        default=300,
+        help='Chunk overlap for text splitting (default: 300, 25%% overlap for concept continuity)'
     )
     parser.add_argument(
         '--use-openai',

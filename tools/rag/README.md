@@ -85,8 +85,8 @@ python3 tools/rag/xml2vec.py [options]
 Options:
   --xml-file PATH         Path to XML file (auto-detected if not specified)
   --output PATH           Output path for vector store (default: data/googology-wiki/vector_store.pkl)
-  --chunk-size SIZE       Chunk size for text splitting (default: 1000)
-  --chunk-overlap SIZE    Chunk overlap for text splitting (default: 200)
+  --chunk-size SIZE       Chunk size for text splitting (default: 1200)
+  --chunk-overlap SIZE    Chunk overlap for text splitting (default: 300)
   --use-openai            Use OpenAI embeddings (requires OPENAI_API_KEY)
   --embedding-model MODEL HuggingFace model (default: all-MiniLM-L6-v2)
   --force                 Overwrite existing vector store
@@ -99,7 +99,7 @@ python3 tools/rag/rag_search.py [query] [options]
 
 Options:
   --cache PATH            Path to vector store file (default: data/googology-wiki/vector_store.pkl)
-  --top-k K               Number of results to return (default: 5)
+  --top-k K               Number of results to return (default: 10)
   --score-threshold SCORE Minimum similarity score threshold
 ```
 
@@ -122,10 +122,19 @@ python3 tools/rag/rag_search.py "Fast-growing hierarchy" --score-threshold 0.5
 
 ## Implementation Notes
 
-1. The system uses HuggingFace embeddings by default (specifically the `all-MiniLM-L6-v2` model) to avoid requiring OpenAI API keys.
-2. Vector stores are cached to disk for faster subsequent searches.
-3. Only main namespace articles (namespace=0) are indexed by default.
-4. The MWDumpLoader automatically extracts metadata including title, URL, and page ID from the MediaWiki XML.
+1. **Chunk size optimization**: Default chunk size is 1200 characters (vs standard 1000) to better preserve mathematical definitions and complex concepts in Googology Wiki.
+
+2. **Enhanced overlap**: Default overlap is 300 characters (25%) to maintain concept continuity, especially important for mathematical notation and cross-references.
+
+3. **Wiki-aware separators**: Custom separator hierarchy prioritizes MediaWiki heading structure (`# ## ### ####`) and list formats for better semantic boundaries.
+
+4. **Embeddings**: Uses HuggingFace embeddings by default (specifically the `all-MiniLM-L6-v2` model) to avoid requiring OpenAI API keys.
+
+5. **Caching**: Vector stores are cached to disk for faster subsequent searches.
+
+6. **Namespace filtering**: Only main namespace articles (namespace=0) are indexed by default to focus on encyclopedic content.
+
+7. **Metadata extraction**: Enhanced metadata extraction provides proper title, URL, and page ID for search results.
 
 ### Function References
 
