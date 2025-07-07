@@ -4,6 +4,7 @@ from typing import List
 from langchain_core.documents import Document
 from langchain_community.document_loaders import MWDumpLoader
 import config
+from ..xml_parser import parse_namespaces
 
 
 def load_mediawiki_documents(xml_path: str, namespace_filter: List[int] = None) -> List[Document]:
@@ -12,30 +13,89 @@ def load_mediawiki_documents(xml_path: str, namespace_filter: List[int] = None) 
     
     Args:
         xml_path: Path to the MediaWiki XML dump file
-        namespace_filter: List of namespace IDs to include (default: [0] for main articles)
+        namespace_filter: List of namespace IDs to include (default: None = all except excluded)
         
     Returns:
         List of Document objects with page content and metadata
     """
+    # Parse namespaces from XML file
+    namespace_mapping = parse_namespaces(xml_path)
+    print(f"Parsed {len(namespace_mapping)} namespaces from XML")
+    
     if namespace_filter is None:
-        namespace_filter = [0]  # Default to main namespace only
+        # Build list of included namespaces by excluding the ones in EXCLUDED_NAMESPACES
+        excluded_namespaces = set(config.EXCLUDED_NAMESPACES)
+        
+        # Get all namespace IDs that don't match excluded namespace names
+        included_ns_ids = []
+        for ns_id, ns_name in namespace_mapping.items():
+            try:
+                ns_id_int = int(ns_id)
+                # Skip negative namespace IDs (Media, Special) - MWDumpLoader has issues with them
+                if ns_id_int < 0:
+                    continue
+                # Include if namespace name is not in excluded list
+                if ns_name not in excluded_namespaces:
+                    included_ns_ids.append(ns_id_int)
+            except ValueError:
+                continue  # Skip non-numeric namespace IDs
+        
+        namespace_filter = included_ns_ids
+        print(f"Including namespaces: {sorted(namespace_filter)}")
+        print(f"Excluded namespaces: {excluded_namespaces}")
         
     loader = MWDumpLoader(
         file_path=xml_path,
-        namespaces=namespace_filter
+        namespaces=namespace_filter,
+        skip_redirects=False  # Include redirects
     )
     
     documents = loader.load()
+    print(f"Loaded {len(documents)} documents before filtering")
     
-    # Enhance metadata for each document
+    # Create reverse mapping: namespace name -> namespace ID
+    name_to_id = {name: ns_id for ns_id, name in namespace_mapping.items()}
+    
+    # Filter out excluded namespaces and enhance metadata
+    excluded_prefixes = [ns + ':' for ns in config.EXCLUDED_NAMESPACES]
+    filtered_documents = []
+    
     for doc in documents:
         if 'source' in doc.metadata:
-            title = doc.metadata['source']
+            source_title = doc.metadata['source']
+            
+            # Try to reconstruct full title with namespace prefix
+            full_title = source_title
+            
+            # For non-main namespace documents, MWDumpLoader strips the namespace prefix
+            # We need to reconstruct it based on the namespace_filter used
+            # Since we can't easily determine which namespace a stripped title came from,
+            # we'll use heuristics and content analysis
+            
+            # Check if this looks like a user blog based on content
+            content_preview = doc.page_content[:300].lower()
+            if any(keyword in content_preview for keyword in ['blog', 'personal', 'diary', 'my thoughts']):
+                if not source_title.startswith('User blog:') and 'User blog' in namespace_mapping.values():
+                    full_title = f"User blog:{source_title}"
+            
+            # Check if this looks like a user page
+            elif any(keyword in content_preview for keyword in ['user page', 'about me', 'my profile']):
+                if not source_title.startswith('User:') and 'User' in namespace_mapping.values():
+                    full_title = f"User:{source_title}"
+            
+            # Skip if title starts with excluded namespace prefix
+            if any(full_title.startswith(prefix) for prefix in excluded_prefixes):
+                continue
+                
+            # Enhance metadata
             doc.metadata.update({
-                'title': title,
-                'id': f'page_{title.replace(" ", "_")}',  # Generate ID from title
-                'url': f'{config.SITE_BASE_URL}/wiki/{title.replace(" ", "_")}',
-                'namespace': 0  # We filtered for main namespace
+                'title': full_title,
+                'id': f'page_{full_title.replace(" ", "_")}',
+                'url': f'{config.SITE_BASE_URL}/wiki/{full_title.replace(" ", "_")}',
+                'namespace': 'auto'  # Auto-detected from title
             })
+            
+            filtered_documents.append(doc)
     
-    return documents
+    print(f"Filtered to {len(filtered_documents)} documents")
+    return filtered_documents

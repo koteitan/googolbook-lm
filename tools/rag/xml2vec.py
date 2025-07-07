@@ -36,7 +36,7 @@ def create_and_save_vector_store(
     """Create vector store from XML and save to disk."""
     
     print(f"Loading documents from: {xml_path}")
-    documents = load_mediawiki_documents(xml_path, namespace_filter=[0])
+    documents = load_mediawiki_documents(xml_path)  # Use default namespace_filter (all except excluded)
     print(f"✓ Loaded {format_number(len(documents))} documents")
     
     print(f"Splitting documents (chunk_size={chunk_size}, overlap={chunk_overlap})")
