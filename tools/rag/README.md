@@ -39,13 +39,11 @@ graph TD
 ### [Document](https://python.langchain.com/api_reference/core/documents/langchain_core.documents.base.Document.html) Class
 - **page_content**: `str` - Raw text content of the chunk/article
 - **metadata**: `dict` - Dictionary containing:
+  - **source**: `str` - Original page title (from MWDumpLoader)
   - **title**: `str` - Wiki article title
-  - **id**: `str` - Unique wiki page identifier
+  - **id**: `str` - Generated page identifier (format: `page_Title_With_Underscores`)
   - **url**: `str` - Full URL to the original wiki page
   - **namespace**: `int` - MediaWiki namespace (0 = main articles)
-  - **categories**: `list[str]` - Article category tags
-  - **timestamp**: `str` - Last modification timestamp
-  - **revision_id**: `str` - Revision identifier
 
 ### [FAISS](https://python.langchain.com/api_reference/community/vectorstores/langchain_community.vectorstores.faiss.FAISS.html) Vector Store Class
 - **index**: `faiss.IndexFlatIP` - FAISS index object containing:

@@ -3,6 +3,7 @@
 from typing import List
 from langchain_core.documents import Document
 from langchain_community.document_loaders import MWDumpLoader
+import config
 
 
 def load_mediawiki_documents(xml_path: str, namespace_filter: List[int] = None) -> List[Document]:
@@ -25,4 +26,16 @@ def load_mediawiki_documents(xml_path: str, namespace_filter: List[int] = None) 
     )
     
     documents = loader.load()
+    
+    # Enhance metadata for each document
+    for doc in documents:
+        if 'source' in doc.metadata:
+            title = doc.metadata['source']
+            doc.metadata.update({
+                'title': title,
+                'id': f'page_{title.replace(" ", "_")}',  # Generate ID from title
+                'url': f'{config.SITE_BASE_URL}/wiki/{title.replace(" ", "_")}',
+                'namespace': 0  # We filtered for main namespace
+            })
+    
     return documents
