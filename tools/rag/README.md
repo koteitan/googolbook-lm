@@ -66,3 +66,59 @@ graph TD
     - **[1]**: `float` - Similarity score (0.0 - 1.0)
   - **[1]**: `tuple[Document, float]` - Second best match
   - **[n]**: `tuple[Document, float]` - nth best match
+
+## Requirements
+
+To use the RAG system, install the following Python packages:
+
+```bash
+pip install langchain langchain-community langchain-text-splitters langchain-openai
+pip install faiss-cpu  # or faiss-gpu for GPU support
+pip install sentence-transformers  # For HuggingFace embeddings
+pip install lxml  # For XML parsing
+```
+
+## Usage
+
+### Basic Usage
+
+Search for information about Graham's Number:
+
+```bash
+python tools/rag/rag_search.py "What is Graham's Number?"
+```
+
+### Command Line Options
+
+```bash
+python tools/rag/rag_search.py [query] [options]
+
+Options:
+  --xml-file PATH         Path to XML file (auto-detected if not specified)
+  --cache PATH            Path to cache file for vector store (default: cache/vector_store.pkl)
+  --no-cache              Disable caching
+  --rebuild               Force rebuild of vector store even if cache exists
+  --chunk-size SIZE       Chunk size for text splitting (default: 1000)
+  --chunk-overlap SIZE    Chunk overlap for text splitting (default: 200)
+  --top-k K               Number of results to return (default: 5)
+  --score-threshold SCORE Minimum similarity score threshold
+```
+
+### Examples
+
+Search with custom parameters:
+```bash
+python tools/rag/rag_search.py "TREE(3)" --top-k 10 --chunk-size 500
+```
+
+Rebuild vector store:
+```bash
+python tools/rag/rag_search.py "Fast-growing hierarchy" --rebuild
+```
+
+## Implementation Notes
+
+1. The system uses HuggingFace embeddings by default (specifically the `all-MiniLM-L6-v2` model) to avoid requiring OpenAI API keys.
+2. Vector stores are cached to disk for faster subsequent searches.
+3. Only main namespace articles (namespace=0) are indexed by default.
+4. The MWDumpLoader automatically extracts metadata including title, URL, and page ID from the MediaWiki XML.
