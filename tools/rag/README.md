@@ -170,7 +170,7 @@ python3 tools/rag/rag_search.py "Fast-growing hierarchy" --score-threshold 0.5
 
 5. **Caching**: Vector stores are cached to disk for faster subsequent searches.
 
-6. **Namespace filtering**: Only main namespace articles (namespace=0) are indexed by default to focus on encyclopedic content.
+6. **Namespace filtering**: All namespaces except excluded ones (File, Template, etc.) are indexed to include user blogs and discussion content.
 
 7. **Metadata extraction**: Enhanced metadata extraction provides proper title, URL, and page ID for search results.
 
