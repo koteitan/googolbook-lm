@@ -70,6 +70,44 @@ Once the vector store is created, you can perform fast searches:
 ```bash
 python3 tools/rag/rag_search.py
 ```
+```
+Loading /
+> What is Graham's Number?
+============================================================
+Result 1 (Score: 0.5130)
+============================================================
+Title: Graham's Number
+URL: https://googology.fandom.com/wiki/Graham's_Number
+ID: page_Graham's_Number
+
+Content Preview:
+REDIRECT Graham's number
+
+============================================================
+Result 2 (Score: 0.5130)
+============================================================
+Title: G64
+URL: https://googology.fandom.com/wiki/G64
+ID: page_G64
+
+Content Preview:
+REDIRECT Graham's number
+
+============================================================
+Result 3 (Score: 0.5130)
+============================================================
+Title: Graham
+URL: https://googology.fandom.com/wiki/Graham
+ID: page_Graham
+
+Content Preview:
+REDIRECT Graham's number
+
+============================================================
+Result 4 (Score: 0.5130)
+============================================================
+...
+```
 
 This starts an interactive search session where you can:
 - Enter multiple queries without reloading the vector store
