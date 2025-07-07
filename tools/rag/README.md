@@ -79,8 +79,9 @@ To use the RAG system, install the following Python packages:
 
 ```bash
 pip install langchain langchain-community langchain-text-splitters langchain-openai
+pip install langchain-huggingface  # For HuggingFace embeddings (new package)
 pip install faiss-cpu  # or faiss-gpu for GPU support
-pip install sentence-transformers  # For HuggingFace embeddings
+pip install sentence-transformers  # For HuggingFace model downloads
 pip install lxml  # For XML parsing
 pip install mwxml  # For MediaWiki XML parsing
 pip install mwparserfromhell  # For MediaWiki markup parsing

@@ -4,7 +4,11 @@ from typing import List, Tuple, Optional
 from langchain_core.documents import Document
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
-from langchain_community.embeddings import HuggingFaceEmbeddings
+try:
+    from langchain_huggingface import HuggingFaceEmbeddings
+except ImportError:
+    # Fallback to old import for compatibility
+    from langchain_community.embeddings import HuggingFaceEmbeddings
 
 
 def create_vector_store(
