@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-RAG Search Tool for Googology Wiki
+RAG Search Tool for MediaWiki
 
 This tool implements a Retrieval-Augmented Generation (RAG) system
-to search through Googology Wiki content using vector similarity.
+to search through MediaWiki content using vector similarity.
 """
 
 import os
@@ -66,7 +66,7 @@ def format_search_results(results):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Search Googology Wiki using RAG (Retrieval-Augmented Generation)'
+        description=f'Search {config.SITE_NAME} using RAG (Retrieval-Augmented Generation)'
     )
     parser.add_argument(
         'query',
@@ -76,8 +76,8 @@ def main():
     )
     parser.add_argument(
         '--cache',
-        default='cache/vector_store.pkl',
-        help='Path to vector store file (default: cache/vector_store.pkl)'
+        default=str(config.DATA_DIR / 'vector_store.pkl'),
+        help=f'Path to vector store file (default: {config.DATA_DIR}/vector_store.pkl)'
     )
     parser.add_argument(
         '--top-k',

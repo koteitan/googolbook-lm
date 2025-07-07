@@ -1,5 +1,7 @@
 # LangChain RAG System Specification
 
+This RAG system works with any MediaWiki site configured in `config.py`. The default paths shown below use the current site configuration.
+
 ## RAG Processing Flow
 
 The LangChain RAG system follows a clear data processing pipeline from MediaWiki XML dumps to searchable vector representations:
@@ -81,6 +83,7 @@ pip install faiss-cpu  # or faiss-gpu for GPU support
 pip install sentence-transformers  # For HuggingFace embeddings
 pip install lxml  # For XML parsing
 pip install mwxml  # For MediaWiki XML parsing
+pip install mwparserfromhell  # For MediaWiki markup parsing
 ```
 
 ## Usage
@@ -102,7 +105,7 @@ This will:
 - Load and process the MediaWiki XML file
 - Split documents into chunks
 - Create embeddings for all chunks
-- Save the vector store to `cache/vector_store.pkl`
+- Save the vector store to `data/googology-wiki/vector_store.pkl`
 
 #### Vector Store Creation Options
 
@@ -111,7 +114,7 @@ python tools/rag/xml2vec.py [options]
 
 Options:
   --xml-file PATH         Path to XML file (auto-detected if not specified)
-  --output PATH           Output path for vector store (default: cache/vector_store.pkl)
+  --output PATH           Output path for vector store (default: data/googology-wiki/vector_store.pkl)
   --chunk-size SIZE       Chunk size for text splitting (default: 1000)
   --chunk-overlap SIZE    Chunk overlap for text splitting (default: 200)
   --use-openai            Use OpenAI embeddings (requires OPENAI_API_KEY)
@@ -133,7 +136,7 @@ python tools/rag/rag_search.py "What is Graham's Number?"
 python tools/rag/rag_search.py [query] [options]
 
 Options:
-  --cache PATH            Path to vector store file (default: cache/vector_store.pkl)
+  --cache PATH            Path to vector store file (default: data/googology-wiki/vector_store.pkl)
   --top-k K               Number of results to return (default: 5)
   --score-threshold SCORE Minimum similarity score threshold
 ```

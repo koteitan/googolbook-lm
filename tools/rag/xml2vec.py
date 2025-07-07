@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Vector Store Creation Tool for Googology Wiki RAG System
+Vector Store Creation Tool for MediaWiki RAG System
 
 This tool creates and saves a vector store from MediaWiki XML data.
 Run this once to prepare the data for fast searches.
@@ -68,7 +68,7 @@ def create_and_save_vector_store(
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Create vector store for Googology Wiki RAG system'
+        description=f'Create vector store for {config.SITE_NAME} RAG system'
     )
     parser.add_argument(
         '--xml-file',
@@ -76,8 +76,8 @@ def main():
     )
     parser.add_argument(
         '--output',
-        default='cache/vector_store.pkl',
-        help='Output path for vector store (default: cache/vector_store.pkl)'
+        default=str(config.DATA_DIR / 'vector_store.pkl'),
+        help=f'Output path for vector store (default: {config.DATA_DIR}/vector_store.pkl)'
     )
     parser.add_argument(
         '--chunk-size',
