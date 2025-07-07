@@ -20,57 +20,6 @@ graph TD
     end
 ```
 
-### Function References
-
-* **MWDumpLoader**
-  * How To: [MediaWiki Dump Loader](https://python.langchain.com/docs/integrations/document_loaders/mediawikidump/)
-  * Reference: [MWDumpLoader API](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.mediawikidump.MWDumpLoader.html)
-
-* **RecursiveCharacterTextSplitter**
-  * How To: [Text Splitters](https://python.langchain.com/docs/concepts/text_splitters/)
-  * Reference: [RecursiveCharacterTextSplitter API](https://python.langchain.com/api_reference/text_splitters/character/langchain_text_splitters.character.RecursiveCharacterTextSplitter.html)
-
-* **FAISS**
-  * How To: [FAISS Vector Store](https://python.langchain.com/docs/integrations/vectorstores/faiss/)
-  * Reference: [FAISS API](https://python.langchain.com/api_reference/community/vectorstores/langchain_community.vectorstores.faiss.FAISS.html)
-
-## Object Structure Overview
-
-### [Document](https://python.langchain.com/api_reference/core/documents/langchain_core.documents.base.Document.html) Class
-- **page_content**: `str` - Raw text content of the chunk/article
-- **metadata**: `dict` - Dictionary containing:
-  - **source**: `str` - Original page title (from MWDumpLoader)
-  - **title**: `str` - Wiki article title
-  - **id**: `str` - Generated page identifier (format: `page_Title_With_Underscores`)
-  - **url**: `str` - Full URL to the original wiki page
-  - **namespace**: `int` - MediaWiki namespace (0 = main articles)
-
-### [FAISS](https://python.langchain.com/api_reference/community/vectorstores/langchain_community.vectorstores.faiss.FAISS.html) Vector Store Class
-- **index**: `faiss.IndexFlatIP` - FAISS index object containing:
-  - **ntotal**: `int` - Total number of stored vectors
-  - **d**: `int` - Vector dimension size
-  - **get_vector(i)**: `numpy.ndarray` - Retrieve vector at index i
-- **docstore**: `InMemoryDocstore` - Document storage containing:
-  - **_dict**: `dict[str, Document]` - Document mapping where:
-    - **key**: `str` - document_id
-    - **value**: `Document` - Document object with page_content and metadata
-- **index_to_docstore_id**: `dict[int, str]` - Vector index to document ID mapping where:
-  - **key**: `int` - vector_index
-  - **value**: `str` - document_id
-- **embedding_function**: `BaseEmbeddings` - Embedding function with methods:
-  - **embed_query(text)**: `list[float]` - Convert query text to vector
-  - **embed_documents(texts)**: `list[list[float]]` - Convert document texts to vectors
-
-### Search Results Structure
-- **results**: `list[tuple[Document, float]]` - List of tuples containing:
-  - **[0]**: `tuple[Document, float]` - First result tuple:
-    - **[0]**: `Document` - Document object with:
-      - **page_content**: `str` - Matching chunk text content
-      - **metadata**: `dict` - Original metadata (title, id, url, etc.)
-    - **[1]**: `float` - Similarity score (0.0 - 1.0)
-  - **[1]**: `tuple[Document, float]` - Second best match
-  - **[n]**: `tuple[Document, float]` - nth best match
-
 ## Requirements
 
 To use the RAG system, install the following Python packages:
@@ -94,10 +43,18 @@ The RAG system uses a two-step process:
 
 ### Step 1: Create Vector Store
 
-First, create the vector store from the XML data:
+First, fetch the XML data if you don't have it:
 
 ```bash
-python3 tools/rag/xml2vec.py
+cd tools/fetch/
+python3 fetch.py
+```
+
+Then create the vector store:
+
+```bash
+cd tools/rag/
+python3 xml2vec.py
 ```
 
 This will:
@@ -106,7 +63,21 @@ This will:
 - Create embeddings for all chunks
 - Save the vector store to `data/googology-wiki/vector_store.pkl`
 
-#### Vector Store Creation Options
+### Step 2: Search
+
+Once the vector store is created, you can perform fast searches:
+
+```bash
+python3 tools/rag/rag_search.py
+```
+
+This starts an interactive search session where you can:
+- Enter multiple queries without reloading the vector store
+- Exit by typing 'quit', 'exit', or pressing Ctrl+C/Ctrl+D
+
+## Command Line Options
+
+### Vector Store Creation Options
 
 ```bash
 python3 tools/rag/xml2vec.py [options]
@@ -121,15 +92,7 @@ Options:
   --force                 Overwrite existing vector store
 ```
 
-### Step 2: Search
-
-Once the vector store is created, you can perform fast searches:
-
-```bash
-python3 tools/rag/rag_search.py "What is Graham's Number?"
-```
-
-#### Search Options
+### Search Options
 
 ```bash
 python3 tools/rag/rag_search.py [query] [options]
@@ -140,7 +103,7 @@ Options:
   --score-threshold SCORE Minimum similarity score threshold
 ```
 
-### Examples
+## Examples
 
 Create vector store with custom settings:
 ```bash
@@ -163,3 +126,54 @@ python3 tools/rag/rag_search.py "Fast-growing hierarchy" --score-threshold 0.5
 2. Vector stores are cached to disk for faster subsequent searches.
 3. Only main namespace articles (namespace=0) are indexed by default.
 4. The MWDumpLoader automatically extracts metadata including title, URL, and page ID from the MediaWiki XML.
+
+### Function References
+
+* **MWDumpLoader**
+  * How To: [MediaWiki Dump Loader](https://python.langchain.com/docs/integrations/document_loaders/mediawikidump/)
+  * Reference: [MWDumpLoader API](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.mediawikidump.MWDumpLoader.html)
+
+* **RecursiveCharacterTextSplitter**
+  * How To: [Text Splitters](https://python.langchain.com/docs/concepts/text_splitters/)
+  * Reference: [RecursiveCharacterTextSplitter API](https://python.langchain.com/api_reference/text_splitters/character/langchain_text_splitters.character.RecursiveCharacterTextSplitter.html)
+
+* **FAISS**
+  * How To: [FAISS Vector Store](https://python.langchain.com/docs/integrations/vectorstores/faiss/)
+  * Reference: [FAISS API](https://python.langchain.com/api_reference/community/vectorstores/langchain_community.vectorstores.faiss.FAISS.html)
+
+### Object Structure Overview
+
+#### [Document](https://python.langchain.com/api_reference/core/documents/langchain_core.documents.base.Document.html) Class
+- **page_content**: `str` - Raw text content of the chunk/article
+- **metadata**: `dict` - Dictionary containing:
+  - **source**: `str` - Original page title (from MWDumpLoader)
+  - **title**: `str` - Wiki article title
+  - **id**: `str` - Generated page identifier (format: `page_Title_With_Underscores`)
+  - **url**: `str` - Full URL to the original wiki page
+  - **namespace**: `int` - MediaWiki namespace (0 = main articles)
+
+#### [FAISS](https://python.langchain.com/api_reference/community/vectorstores/langchain_community.vectorstores.faiss.FAISS.html) Vector Store Class
+- **index**: `faiss.IndexFlatIP` - FAISS index object containing:
+  - **ntotal**: `int` - Total number of stored vectors
+  - **d**: `int` - Vector dimension size
+  - **get_vector(i)**: `numpy.ndarray` - Retrieve vector at index i
+- **docstore**: `InMemoryDocstore` - Document storage containing:
+  - **_dict**: `dict[str, Document]` - Document mapping where:
+    - **key**: `str` - document_id
+    - **value**: `Document` - Document object with page_content and metadata
+- **index_to_docstore_id**: `dict[int, str]` - Vector index to document ID mapping where:
+  - **key**: `int` - vector_index
+  - **value**: `str` - document_id
+- **embedding_function**: `BaseEmbeddings` - Embedding function with methods:
+  - **embed_query(text)**: `list[float]` - Convert query text to vector
+  - **embed_documents(texts)**: `list[list[float]]` - Convert document texts to vectors
+
+#### Search Results Structure
+- **results**: `list[tuple[Document, float]]` - List of tuples containing:
+  - **[0]**: `tuple[Document, float]` - First result tuple:
+    - **[0]**: `Document` - Document object with:
+      - **page_content**: `str` - Matching chunk text content
+      - **metadata**: `dict` - Original metadata (title, id, url, etc.)
+    - **[1]**: `float` - Similarity score (0.0 - 1.0)
+  - **[1]**: `tuple[Document, float]` - Second best match
+  - **[n]**: `tuple[Document, float]` - nth best match
