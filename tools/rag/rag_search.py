@@ -71,8 +71,8 @@ def main():
     parser.add_argument(
         'query',
         nargs='?',
-        default="What is Graham's Number?",
-        help='Search query (default: "What is Graham\'s Number?")'
+        default=None,
+        help='Search query'
     )
     parser.add_argument(
         '--cache',
@@ -94,23 +94,63 @@ def main():
     args = parser.parse_args()
     
     try:
-        # Load vector store
+        # Load vector store first
         vector_store = load_vector_store(args.cache)
         
-        # Perform search
-        print(f"\nSearching for: {args.query}")
-        results = search_documents(
-            vector_store,
-            args.query,
-            k=args.top_k,
-            score_threshold=args.score_threshold
-        )
+        # Single query mode if argument provided
+        if args.query is not None:
+            print(f"\nSearching for: {args.query}")
+            results = search_documents(
+                vector_store,
+                args.query,
+                k=args.top_k,
+                score_threshold=args.score_threshold
+            )
+            
+            if not results:
+                print("No results found.")
+            else:
+                print(f"\nFound {len(results)} results:")
+                print(format_search_results(results))
         
-        if not results:
-            print("No results found.")
+        # Interactive mode if no argument
         else:
-            print(f"\nFound {len(results)} results:")
-            print(format_search_results(results))
+            print(f"\nInteractive RAG search for {config.SITE_NAME}")
+            print("Type 'quit' or 'exit' to stop, or press Ctrl+C/Ctrl+D\n")
+            
+            while True:
+                try:
+                    query = input("Enter search query: ").strip()
+                    
+                    if not query:
+                        continue
+                    
+                    if query.lower() in ['quit', 'exit']:
+                        print("Goodbye!")
+                        break
+                    
+                    print(f"\nSearching for: {query}")
+                    results = search_documents(
+                        vector_store,
+                        query,
+                        k=args.top_k,
+                        score_threshold=args.score_threshold
+                    )
+                    
+                    if not results:
+                        print("No results found.")
+                    else:
+                        print(f"\nFound {len(results)} results:")
+                        print(format_search_results(results))
+                    
+                    print()  # Empty line before next prompt
+                    
+                except KeyboardInterrupt:
+                    print("\nGoodbye!")
+                    break
+                except EOFError:
+                    print("\nGoodbye!")
+                    break
             
     except FileNotFoundError as e:
         print(f"Error: {e}")
