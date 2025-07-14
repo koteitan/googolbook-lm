@@ -53,8 +53,8 @@ def load_mediawiki_documents(xml_path: str, namespace_filter: List[int] = None) 
     documents = loader.load()
     print(f"Loaded {len(documents)} documents before filtering")
     
-    # Create reverse mapping: namespace name -> namespace ID
-    name_to_id = {name: ns_id for ns_id, name in namespace_mapping.items()}
+    # Create reverse mapping: namespace ID -> namespace name
+    id_to_name = {int(ns_id): ns_name for ns_id, ns_name in namespace_mapping.items() if ns_id.isdigit()}
     
     # Filter out excluded namespaces and enhance metadata
     excluded_prefixes = [ns + ':' for ns in config.EXCLUDED_NAMESPACES]
@@ -64,34 +64,32 @@ def load_mediawiki_documents(xml_path: str, namespace_filter: List[int] = None) 
         if 'source' in doc.metadata:
             source_title = doc.metadata['source']
             
-            # Try to reconstruct full title with namespace prefix
+            # Reconstruct full title with namespace prefix
+            # MWDumpLoader strips namespace prefixes, so we need to add them back
             full_title = source_title
             
-            # For non-main namespace documents, MWDumpLoader strips the namespace prefix
-            # We need to reconstruct it based on the namespace_filter used
-            # Since we can't easily determine which namespace a stripped title came from,
-            # we'll use heuristics and content analysis
+            # Reconstruct namespace prefix based on title patterns
+            # MWDumpLoader strips namespace prefixes, so we need to detect and restore them
             
-            # Check if this looks like a user blog based on content
-            content_preview = doc.page_content[:300].lower()
-            if any(keyword in content_preview for keyword in ['blog', 'personal', 'diary', 'my thoughts']):
-                if not source_title.startswith('User blog:') and 'User blog' in namespace_mapping.values():
-                    full_title = f"User blog:{source_title}"
-            
-            # Check if this looks like a user page
-            elif any(keyword in content_preview for keyword in ['user page', 'about me', 'my profile']):
-                if not source_title.startswith('User:') and 'User' in namespace_mapping.values():
-                    full_title = f"User:{source_title}"
+            # User blog namespace: typically contains '/' or person names
+            if ('/' in source_title and 500 in namespace_filter and 500 in id_to_name):
+                # This is likely from User blog namespace
+                full_title = f"{id_to_name[500]}:{source_title}"
+            else:
+                # Main namespace or other - no prefix needed for Main
+                full_title = source_title
             
             # Skip if title starts with excluded namespace prefix
             if any(full_title.startswith(prefix) for prefix in excluded_prefixes):
                 continue
                 
             # Enhance metadata
+            # For URLs, replace spaces with underscores but keep colons
+            url_title = full_title.replace(" ", "_")
             doc.metadata.update({
                 'title': full_title,
                 'id': f'page_{full_title.replace(" ", "_")}',
-                'url': f'{config.SITE_BASE_URL}/wiki/{full_title.replace(" ", "_")}',
+                'url': f'{config.SITE_BASE_URL}/wiki/{url_title}',
                 'namespace': 'auto'  # Auto-detected from title
             })
             
