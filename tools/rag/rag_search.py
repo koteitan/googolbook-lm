@@ -14,7 +14,6 @@ import time
 import threading
 from typing import Optional
 from pathlib import Path
-from urllib.parse import quote
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -77,23 +76,10 @@ def format_search_results(results):
         # Display metadata
         metadata = doc.metadata
         title = metadata.get('title', 'Unknown')
-        base_url = metadata.get('url', 'N/A')
-        
-        # Create URL-encoded version for terminal compatibility
-        if base_url != 'N/A':
-            # Extract the page name from the URL and encode it
-            if '/wiki/' in base_url:
-                base_part, page_part = base_url.rsplit('/wiki/', 1)
-                # Encode special characters but keep safe characters like : and _
-                encoded_page = quote(page_part, safe=':_')
-                encoded_url = f"{base_part}/wiki/{encoded_page}"
-            else:
-                encoded_url = base_url
-        else:
-            encoded_url = 'N/A'
+        url = metadata.get('url', 'N/A')
         
         output.append(f"Title: {title}")
-        output.append(f"URL: {encoded_url}")
+        output.append(f"URL: {url}")
         output.append(f"ID: {metadata.get('id', 'N/A')}")
         
         # Display content preview

@@ -1,10 +1,34 @@
 """MediaWiki XML document loading utilities."""
 
-from typing import List
+from typing import List, Dict
 from langchain_core.documents import Document
 from langchain_community.document_loaders import MWDumpLoader
 import config
-from ..xml_parser import parse_namespaces
+from ..xml_parser import parse_namespaces, iterate_pages
+
+
+def build_title_to_page_id_mapping(xml_path: str) -> Dict[str, str]:
+    """
+    Build a mapping from page titles to page IDs by parsing XML directly.
+    
+    Args:
+        xml_path: Path to the MediaWiki XML dump file
+        
+    Returns:
+        Dictionary mapping page titles to page IDs
+    """
+    title_to_id = {}
+    
+    print("Building title-to-page-ID mapping...")
+    for page_count, elements in iterate_pages(xml_path, show_progress=False):
+        if elements.get('id') and elements.get('title'):
+            title_to_id[elements['title']] = elements['id']
+            
+        if page_count % 10000 == 0:
+            print(f"Processed {page_count:,} pages for ID mapping...")
+    
+    print(f"Built mapping for {len(title_to_id):,} pages")
+    return title_to_id
 
 
 def load_mediawiki_documents(xml_path: str, namespace_filter: List[int] = None) -> List[Document]:
@@ -53,6 +77,9 @@ def load_mediawiki_documents(xml_path: str, namespace_filter: List[int] = None) 
     documents = loader.load()
     print(f"Loaded {len(documents)} documents before filtering")
     
+    # Build title-to-page-ID mapping
+    title_to_id = build_title_to_page_id_mapping(xml_path)
+    
     # Create reverse mapping: namespace ID -> namespace name
     id_to_name = {int(ns_id): ns_name for ns_id, ns_name in namespace_mapping.items() if ns_id.isdigit()}
     
@@ -84,12 +111,19 @@ def load_mediawiki_documents(xml_path: str, namespace_filter: List[int] = None) 
                 continue
                 
             # Enhance metadata
-            # For URLs, replace spaces with underscores but keep colons
-            url_title = full_title.replace(" ", "_")
+            # Generate curid-based URL
+            page_id = title_to_id.get(full_title)
+            if page_id:
+                url = f'https://googology.fandom.com/wiki/?curid={page_id}'
+            else:
+                # Fallback to wiki URL if page ID not found
+                url_title = full_title.replace(" ", "_")
+                url = f'{config.SITE_BASE_URL}/wiki/{url_title}'
+            
             doc.metadata.update({
                 'title': full_title,
-                'id': f'page_{full_title.replace(" ", "_")}',
-                'url': f'{config.SITE_BASE_URL}/wiki/{url_title}',
+                'id': page_id or f'page_{full_title.replace(" ", "_")}',
+                'url': url,
                 'namespace': 'auto'  # Auto-detected from title
             })
             
