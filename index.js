@@ -42,21 +42,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Vector math utilities
 function cosineSimilarity(vecA, vecB) {
+    if (!vecA || !vecB || vecA.length !== vecB.length) {
+        console.error('Invalid vectors for cosine similarity:', {
+            vecA: vecA ? vecA.length : 'null',
+            vecB: vecB ? vecB.length : 'null'
+        });
+        return 0;
+    }
+    
     let dotProduct = 0;
     let normA = 0;
     let normB = 0;
     
     for (let i = 0; i < vecA.length; i++) {
-        dotProduct += vecA[i] * vecB[i];
-        normA += vecA[i] * vecA[i];
-        normB += vecB[i] * vecB[i];
+        const a = vecA[i];
+        const b = vecB[i];
+        
+        if (typeof a !== 'number' || typeof b !== 'number' || isNaN(a) || isNaN(b)) {
+            console.error(`Invalid vector components at index ${i}:`, { a, b });
+            return 0;
+        }
+        
+        dotProduct += a * b;
+        normA += a * a;
+        normB += b * b;
     }
     
     normA = Math.sqrt(normA);
     normB = Math.sqrt(normB);
     
-    if (normA === 0 || normB === 0) return 0;
-    return dotProduct / (normA * normB);
+    if (normA === 0 || normB === 0 || isNaN(normA) || isNaN(normB)) {
+        console.error('Invalid norms:', { normA, normB });
+        return 0;
+    }
+    
+    const similarity = dotProduct / (normA * normB);
+    
+    if (isNaN(similarity)) {
+        console.error('NaN similarity result:', { dotProduct, normA, normB });
+        return 0;
+    }
+    
+    return similarity;
 }
 
 // Load vector store from compressed JSON
@@ -94,28 +121,63 @@ async function loadVectorStore() {
                     throw new Error('API key required for semantic search');
                 }
                 
+                console.log(`Searching for: "${query}" in ${vectorStore.documents.length} documents`);
+                
                 // Get query embedding from OpenAI
+                console.log('Getting query embedding...');
                 const queryEmbedding = await getEmbedding(query, apiKey);
+                console.log('Query embedding dimension:', queryEmbedding.length);
                 
                 // Calculate similarities
                 const similarities = [];
-                for (const doc of vectorStore.documents) {
+                let validSimilarities = 0;
+                let invalidSimilarities = 0;
+                
+                for (let i = 0; i < vectorStore.documents.length; i++) {
+                    const doc = vectorStore.documents[i];
+                    if (!doc.embedding || !Array.isArray(doc.embedding)) {
+                        console.error(`Invalid embedding for document ${i}:`, doc);
+                        invalidSimilarities++;
+                        continue;
+                    }
+                    
                     const similarity = cosineSimilarity(queryEmbedding, doc.embedding);
-                    similarities.push({
-                        ...doc,
-                        score: similarity
-                    });
+                    if (isNaN(similarity)) {
+                        console.error(`NaN similarity for document ${i}:`, {
+                            docId: doc.id,
+                            queryEmbedding: queryEmbedding.slice(0, 5),
+                            docEmbedding: doc.embedding.slice(0, 5),
+                            similarity
+                        });
+                        invalidSimilarities++;
+                    } else {
+                        validSimilarities++;
+                        similarities.push({
+                            ...doc,
+                            score: similarity
+                        });
+                    }
+                    
+                    // Log progress for large datasets
+                    if (i > 0 && i % 10000 === 0) {
+                        console.log(`Processed ${i}/${vectorStore.documents.length} documents`);
+                    }
                 }
+                
+                console.log(`Similarity calculation complete: ${validSimilarities} valid, ${invalidSimilarities} invalid`);
                 
                 // Sort by similarity and return top k
                 similarities.sort((a, b) => b.score - a.score);
-                return similarities.slice(0, k).map(doc => ({
+                const topResults = similarities.slice(0, k).map(doc => ({
                     title: doc.metadata.title || 'Unknown',
                     content: doc.content,
                     score: doc.score,
                     url: doc.metadata.url || '#',
                     id: doc.metadata.id || doc.id
                 }));
+                
+                console.log('Top results:', topResults.map(r => ({ title: r.title, score: r.score })));
+                return topResults;
             }
         };
         
@@ -178,16 +240,56 @@ async function handleSend() {
     
     try {
         // Search vector store
+        console.log('Starting vector search...');
         const searchResults = await vectorStore.search(query);
+        console.log('Search completed. Results:', searchResults);
+        
         displayRAGResults(searchResults);
         
+        // Create debug info
+        const debugInfo = {
+            query: query,
+            totalDocuments: vectorStore.documents.length,
+            searchResults: searchResults.length,
+            topResults: searchResults.slice(0, 3).map(r => ({
+                title: r.title,
+                score: r.score,
+                id: r.id,
+                contentPreview: r.content.substring(0, 100)
+            }))
+        };
+        
         // Generate response with LLM
-        const response = await generateResponse(query, searchResults, apiKey);
-        displayResponse(response);
+        let response;
+        try {
+            response = await generateResponse(query, searchResults, apiKey);
+        } catch (llmError) {
+            console.error('LLM Error:', llmError);
+            response = `LLM Error: ${llmError.message}\n\n--- DEBUG INFO ---\n${JSON.stringify(debugInfo, null, 2)}`;
+        }
+        
+        // Add debug info to response
+        const fullResponse = response + `\n\n--- RAG DEBUG INFO ---\n` +
+            `Query: "${debugInfo.query}"\n` +
+            `Total documents in vector store: ${debugInfo.totalDocuments}\n` +
+            `Search results found: ${debugInfo.searchResults}\n` +
+            `Top 3 results:\n${debugInfo.topResults.map((r, i) => 
+                `${i+1}. ${r.title} (Score: ${r.score}, ID: ${r.id})\n   Preview: ${r.contentPreview}...`
+            ).join('\n')}`;
+        
+        displayResponse(fullResponse);
         
     } catch (error) {
         console.error('Error processing query:', error);
-        elements.responseWindow.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+        const errorDetails = {
+            message: error.message,
+            stack: error.stack,
+            vectorStoreLoaded: !!vectorStore,
+            vectorStoreDocuments: vectorStore ? vectorStore.documents.length : 0,
+            query: query
+        };
+        elements.responseWindow.innerHTML = `<p class="error">Error: ${error.message}</p>
+            <pre class="error">${JSON.stringify(errorDetails, null, 2)}</pre>`;
     } finally {
         elements.sendBtn.disabled = false;
         elements.promptWindow.disabled = false;
