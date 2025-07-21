@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Googology Wiki RAG Q&A System</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Googology Wiki Q&A with RAG</h1>
+            <p class="subtitle">Ask questions about googology and get AI-powered answers with sources</p>
+        </header>
+
+        <main>
+            <!-- Configuration Section -->
+            <section class="config-section">
+                <h2>Configuration</h2>
+                <div class="config-grid">
+                    <div class="config-item">
+                        <label for="base-url">LLM API Base URL:</label>
+                        <input type="url" id="base-url" placeholder="https://api.openai.com/v1">
+                    </div>
+                    <div class="config-item">
+                        <label for="api-key">API Key:</label>
+                        <input type="password" id="api-key" placeholder="Enter your API key">
+                    </div>
+                </div>
+                <div class="data-loading">
+                    <button id="load-data-btn" class="btn btn-primary">Load Vector Store</button>
+                    <div class="progress-container">
+                        <div id="loading-progress" class="progress-bar"></div>
+                        <span id="loading-status">Not loaded</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Question Section -->
+            <section class="question-section">
+                <h2>Ask a Question</h2>
+                <div class="prompt-area">
+                    <textarea id="prompt-window" 
+                              placeholder="Enter your question about googology here..."
+                              rows="4"></textarea>
+                    <button id="send-btn" class="btn btn-primary" disabled>Send</button>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section class="results-section">
+                <div class="results-grid">
+                    <!-- Response Window -->
+                    <div class="response-container">
+                        <h3>AI Response</h3>
+                        <div id="response-window" class="content-window">
+                            <p class="placeholder">Your AI-generated answer will appear here...</p>
+                        </div>
+                    </div>
+
+                    <!-- RAG Results Window -->
+                    <div class="rag-container">
+                        <h3>RAG Search Results</h3>
+                        <div id="rag-window" class="content-window">
+                            <p class="placeholder">Related documents from the wiki will appear here...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Powered by RAG (Retrieval-Augmented Generation) • Data from Googology Wiki</p>
+        </footer>
+    </div>
+
+    <script src="index.js"></script>
+</body>
+</html>

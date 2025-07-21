@@ -10,6 +10,7 @@ import os
 import sys
 import argparse
 import pickle
+import gzip
 from pathlib import Path
 
 # Add parent directory to path for imports
@@ -57,11 +58,20 @@ def create_and_save_vector_store(
     
     print(f"Saving vector store to: {output_path}")
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    
+    # Save as regular pickle
     with open(output_path, 'wb') as f:
         pickle.dump(vector_store, f)
-    
     print(f"✓ Vector store saved successfully!")
     print(f"  File size: {os.path.getsize(output_path) / 1024 / 1024:.1f} MB")
+    
+    # Also save compressed version for web
+    gz_path = output_path + '.gz'
+    print(f"Creating compressed version: {gz_path}")
+    with gzip.open(gz_path, 'wb') as f:
+        pickle.dump(vector_store, f)
+    print(f"✓ Compressed vector store saved!")
+    print(f"  Compressed size: {os.path.getsize(gz_path) / 1024 / 1024:.1f} MB")
     
     return vector_store
 
