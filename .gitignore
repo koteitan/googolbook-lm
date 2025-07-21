@@ -27,3 +27,15 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+# Vector store files (generated content)
+data/*/vector_store.pkl
+data/*/vector_store.pkl.gz
+data/*/vector_store.json
+data/*/vector_store.json.gz
+
+# Log files
+*.log
+
+# ctags files
+tags
