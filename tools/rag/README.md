@@ -8,15 +8,21 @@ The LangChain RAG system follows a clear data processing pipeline from MediaWiki
 
 ```mermaid
 graph TD
-    subgraph main_flow["Main Processing Flow"]
+    subgraph xml2vec["xml2vec.py"]
         A[xml] -->|MWDumpLoader.load| B[Document documents]
         B -->|RecursiveCharacterTextSplitter.split_documents| C[Document chunks]
         C -->|FAISS.from_documents| D[vector_store.pkl]
-        D -->|export| G[vector_store.json.gz]
-        G -->|load & decompress| H[vectorStore object]
-        I[user query] -->|HuggingFace Transformers.js| J[query embedding]
-        H -->|cosine similarity| K[search results]
-        J -->|cosine similarity| K
+    end
+    
+    subgraph vec2json["vec2json.py"]
+        D --> G[vector_store.json.gz]
+    end
+    
+    subgraph web_interface["index.js Web Interface"]
+        G -->|pako.inflate + JSON.parse| H[vectorStore object]
+        I[user query] -->|"pipeline('feature-extraction').embedder"| J[query embedding]
+        H -->|cosineSimilarity| K[search results]
+        J -->|cosineSimilarity| K
         K -->|OpenAI API| L[AI response]
     end
     
