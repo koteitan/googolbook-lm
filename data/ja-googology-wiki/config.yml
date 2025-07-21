@@ -64,10 +64,13 @@ web:
   # Current site directory name
   current_site: "ja-googology-wiki"
   
-  # Vector store file paths (relative to site directory)
+  # Vector store file paths
   vector_store:
     meta_path: "./vector_store_meta.json"
-    part_path_template: "./vector_store_part{}.json.gz"
+    # Local files (commented out for deployment)
+    # part_path_template: "./vector_store_part{}.json.gz"
+    # External CDN hosting for large vector store files
+    part_path_template: "http://www.ukaibutton.com/googolbook-lm/data/ja-googology-wiki/vector_store_part{}.json.gz"
   
   # Default API settings
   api:
