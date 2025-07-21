@@ -1,3 +1,4 @@
+// RAG Common Module - Shared functionality across all sites
 // Import Transformers.js for HuggingFace embeddings
 import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.6.0/dist/transformers.min.js';
 
@@ -14,10 +15,9 @@ let embedder = null;
 let CONFIG = null; // Will be loaded from YAML
 
 // Load configuration from YAML
-async function loadConfig() {
+async function loadConfig(currentSite) {
     try {
-        const currentSite = 'ja-googology-wiki'; // Default site
-        const configPath = `data/${currentSite}/config.yml`;
+        const configPath = `./config.yml`;
         
         console.log('Loading configuration from:', configPath);
         const response = await fetch(configPath);
@@ -43,6 +43,8 @@ async function loadConfig() {
         };
         
         console.log('Configuration loaded successfully:', CONFIG);
+        console.log('VECTOR_STORE_META_PATH:', CONFIG.VECTOR_STORE_META_PATH);
+        console.log('VECTOR_STORE_PART_PATH_TEMPLATE:', CONFIG.VECTOR_STORE_PART_PATH_TEMPLATE);
         return CONFIG;
     } catch (error) {
         console.error('Failed to load configuration:', error);
@@ -62,63 +64,6 @@ async function loadConfig() {
         return CONFIG;
     }
 }
-
-// DOM Elements
-const elements = {
-    baseUrl: document.getElementById('base-url'),
-    apiKey: document.getElementById('api-key'),
-    loadDataBtn: document.getElementById('load-data-btn'),
-    loadingProgress: document.getElementById('loading-progress'),
-    loadingStatus: document.getElementById('loading-status'),
-    promptWindow: document.getElementById('prompt-window'),
-    sendBtn: document.getElementById('send-btn'),
-    responseWindow: document.getElementById('response-window'),
-    ragWindow: document.getElementById('rag-window'),
-    errorMessages: document.getElementById('error-messages')
-};
-
-// Initialize
-document.addEventListener('DOMContentLoaded', async () => {
-    // Load configuration first
-    await loadConfig();
-    
-    // Set default API URL
-    elements.baseUrl.value = CONFIG.DEFAULT_API_URL;
-    
-    // Initialize the embedding pipeline for retrieval
-    console.log('Initializing HuggingFace embedding pipeline for retrieval...');
-    elements.loadingStatus.textContent = 'Initializing embedding model...';
-    
-    try {
-        embedder = await pipeline('feature-extraction', CONFIG.EMBEDDING_MODEL);
-        console.log('HuggingFace embedding pipeline initialized successfully');
-        elements.loadingStatus.textContent = 'Embedding model ready - click "Load Data"';
-    } catch (error) {
-        console.error('Failed to initialize embedding pipeline:', error);
-        elements.loadingStatus.textContent = 'Failed to initialize embedding model';
-    }
-    
-    // Initial error check - removed early checks to avoid showing errors before password manager fills values
-    
-    // Event listeners
-    elements.loadDataBtn.addEventListener('click', loadVectorStore);
-    elements.sendBtn.addEventListener('click', handleSend);
-    elements.promptWindow.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && e.ctrlKey && !elements.sendBtn.disabled) {
-            handleSend();
-        }
-    });
-    
-    // Listen for input changes to update error messages
-    elements.baseUrl.addEventListener('input', checkAndShowErrors);
-    elements.apiKey.addEventListener('input', checkAndShowErrors);
-    
-    // Single delayed check for initial error display
-    setTimeout(() => {
-        checkAndShowErrors();
-    }, 1000);
-    
-});
 
 // Vector math utilities
 function cosineSimilarity(vecA, vecB) {
@@ -167,7 +112,7 @@ function cosineSimilarity(vecA, vecB) {
 }
 
 // Load vector store from multiple compressed JSON parts
-async function loadVectorStore() {
+async function loadVectorStore(elements) {
     if (isLoading || !embedder) {
         if (!embedder) {
             alert('Embedding model not ready yet. Please wait for initialization.');
@@ -191,6 +136,8 @@ async function loadVectorStore() {
     try {
         // First, load metadata
         console.log('Loading metadata from:', CONFIG.VECTOR_STORE_META_PATH);
+        console.log('Current location:', window.location.href);
+        console.log('Resolved URL:', new URL(CONFIG.VECTOR_STORE_META_PATH, window.location.href).href);
         const metaResponse = await fetch(CONFIG.VECTOR_STORE_META_PATH);
         if (!metaResponse.ok) {
             throw new Error(`Failed to load metadata: ${metaResponse.status}`);
@@ -208,6 +155,7 @@ async function loadVectorStore() {
             
             const partPath = CONFIG.VECTOR_STORE_PART_PATH_TEMPLATE.replace('{}', String(partIndex).padStart(2, '0'));
             console.log(`Loading part ${partIndex} from:`, partPath);
+            console.log(`Resolved part URL:`, new URL(partPath, window.location.href).href);
             
             const response = await fetch(partPath);
             if (!response.ok) {
@@ -326,7 +274,7 @@ async function loadVectorStore() {
         elements.loadingStatus.textContent = 'Data loaded successfully';
         
         // Update error messages after vector store is loaded
-        checkAndShowErrors();
+        checkAndShowErrors(elements);
         
     } catch (error) {
         console.error('Error loading vector store:', error);
@@ -339,18 +287,18 @@ async function loadVectorStore() {
 }
 
 // Error message management
-function showErrorMessages(messages) {
+function showErrorMessages(elements, messages) {
     elements.errorMessages.innerHTML = messages
         .map(msg => `<div class="error-message">${msg}</div>`)
         .join('');
 }
 
-function clearErrorMessages() {
+function clearErrorMessages(elements) {
     elements.errorMessages.innerHTML = '';
 }
 
 // Check and display error messages continuously
-function checkAndShowErrors() {
+function checkAndShowErrors(elements) {
     const errors = [];
     
     // Check API settings
@@ -375,17 +323,16 @@ function checkAndShowErrors() {
     
     // Show or clear error messages
     if (errors.length > 0) {
-        showErrorMessages(errors);
+        showErrorMessages(elements, errors);
         elements.sendBtn.disabled = true;
     } else {
-        clearErrorMessages();
+        clearErrorMessages(elements);
         elements.sendBtn.disabled = false;
     }
 }
 
-
 // Handle send button click
-async function handleSend() {
+async function handleSend(elements) {
     const query = elements.promptWindow.value.trim();
     if (!query) return;
     
@@ -408,10 +355,10 @@ async function handleSend() {
         console.log('Search completed. Results count:', searchResults.length);
         console.log('Sample scores:', searchResults.slice(0, 5).map(r => r.score));
         
-        displayRAGResults(searchResults);
+        displayRAGResults(elements, searchResults);
         
         // Generate AI response using OpenAI LLM
-        await generateAIResponse(query, searchResults, apiKey);
+        await generateAIResponse(elements, query, searchResults, apiKey);
         
     } catch (error) {
         console.error('Error during search:', error);
@@ -420,12 +367,12 @@ async function handleSend() {
     } finally {
         elements.promptWindow.disabled = false;
         // Re-check errors to restore correct send button state
-        checkAndShowErrors();
+        checkAndShowErrors(elements);
     }
 }
 
 // Display RAG search results
-function displayRAGResults(results) {
+function displayRAGResults(elements, results) {
     if (!results || results.length === 0) {
         elements.ragWindow.innerHTML = '<p class="no-results">No relevant documents found.</p>';
         return;
@@ -448,7 +395,7 @@ function displayRAGResults(results) {
 }
 
 // Generate AI response using OpenAI API
-async function generateAIResponse(query, searchResults, apiKey) {
+async function generateAIResponse(elements, query, searchResults, apiKey) {
     try {
         const baseUrl = elements.baseUrl.value.trim();
         
@@ -515,3 +462,60 @@ ${context}`;
         elements.responseWindow.innerHTML = `<p class="error">Failed to generate response: ${error.message}</p>`;
     }
 }
+
+// Initialize RAG system with given currentSite
+async function initializeRAG(currentSite) {
+    // Get DOM elements
+    const elements = {
+        baseUrl: document.getElementById('base-url'),
+        apiKey: document.getElementById('api-key'),
+        loadDataBtn: document.getElementById('load-data-btn'),
+        loadingProgress: document.getElementById('loading-progress'),
+        loadingStatus: document.getElementById('loading-status'),
+        promptWindow: document.getElementById('prompt-window'),
+        sendBtn: document.getElementById('send-btn'),
+        responseWindow: document.getElementById('response-window'),
+        ragWindow: document.getElementById('rag-window'),
+        errorMessages: document.getElementById('error-messages')
+    };
+    
+    // Load configuration first
+    await loadConfig(currentSite);
+    
+    // Set default API URL
+    elements.baseUrl.value = CONFIG.DEFAULT_API_URL;
+    
+    // Initialize the embedding pipeline for retrieval
+    console.log('Initializing HuggingFace embedding pipeline for retrieval...');
+    elements.loadingStatus.textContent = 'Initializing embedding model...';
+    
+    try {
+        embedder = await pipeline('feature-extraction', CONFIG.EMBEDDING_MODEL);
+        console.log('HuggingFace embedding pipeline initialized successfully');
+        elements.loadingStatus.textContent = 'Embedding model ready - click "Load Data"';
+    } catch (error) {
+        console.error('Failed to initialize embedding pipeline:', error);
+        elements.loadingStatus.textContent = 'Failed to initialize embedding model';
+    }
+    
+    // Event listeners
+    elements.loadDataBtn.addEventListener('click', () => loadVectorStore(elements));
+    elements.sendBtn.addEventListener('click', () => handleSend(elements));
+    elements.promptWindow.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && e.ctrlKey && !elements.sendBtn.disabled) {
+            handleSend(elements);
+        }
+    });
+    
+    // Listen for input changes to update error messages
+    elements.baseUrl.addEventListener('input', () => checkAndShowErrors(elements));
+    elements.apiKey.addEventListener('input', () => checkAndShowErrors(elements));
+    
+    // Single delayed check for initial error display
+    setTimeout(() => {
+        checkAndShowErrors(elements);
+    }, 1000);
+}
+
+// Export the initialization function
+export { initializeRAG };

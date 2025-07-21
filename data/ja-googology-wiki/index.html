@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>巨大数研究 Wiki RAG Q&A システム</title>
+    <link rel="stylesheet" href="../../index.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>巨大数研究 Wiki AI質問応答システム</h1>
+            <p class="subtitle">巨大数について質問すると、AIがソース付きで回答します</p>
+        </header>
+
+        <main>
+            <!-- Question Section -->
+            <section class="question-section">
+                <h2>質問を入力してください</h2>
+                <div class="prompt-area">
+                    <textarea id="prompt-window" 
+                              placeholder="巨大数についての質問をここに入力してください..."
+                              rows="4"></textarea>
+                    <button id="send-btn" class="btn btn-primary" disabled>送信</button>
+                </div>
+                <div id="error-messages" class="error-messages"></div>
+            </section>
+
+            <!-- AI Response Section -->
+            <section class="response-section">
+                <h2>回答</h2>
+                <div id="response-window" class="content-window">
+                    <p class="placeholder">AIによる回答がここに表示されます...</p>
+                </div>
+            </section>
+
+            <!-- RAG Results Section -->
+            <section class="rag-section">
+                <h2>AI検索結果</h2>
+                <div id="rag-window" class="content-window">
+                    <p class="placeholder">関連する文書がここに表示されます...</p>
+                </div>
+            </section>
+
+            <!-- Configuration Section -->
+            <section class="config-section">
+                <h2>設定</h2>
+                <div class="config-grid">
+                    <div class="config-item">
+                        <label for="base-url">LLM API ベース URL:</label>
+                        <input type="url" id="base-url" placeholder="https://api.openai.com/v1">
+                    </div>
+                    <div class="config-item">
+                        <label for="api-key">API キー:</label>
+                        <input type="password" id="api-key" placeholder="OpenAI API key または HuggingFace token">
+                        <small>HuggingFace token推奨（ベクトル埋め込みと一致）</small>
+                    </div>
+                </div>
+                <div class="data-loading">
+                    <button id="load-data-btn" class="btn btn-primary">データ読み込み</button>
+                    <div class="progress-container">
+                        <div id="loading-progress" class="progress-bar"></div>
+                        <span id="loading-status">未読み込み</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>RAG (Retrieval-Augmented Generation) によって動作 • データ提供: 巨大数研究 Wiki</p>
+        </footer>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.6.0/dist/transformers.min.js"></script>
+    <script type="module" src="index.js"></script>
+</body>
+</html>

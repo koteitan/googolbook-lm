@@ -62,10 +62,10 @@ web:
   # Current site directory name
   current_site: "googology-wiki"
   
-  # Vector store file paths (relative to site root)
+  # Vector store file paths (relative to site directory)
   vector_store:
-    meta_path: "data/googology-wiki/vector_store_meta.json"
-    part_path_template: "data/googology-wiki/vector_store_part{}.json.gz"
+    meta_path: "./vector_store_meta.json"
+    part_path_template: "./vector_store_part{}.json.gz"
   
   # Default API settings
   api:
