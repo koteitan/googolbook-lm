@@ -268,6 +268,23 @@ section h3 {
     100% { transform: rotate(360deg); }
 }
 
+/* Error Messages */
+.error-messages {
+    margin-top: 15px;
+    padding: 0;
+}
+
+.error-message {
+    color: #e74c3c;
+    font-size: 0.9rem;
+    margin: 8px 0;
+    padding: 8px 12px;
+    background-color: #fdf2f2;
+    border-left: 4px solid #e74c3c;
+    border-radius: 4px;
+    display: block;
+}
+
 /* Footer */
 footer {
     text-align: center;

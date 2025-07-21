@@ -30,7 +30,8 @@ const elements = {
     promptWindow: document.getElementById('prompt-window'),
     sendBtn: document.getElementById('send-btn'),
     responseWindow: document.getElementById('response-window'),
-    ragWindow: document.getElementById('rag-window')
+    ragWindow: document.getElementById('rag-window'),
+    errorMessages: document.getElementById('error-messages')
 };
 
 // Initialize
@@ -248,14 +249,44 @@ async function loadVectorStore() {
     }
 }
 
+// Error message management
+function showErrorMessages(messages) {
+    elements.errorMessages.innerHTML = messages
+        .map(msg => `<div class="error-message">${msg}</div>`)
+        .join('');
+}
+
+function clearErrorMessages() {
+    elements.errorMessages.innerHTML = '';
+}
+
 // Handle send button click
 async function handleSend() {
     const query = elements.promptWindow.value.trim();
     if (!query) return;
     
+    // Clear previous error messages
+    clearErrorMessages();
+    
+    // Validate prerequisites
+    const errors = [];
+    
+    // Check API settings
+    const baseUrl = elements.baseUrl.value.trim();
     const apiKey = elements.apiKey.value.trim();
-    if (!apiKey) {
-        alert('Please enter your OpenAI API key for LLM generation');
+    
+    if (!baseUrl || !apiKey) {
+        errors.push('LLM APIの設定をしてください');
+    }
+    
+    // Check vector store
+    if (!vectorStore) {
+        errors.push('データを読み込んでください');
+    }
+    
+    // Show errors if any
+    if (errors.length > 0) {
+        showErrorMessages(errors);
         return;
     }
     

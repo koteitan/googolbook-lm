@@ -14,6 +14,34 @@
         </header>
 
         <main>
+            <!-- Question Section -->
+            <section class="question-section">
+                <h2>Ask a Question</h2>
+                <div class="prompt-area">
+                    <textarea id="prompt-window" 
+                              placeholder="Enter your question about googology here..."
+                              rows="4"></textarea>
+                    <button id="send-btn" class="btn btn-primary" disabled>Send</button>
+                </div>
+                <div id="error-messages" class="error-messages"></div>
+            </section>
+
+            <!-- AI Response Section -->
+            <section class="response-section">
+                <h2>AI Response</h2>
+                <div id="response-window" class="content-window">
+                    <p class="placeholder">Your AI-generated answer will appear here...</p>
+                </div>
+            </section>
+
+            <!-- RAG Results Section -->
+            <section class="rag-section">
+                <h2>RAG Search Results</h2>
+                <div id="rag-window" class="content-window">
+                    <p class="placeholder">Related documents from the wiki will appear here...</p>
+                </div>
+            </section>
+
             <!-- Configuration Section -->
             <section class="config-section">
                 <h2>Configuration</h2>
@@ -33,38 +61,6 @@
                     <div class="progress-container">
                         <div id="loading-progress" class="progress-bar"></div>
                         <span id="loading-status">Not loaded</span>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Question Section -->
-            <section class="question-section">
-                <h2>Ask a Question</h2>
-                <div class="prompt-area">
-                    <textarea id="prompt-window" 
-                              placeholder="Enter your question about googology here..."
-                              rows="4"></textarea>
-                    <button id="send-btn" class="btn btn-primary" disabled>Send</button>
-                </div>
-            </section>
-
-            <!-- Results Section -->
-            <section class="results-section">
-                <div class="results-grid">
-                    <!-- Response Window -->
-                    <div class="response-container">
-                        <h3>AI Response</h3>
-                        <div id="response-window" class="content-window">
-                            <p class="placeholder">Your AI-generated answer will appear here...</p>
-                        </div>
-                    </div>
-
-                    <!-- RAG Results Window -->
-                    <div class="rag-container">
-                        <h3>RAG Search Results</h3>
-                        <div id="rag-window" class="content-window">
-                            <p class="placeholder">Related documents from the wiki will appear here...</p>
-                        </div>
                     </div>
                 </div>
             </section>
