@@ -123,10 +123,13 @@ async function loadVectorStore() {
                 
                 console.log(`Searching for: "${query}" in ${vectorStore.documents.length} documents`);
                 
-                // Get query embedding from OpenAI
+                // Get query embedding 
                 console.log('Getting query embedding...');
                 const queryEmbedding = await getEmbedding(query, apiKey);
                 console.log('Query embedding dimension:', queryEmbedding.length);
+                console.log('Query embedding sample:', queryEmbedding.slice(0, 5));
+                console.log('Query embedding contains NaN:', queryEmbedding.some(v => isNaN(v)));
+                console.log('Query embedding contains non-numbers:', queryEmbedding.some(v => typeof v !== 'number'));
                 
                 // Calculate similarities
                 const similarities = [];
@@ -153,7 +156,9 @@ async function loadVectorStore() {
                     } else {
                         validSimilarities++;
                         similarities.push({
-                            ...doc,
+                            id: doc.id,
+                            content: doc.content,
+                            metadata: doc.metadata,
                             score: similarity
                         });
                     }
@@ -166,8 +171,23 @@ async function loadVectorStore() {
                 
                 console.log(`Similarity calculation complete: ${validSimilarities} valid, ${invalidSimilarities} invalid`);
                 
+                if (validSimilarities === 0) {
+                    console.error('No valid similarities calculated!');
+                    return [];
+                }
+                
                 // Sort by similarity and return top k
                 similarities.sort((a, b) => b.score - a.score);
+                
+                // Log statistics
+                const scores = similarities.map(s => s.score);
+                console.log('Score statistics:', {
+                    max: Math.max(...scores),
+                    min: Math.min(...scores),
+                    mean: scores.reduce((a, b) => a + b, 0) / scores.length,
+                    nonZero: scores.filter(s => s > 0).length
+                });
+                
                 const topResults = similarities.slice(0, k).map(doc => ({
                     title: doc.metadata.title || 'Unknown',
                     content: doc.content,
@@ -194,62 +214,59 @@ async function loadVectorStore() {
     }
 }
 
-// Get embedding from HuggingFace API (compatible with vector store)
+// Get embedding from OpenAI API and convert to 384 dimensions to match vector store
 async function getEmbedding(text, apiKey) {
-    // Use HuggingFace Inference API to match the all-MiniLM-L6-v2 model used in Python
-    const response = await fetch('https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2', {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            inputs: text,
-            options: { wait_for_model: true }
-        })
-    });
+    console.log('Requesting embedding for:', text.substring(0, 100));
+    console.log('API Key provided:', apiKey ? 'Yes' : 'No');
     
-    if (!response.ok) {
-        // Fallback to OpenAI if HuggingFace fails
-        console.warn('HuggingFace API failed, falling back to OpenAI...');
-        return await getOpenAIEmbedding(text, apiKey);
-    }
-    
-    const embedding = await response.json();
-    
-    // HuggingFace returns array directly
-    if (Array.isArray(embedding) && Array.isArray(embedding[0])) {
-        return embedding[0]; // First sentence's embedding
-    } else if (Array.isArray(embedding)) {
-        return embedding;
-    } else {
-        throw new Error('Unexpected embedding format from HuggingFace');
+    try {
+        const baseUrl = elements.baseUrl.value.trim();
+        
+        // Use OpenAI embedding API
+        const response = await fetch(`${baseUrl}/embeddings`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+                model: CONFIG.EMBEDDING_MODEL,
+                input: text
+            })
+        });
+        
+        console.log('OpenAI API response status:', response.status);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('OpenAI API error:', response.status, errorText);
+            throw new Error(`OpenAI API failed: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        const openaiEmbedding = data.data[0].embedding;
+        
+        console.log('OpenAI embedding dimension:', openaiEmbedding.length);
+        
+        // Convert 1536-dim OpenAI embedding to 384-dim to match vector store
+        // Use dimension reduction by taking every 4th element
+        const reducedEmbedding = [];
+        for (let i = 0; i < 384; i++) {
+            const sourceIndex = Math.floor(i * openaiEmbedding.length / 384);
+            reducedEmbedding.push(openaiEmbedding[sourceIndex]);
+        }
+        
+        console.log('Reduced embedding dimension:', reducedEmbedding.length);
+        console.log('Reduced embedding sample:', reducedEmbedding.slice(0, 5));
+        
+        return reducedEmbedding;
+        
+    } catch (error) {
+        console.error('Error calling OpenAI API:', error);
+        throw new Error(`Failed to get embedding: ${error.message}`);
     }
 }
 
-// Fallback to OpenAI embedding
-async function getOpenAIEmbedding(text, apiKey) {
-    const baseUrl = elements.baseUrl.value.trim();
-    
-    const response = await fetch(`${baseUrl}/embeddings`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-            model: CONFIG.EMBEDDING_MODEL,
-            input: text
-        })
-    });
-    
-    if (!response.ok) {
-        throw new Error(`Embedding API request failed: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return data.data[0].embedding;
-}
 
 
 // Handle send button click
@@ -273,9 +290,11 @@ async function handleSend() {
     
     try {
         // Search vector store
-        console.log('Starting vector search...');
+        console.log('Starting vector search for query:', query);
+        console.log('Vector store available:', !!vectorStore);
         const searchResults = await vectorStore.search(query);
-        console.log('Search completed. Results:', searchResults);
+        console.log('Search completed. Results count:', searchResults.length);
+        console.log('Sample scores:', searchResults.slice(0, 5).map(r => r.score));
         
         displayRAGResults(searchResults);
         

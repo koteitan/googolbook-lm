@@ -71,7 +71,7 @@ def export_vector_store_to_json(vector_store_path: str, output_path: str, max_do
                 # Create document entry
                 doc_entry = {
                     'id': doc_id,
-                    'content': doc.page_content[:500],  # Limit content size
+                    'content': doc.page_content,  # Keep full content for proper search
                     'metadata': doc.metadata,
                     'embedding': embedding.tolist()  # Convert numpy array to list
                 }
