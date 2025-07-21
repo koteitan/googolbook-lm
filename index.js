@@ -194,8 +194,41 @@ async function loadVectorStore() {
     }
 }
 
-// Get embedding from OpenAI API
+// Get embedding from HuggingFace API (compatible with vector store)
 async function getEmbedding(text, apiKey) {
+    // Use HuggingFace Inference API to match the all-MiniLM-L6-v2 model used in Python
+    const response = await fetch('https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            inputs: text,
+            options: { wait_for_model: true }
+        })
+    });
+    
+    if (!response.ok) {
+        // Fallback to OpenAI if HuggingFace fails
+        console.warn('HuggingFace API failed, falling back to OpenAI...');
+        return await getOpenAIEmbedding(text, apiKey);
+    }
+    
+    const embedding = await response.json();
+    
+    // HuggingFace returns array directly
+    if (Array.isArray(embedding) && Array.isArray(embedding[0])) {
+        return embedding[0]; // First sentence's embedding
+    } else if (Array.isArray(embedding)) {
+        return embedding;
+    } else {
+        throw new Error('Unexpected embedding format from HuggingFace');
+    }
+}
+
+// Fallback to OpenAI embedding
+async function getOpenAIEmbedding(text, apiKey) {
     const baseUrl = elements.baseUrl.value.trim();
     
     const response = await fetch(`${baseUrl}/embeddings`, {
