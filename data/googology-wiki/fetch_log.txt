@@ -1,0 +1,5 @@
+Archive fetched: 2025-07-22 04:32:01
+Source: https://s3.amazonaws.com/wikia_xml_dumps/g/go/googology_pages_current.xml.7z
+Archive file: googology_pages_current.xml.7z
+XML file: googology_pages_current.xml
+XML path: googology_pages_current.xml

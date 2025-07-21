@@ -1,0 +1,5 @@
+Archive fetched: 2025-07-22 04:26:31
+Source: https://s3.amazonaws.com/wikia_xml_dumps/j/ja/jagoogology_pages_current.xml.7z
+Archive file: jagoogology_pages_current.xml.7z
+XML file: jagoogology_pages_current.xml
+XML path: jagoogology_pages_current.xml

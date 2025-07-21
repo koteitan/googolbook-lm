@@ -8,6 +8,44 @@ import { load as yamlLoad } from 'https://cdn.skypack.dev/js-yaml@4.1.0';
 // Debug flag - set to true to show debug info in AI response
 const SHOW_DEBUG_INFO = false;
 
+// Update license information in footer
+async function updateLicenseInfo(config) {
+    try {
+        // Update license link
+        const licenseLink = document.getElementById('license-link');
+        if (licenseLink && config.license) {
+            licenseLink.href = config.license.url;
+            licenseLink.textContent = config.license.short;
+        }
+        
+        // Load and display fetch date from fetch_log.txt
+        const fetchDateElement = document.getElementById('fetch-date');
+        if (fetchDateElement) {
+            try {
+                const response = await fetch('./fetch_log.txt');
+                if (response.ok) {
+                    const logContent = await response.text();
+                    const firstLine = logContent.split('\n')[0];
+                    // Extract date from "Archive fetched: YYYY-MM-DD HH:MM:SS"
+                    const dateMatch = firstLine.match(/Archive fetched: (.+)/);
+                    if (dateMatch) {
+                        fetchDateElement.textContent = dateMatch[1];
+                    } else {
+                        fetchDateElement.textContent = 'unknown';
+                    }
+                } else {
+                    fetchDateElement.textContent = 'unknown';
+                }
+            } catch (error) {
+                console.warn('Failed to load fetch date:', error);
+                fetchDateElement.textContent = 'unknown';
+            }
+        }
+    } catch (error) {
+        console.warn('Failed to update license info:', error);
+    }
+}
+
 // Global state
 let vectorStore = null;
 let isLoading = false;
@@ -45,6 +83,10 @@ async function loadConfig(currentSite) {
         console.log('Configuration loaded successfully:', CONFIG);
         console.log('VECTOR_STORE_META_PATH:', CONFIG.VECTOR_STORE_META_PATH);
         console.log('VECTOR_STORE_PART_PATH_TEMPLATE:', CONFIG.VECTOR_STORE_PART_PATH_TEMPLATE);
+        
+        // Update license information in footer
+        updateLicenseInfo(config);
+        
         return CONFIG;
     } catch (error) {
         console.error('Failed to load configuration:', error);
