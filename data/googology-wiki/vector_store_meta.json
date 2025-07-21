@@ -1,0 +1,6 @@
+{
+  "total_documents": 94654,
+  "num_parts": 10,
+  "docs_per_part": 10000,
+  "embedding_dimension": 384
+}
