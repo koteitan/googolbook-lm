@@ -52,6 +52,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         elements.loadingStatus.textContent = 'Failed to initialize embedding model';
     }
     
+    // Initial error check - removed early checks to avoid showing errors before password manager fills values
+    
     // Event listeners
     elements.loadDataBtn.addEventListener('click', loadVectorStore);
     elements.sendBtn.addEventListener('click', handleSend);
@@ -60,6 +62,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             handleSend();
         }
     });
+    
+    // Listen for input changes to update error messages
+    elements.baseUrl.addEventListener('input', checkAndShowErrors);
+    elements.apiKey.addEventListener('input', checkAndShowErrors);
+    
+    // Single delayed check for initial error display
+    setTimeout(() => {
+        checkAndShowErrors();
+    }, 1000);
+    
 });
 
 // Vector math utilities
@@ -236,8 +248,10 @@ async function loadVectorStore() {
             }
         };
         
-        elements.sendBtn.disabled = false;
         elements.loadingStatus.textContent = 'Vector store loaded successfully';
+        
+        // Update error messages after vector store is loaded
+        checkAndShowErrors();
         
     } catch (error) {
         console.error('Error loading vector store:', error);
@@ -260,35 +274,48 @@ function clearErrorMessages() {
     elements.errorMessages.innerHTML = '';
 }
 
-// Handle send button click
-async function handleSend() {
-    const query = elements.promptWindow.value.trim();
-    if (!query) return;
-    
-    // Clear previous error messages
-    clearErrorMessages();
-    
-    // Validate prerequisites
+// Check and display error messages continuously
+function checkAndShowErrors() {
     const errors = [];
     
     // Check API settings
     const baseUrl = elements.baseUrl.value.trim();
     const apiKey = elements.apiKey.value.trim();
     
+    // Debug: Log API values during check
+    console.log('checkAndShowErrors - API values:', {
+        baseUrl: baseUrl || '(empty)',
+        apiKey: apiKey ? `[${apiKey.length} chars]` : '(empty)',
+        vectorStore: !!vectorStore
+    });
+    
     if (!baseUrl || !apiKey) {
-        errors.push('LLM APIの設定をしてください');
+        errors.push('Please configure LLM API settings in the Configuration section below');
     }
     
     // Check vector store
     if (!vectorStore) {
-        errors.push('データを読み込んでください');
+        errors.push('Please load the vector store data in the Configuration section below');
     }
     
-    // Show errors if any
+    // Show or clear error messages
     if (errors.length > 0) {
         showErrorMessages(errors);
-        return;
+        elements.sendBtn.disabled = true;
+    } else {
+        clearErrorMessages();
+        elements.sendBtn.disabled = false;
     }
+}
+
+
+// Handle send button click
+async function handleSend() {
+    const query = elements.promptWindow.value.trim();
+    if (!query) return;
+    
+    // At this point, all validations should already pass since send button is only enabled when ready
+    const apiKey = elements.apiKey.value.trim();
     
     // Disable inputs during processing
     elements.sendBtn.disabled = true;
@@ -316,8 +343,9 @@ async function handleSend() {
         elements.responseWindow.innerHTML = `<p class="error">Error: ${error.message}</p>`;
         elements.ragWindow.innerHTML = `<p class="error">Search failed: ${error.message}</p>`;
     } finally {
-        elements.sendBtn.disabled = false;
         elements.promptWindow.disabled = false;
+        // Re-check errors to restore correct send button state
+        checkAndShowErrors();
     }
 }
 
