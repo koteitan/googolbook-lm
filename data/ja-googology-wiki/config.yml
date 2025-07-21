@@ -70,7 +70,7 @@ web:
     # Local files (commented out for deployment)
     # part_path_template: "./vector_store_part{}.json.gz"
     # External CDN hosting for large vector store files
-    part_path_template: "http://www.ukaibutton.com/googolbook-lm/data/ja-googology-wiki/vector_store_part{}.json.gz"
+    part_path_template: "https://www.ukaibutton.com/googolbook-lm/data/ja-googology-wiki/vector_store_part{}.json.gz"
   
   # Default API settings
   api:
