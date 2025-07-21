@@ -46,3 +46,6 @@ EXCLUDED_USERNAMES = [
     'FANDOM',
     'Wikia'
 ]
+
+# Vector store configuration
+VECTOR_STORE_SAMPLE_SIZE = 20000  # Number of documents to export for web interface

@@ -12,6 +12,7 @@ import pickle
 import gzip
 import argparse
 import numpy as np
+import importlib.util
 from pathlib import Path
 
 # Add parent directory to path for imports
@@ -20,6 +21,15 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 import config
 from lib.io_utils import find_xml_file
 from lib.formatting import format_number
+
+# Import site-specific configuration
+site_config_path = config.DATA_DIR / 'config.py'
+if site_config_path.exists():
+    spec = importlib.util.spec_from_file_location("site_config", site_config_path)
+    site_config = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(site_config)
+else:
+    site_config = None
 
 
 def export_vector_store_to_json(vector_store_path: str, output_path: str, max_docs: int = None):
@@ -49,8 +59,18 @@ def export_vector_store_to_json(vector_store_path: str, output_path: str, max_do
     index_to_docstore_id = vector_store.index_to_docstore_id
     
     # Determine number of documents to process
-    num_docs = index.ntotal
-    if max_docs and max_docs < num_docs:
+    total_docs = index.ntotal
+    print(f"Total documents in vector store: {total_docs}")
+    
+    # Validate and adjust max_docs
+    if max_docs is None or max_docs <= 0 or max_docs > total_docs:
+        if max_docs is not None:
+            if max_docs <= 0:
+                print(f"Warning: max_docs ({max_docs}) is invalid, using all documents")
+            elif max_docs > total_docs:
+                print(f"Warning: max_docs ({max_docs}) exceeds total documents ({total_docs}), using all documents")
+        num_docs = total_docs
+    else:
         num_docs = max_docs
     
     print(f"Processing {num_docs} documents...")
@@ -108,6 +128,15 @@ def export_vector_store_to_json(vector_store_path: str, output_path: str, max_do
 
 
 def main():
+    # Get default max_docs from site config with validation
+    default_max_docs = None
+    if site_config and hasattr(site_config, 'VECTOR_STORE_SAMPLE_SIZE'):
+        sample_size = site_config.VECTOR_STORE_SAMPLE_SIZE
+        if isinstance(sample_size, int) and sample_size > 0:
+            default_max_docs = sample_size
+        else:
+            print(f"Warning: Invalid VECTOR_STORE_SAMPLE_SIZE ({sample_size}) in site config, will use all documents")
+    
     parser = argparse.ArgumentParser(
         description='Export vector store to JSON format for web use'
     )
@@ -121,10 +150,17 @@ def main():
         default=str(config.DATA_DIR / 'vector_store.json'),
         help='Output path for JSON file'
     )
+    help_text = 'Maximum number of documents to export'
+    if default_max_docs:
+        help_text += f' (default: {default_max_docs} from site config)'
+    else:
+        help_text += ' (default: all documents)'
+    
     parser.add_argument(
         '--max-docs',
         type=int,
-        help='Maximum number of documents to export (for testing)'
+        default=default_max_docs,
+        help=help_text
     )
     
     args = parser.parse_args()

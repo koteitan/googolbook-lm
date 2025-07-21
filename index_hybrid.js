@@ -16,7 +16,8 @@ const CONFIG = {
     DEFAULT_TOP_K: 5,
     DEFAULT_API_URL: 'https://api.openai.com/v1',
     DEFAULT_MODEL: 'gpt-3.5-turbo',
-    EMBEDDING_MODEL: 'Xenova/all-MiniLM-L6-v2'  // HuggingFace for retrieval
+    EMBEDDING_MODEL: 'Xenova/all-MiniLM-L6-v2',  // HuggingFace for retrieval
+    EXPECTED_DOCUMENTS: 20000  // Expected number of documents (from VECTOR_STORE_SAMPLE_SIZE in site config)
 };
 
 // DOM Elements

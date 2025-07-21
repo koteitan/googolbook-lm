@@ -11,12 +11,24 @@ graph TD
     subgraph xml2vec["xml2vec.py"]
         A[xml] -->|MWDumpLoader.load| B[Document documents]
         B -->|RecursiveCharacterTextSplitter.split_documents| C[Document chunks]
-        C -->|FAISS.from_documents| D[vector_store]
+        C -->|FAISS.from_documents| D[vector_store.pkl]
     end
     
-    subgraph rag_search["rag_search.py"]
+    subgraph vec2json["vec2json.py"]
+        D -->|export| G[vector_store.json.gz]
+    end
+    
+    subgraph rag_search["rag_search.py (Python)"]
         E[query] -->|vector_store.similarity_search_with_score| F[results]
         D -->|vector_store.similarity_search_with_score| F
+    end
+    
+    subgraph web_interface["index_hybrid.js (Web)"]
+        G -->|load & decompress| H[vectorStore object]
+        I[user query] -->|HuggingFace Transformers.js| J[query embedding]
+        H -->|cosine similarity| K[search results]
+        J -->|cosine similarity| K
+        K -->|OpenAI API| L[AI response]
     end
 ```
 
@@ -36,10 +48,11 @@ pip install mwparserfromhell  # For MediaWiki markup parsing
 
 ## Usage
 
-The RAG system uses a two-step process:
+The RAG system uses a three-step process:
 
 1. **Create vector store** (one-time setup, may take several minutes)
-2. **Search** (fast, interactive queries)
+2. **Export to JSON** (for web interface usage)
+3. **Search** (fast, interactive queries)
 
 ### Step 1: Create Vector Store
 
@@ -63,7 +76,21 @@ This will:
 - Create embeddings for all chunks
 - Save the vector store to `data/googology-wiki/vector_store.pkl`
 
-### Step 2: Search
+### Step 2: Export to JSON (for Web Interface)
+
+To use the vector store in the web interface, export it to JSON format:
+
+```bash
+python3 tools/rag/vec2json.py
+```
+
+This will:
+- Load the vector store from `data/googology-wiki/vector_store.pkl`
+- Export documents and embeddings to JSON format
+- Create both uncompressed (`vector_store.json`) and compressed (`vector_store.json.gz`) versions
+- Use the document count configured in `data/googology-wiki/config.py` (VECTOR_STORE_SAMPLE_SIZE)
+
+### Step 3: Search
 
 Once the vector store is created, you can perform fast searches:
 
@@ -119,16 +146,52 @@ This starts an interactive search session where you can:
 
 ```bash
 python3 tools/rag/xml2vec.py [options]
-
-Options:
-  --xml-file PATH         Path to XML file (auto-detected if not specified)
-  --output PATH           Output path for vector store (default: data/googology-wiki/vector_store.pkl)
-  --chunk-size SIZE       Chunk size for text splitting (default: 1200)
-  --chunk-overlap SIZE    Chunk overlap for text splitting (default: 300)
-  --use-openai            Use OpenAI embeddings (requires OPENAI_API_KEY)
-  --embedding-model MODEL HuggingFace model (default: all-MiniLM-L6-v2)
-  --force                 Overwrite existing vector store
 ```
+
+**Options:**
+- **`--xml-file`**
+  - Specifies path to MediaWiki XML dump file
+  - Default: Automatically searches for XML files in the data directory
+- **`--output`**
+  - Sets output path for the vector store pickle file
+  - Default: `data/{site}/vector_store.pkl`
+- **`--chunk-size`**
+  - Controls text chunk size for document splitting
+  - Default: 1200 characters, optimized for mathematical content preservation
+- **`--chunk-overlap`**
+  - Sets overlap between consecutive chunks
+  - Default: 300 characters (25% overlap) to maintain concept continuity
+- **`--use-openai`**
+  - Switches from HuggingFace to OpenAI embeddings
+  - Requires: `OPENAI_API_KEY` environment variable
+- **`--embedding-model`**
+  - Specifies HuggingFace model name
+  - Default: `all-MiniLM-L6-v2`
+  - Note: Only used when not using OpenAI embeddings
+- **`--force`**
+  - Overwrites existing vector store file without prompting
+  - Useful for automation and updates
+
+### JSON Export Options
+
+```bash
+python3 tools/rag/vec2json.py [options]
+```
+
+**Options:**
+- **`--input`**
+  - Specifies path to vector store pickle file
+  - Default: `data/{site}/vector_store.pkl`
+- **`--output`**
+  - Sets output path for the JSON file
+  - Default: `data/{site}/vector_store.json`
+  - Note: Both uncompressed `.json` and compressed `.json.gz` files are created automatically
+- **`--max-docs`**
+  - Controls the number of documents to export
+  - Default: Uses `VECTOR_STORE_SAMPLE_SIZE` from site config
+  - Positive number: Export specified number of documents
+  - Zero or negative: Export all documents (ignores config limit)
+  - Exceeds total: Automatically exports all available documents
 
 ### Search Options
 
@@ -143,19 +206,22 @@ Options:
 
 ## Examples
 
-Create vector store with custom settings:
+### Vector Store Creation
+Uses HuggingFace embeddings and auto-detected XML file:
 ```bash
-python3 tools/rag/xml2vec.py --chunk-size 500 --chunk-overlap 100
+python3 tools/rag/xml2vec.py
 ```
 
-Search with custom parameters:
+### JSON Export
+Uses `VECTOR_STORE_SAMPLE_SIZE` from `data/{site}/config.py`:
 ```bash
-python3 tools/rag/rag_search.py "TREE(3)" --top-k 10
+python3 tools/rag/vec2json.py
 ```
 
-Search with score threshold:
+### Search
+Interactive search session:
 ```bash
-python3 tools/rag/rag_search.py "Fast-growing hierarchy" --score-threshold 0.5
+python3 tools/rag/rag_search.py
 ```
 
 ## Implementation Notes
@@ -173,6 +239,11 @@ python3 tools/rag/rag_search.py "Fast-growing hierarchy" --score-threshold 0.5
 6. **Namespace filtering**: All namespaces except excluded ones (File, Template, etc.) are indexed to include user blogs and discussion content.
 
 7. **Metadata extraction**: Enhanced metadata extraction provides proper title, URL, and page ID for search results.
+
+8. **JSON Export Configuration**: The `--max-docs` parameter allows flexible document export:
+   - **Default behavior**: Uses `VECTOR_STORE_SAMPLE_SIZE` from `data/{site}/config.py`
+   - **Validation**: Automatically uses all documents if the specified count is invalid (≤0) or exceeds total documents
+   - **Web interface optimization**: Compressed JSON format (.gz) reduces file size for browser loading
 
 ### Function References
 
