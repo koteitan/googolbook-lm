@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         embedder = await pipeline('feature-extraction', CONFIG.EMBEDDING_MODEL);
         console.log('HuggingFace embedding pipeline initialized successfully');
-        elements.loadingStatus.textContent = 'Embedding model ready - click "Load Vector Store"';
+        elements.loadingStatus.textContent = 'Embedding model ready - click "Load Data"';
     } catch (error) {
         console.error('Failed to initialize embedding pipeline:', error);
         elements.loadingStatus.textContent = 'Failed to initialize embedding model';
@@ -132,7 +132,7 @@ async function loadVectorStore() {
     isLoading = true;
     elements.loadDataBtn.disabled = true;
     elements.loadingProgress.classList.add('loading');
-    elements.loadingStatus.textContent = 'Loading vector store...';
+    elements.loadingStatus.textContent = 'Loading data...';
     
     try {
         console.log('Loading vector store from:', CONFIG.VECTOR_STORE_PATH);
@@ -140,7 +140,7 @@ async function loadVectorStore() {
         // Load compressed JSON
         const response = await fetch(CONFIG.VECTOR_STORE_PATH);
         if (!response.ok) {
-            throw new Error(`Failed to load vector store: ${response.status}`);
+            throw new Error(`Failed to load data: ${response.status}`);
         }
         
         const arrayBuffer = await response.arrayBuffer();
@@ -248,14 +248,14 @@ async function loadVectorStore() {
             }
         };
         
-        elements.loadingStatus.textContent = 'Vector store loaded successfully';
+        elements.loadingStatus.textContent = 'Data loaded successfully';
         
         // Update error messages after vector store is loaded
         checkAndShowErrors();
         
     } catch (error) {
         console.error('Error loading vector store:', error);
-        elements.loadingStatus.textContent = 'Failed to load vector store: ' + error.message;
+        elements.loadingStatus.textContent = 'Failed to load data: ' + error.message;
         elements.loadingProgress.classList.remove('loading');
     } finally {
         isLoading = false;
@@ -295,7 +295,7 @@ function checkAndShowErrors() {
     
     // Check vector store
     if (!vectorStore) {
-        errors.push('Please load the vector store data in the Configuration section below');
+        errors.push('Please load the data in the Configuration section below');
     }
     
     // Show or clear error messages
