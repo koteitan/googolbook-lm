@@ -4,6 +4,7 @@ from typing import List, Dict
 from langchain_core.documents import Document
 from langchain_community.document_loaders import MWDumpLoader
 import config
+from ..config_loader import get_site_config
 from ..xml_parser import parse_namespaces, iterate_pages
 
 
@@ -86,9 +87,12 @@ def load_mediawiki_documents(xml_path: str, namespace_filter: List[int] = None) 
     namespace_mapping = parse_namespaces(xml_path)
     print(f"Parsed {len(namespace_mapping)} namespaces from XML")
     
+    # Load site configuration
+    site_config = get_site_config()
+    
     if namespace_filter is None:
         # Build list of included namespaces by excluding the ones in EXCLUDED_NAMESPACES
-        excluded_namespaces = set(config.EXCLUDED_NAMESPACES)
+        excluded_namespaces = set(site_config.EXCLUDED_NAMESPACES)
         
         # Get all namespace IDs that don't match excluded namespace names
         included_ns_ids = []
@@ -127,7 +131,7 @@ def load_mediawiki_documents(xml_path: str, namespace_filter: List[int] = None) 
     id_to_name = {int(ns_id): ns_name for ns_id, ns_name in namespace_mapping.items() if ns_id.isdigit()}
     
     # Filter out excluded namespaces and enhance metadata
-    excluded_prefixes = [ns + ':' for ns in config.EXCLUDED_NAMESPACES]
+    excluded_prefixes = [ns + ':' for ns in site_config.EXCLUDED_NAMESPACES]
     filtered_documents = []
     
     for doc in documents:
@@ -160,7 +164,7 @@ def load_mediawiki_documents(xml_path: str, namespace_filter: List[int] = None) 
             else:
                 # Fallback to wiki URL if page ID not found
                 url_title = full_title.replace(" ", "_")
-                url = f'{config.SITE_BASE_URL}/wiki/{url_title}'
+                url = f'{site_config.SITE_BASE_URL}/wiki/{url_title}'
             
             doc.metadata.update({
                 'title': full_title,

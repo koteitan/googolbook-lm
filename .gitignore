@@ -37,6 +37,9 @@ data/*/vector_store_meta.json
 data/*/vector_store_part*.json
 data/*/vector_store_part*.json.gz
 
+# Configuration backup files
+data/*/config.py.bak
+
 # Log files
 *.log
 

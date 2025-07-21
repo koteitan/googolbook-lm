@@ -1,6 +1,9 @@
 // Import Transformers.js for HuggingFace embeddings
 import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.6.0/dist/transformers.min.js';
 
+// Import YAML parser
+import { load as yamlLoad } from 'https://cdn.skypack.dev/js-yaml@4.1.0';
+
 // Debug flag - set to true to show debug info in AI response
 const SHOW_DEBUG_INFO = false;
 
@@ -8,21 +11,57 @@ const SHOW_DEBUG_INFO = false;
 let vectorStore = null;
 let isLoading = false;
 let embedder = null;
+let CONFIG = null; // Will be loaded from YAML
 
-// Configuration
-const CONFIG = {
-    CURRENT_SITE: 'googology-wiki',
-    SITE_BASE_URL: 'https://googology.fandom.com',
-    VECTOR_STORE_META_PATH: 'data/googology-wiki/vector_store_meta.json',
-    VECTOR_STORE_PART_PATH_TEMPLATE: 'data/googology-wiki/vector_store_part{}.json.gz',
-    DEFAULT_TOP_K: 5,
-    DEFAULT_API_URL: 'https://api.openai.com/v1',
-    DEFAULT_MODEL: 'gpt-3.5-turbo',
-    EMBEDDING_MODEL: 'Xenova/all-MiniLM-L6-v2',  // HuggingFace for retrieval
-    // Split search configuration (will be loaded from site config)
-    PRELIMINARY_DOCS_PER_PART: 10,
-    FINAL_RESULT_COUNT: 10
-};
+// Load configuration from YAML
+async function loadConfig() {
+    try {
+        const currentSite = 'googology-wiki'; // Default site
+        const configPath = `data/${currentSite}/config.yml`;
+        
+        console.log('Loading configuration from:', configPath);
+        const response = await fetch(configPath);
+        if (!response.ok) {
+            throw new Error(`Failed to load config: ${response.status}`);
+        }
+        
+        const yamlText = await response.text();
+        const config = yamlLoad(yamlText);
+        
+        // Create CONFIG object from YAML
+        CONFIG = {
+            CURRENT_SITE: config.web.current_site,
+            SITE_BASE_URL: config.site.base_url,
+            VECTOR_STORE_META_PATH: config.web.vector_store.meta_path,
+            VECTOR_STORE_PART_PATH_TEMPLATE: config.web.vector_store.part_path_template,
+            DEFAULT_TOP_K: config.web.api.default_top_k,
+            DEFAULT_API_URL: config.web.api.default_url,
+            DEFAULT_MODEL: config.web.api.default_model,
+            EMBEDDING_MODEL: config.web.api.embedding_model,
+            PRELIMINARY_DOCS_PER_PART: config.vector_store.preliminary_per_part,
+            FINAL_RESULT_COUNT: config.vector_store.final_result_count
+        };
+        
+        console.log('Configuration loaded successfully:', CONFIG);
+        return CONFIG;
+    } catch (error) {
+        console.error('Failed to load configuration:', error);
+        // Fallback to hardcoded config
+        CONFIG = {
+            CURRENT_SITE: 'googology-wiki',
+            SITE_BASE_URL: 'https://googology.fandom.com',
+            VECTOR_STORE_META_PATH: 'data/googology-wiki/vector_store_meta.json',
+            VECTOR_STORE_PART_PATH_TEMPLATE: 'data/googology-wiki/vector_store_part{}.json.gz',
+            DEFAULT_TOP_K: 5,
+            DEFAULT_API_URL: 'https://api.openai.com/v1',
+            DEFAULT_MODEL: 'gpt-3.5-turbo',
+            EMBEDDING_MODEL: 'Xenova/all-MiniLM-L6-v2',
+            PRELIMINARY_DOCS_PER_PART: 10,
+            FINAL_RESULT_COUNT: 10
+        };
+        return CONFIG;
+    }
+}
 
 // DOM Elements
 const elements = {
@@ -40,6 +79,9 @@ const elements = {
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
+    // Load configuration first
+    await loadConfig();
+    
     // Set default API URL
     elements.baseUrl.value = CONFIG.DEFAULT_API_URL;
     

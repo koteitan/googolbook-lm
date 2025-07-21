@@ -2,36 +2,21 @@
 Configuration loader for multi-site Googology Wiki analysis tools.
 
 This file loads the appropriate site-specific configuration based on the
-current site selection.
+current site selection, now using YAML configuration files.
 """
 
-import sys
 from pathlib import Path
+from lib.config_loader import get_site_config
 
 # Current site configuration (change this to switch sites)
-CURRENT_SITE = 'googology-wiki'
 #CURRENT_SITE = 'ja-googology-wiki'
+CURRENT_SITE = 'googology-wiki'
 
-# Load site-specific configuration
+# Load site-specific configuration from YAML
 PROJECT_ROOT = Path(__file__).parent.resolve()
-site_config_path = PROJECT_ROOT / 'data' / CURRENT_SITE / 'config.py'
+site_config = get_site_config(CURRENT_SITE)
 
-if not site_config_path.exists():
-    raise FileNotFoundError(f"Site configuration not found: {site_config_path}")
-
-# Import site-specific config
-sys.path.insert(0, str(site_config_path.parent))
-try:
-    import importlib.util
-    spec = importlib.util.spec_from_file_location("site_config", site_config_path)
-    site_config = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(site_config)
-except ImportError:
-    # Fallback method
-    import imp
-    site_config = imp.load_source('site_config', str(site_config_path))
-
-# Export site-specific values
+# Export site-specific values for backward compatibility
 SITE_NAME = site_config.SITE_NAME
 SITE_URL = site_config.SITE_URL
 SITE_BASE_URL = site_config.SITE_BASE_URL

@@ -23,12 +23,11 @@ from lib.io_utils import find_xml_file
 from lib.formatting import format_number
 
 # Import site-specific configuration
-site_config_path = config.DATA_DIR / 'config.py'
-if site_config_path.exists():
-    spec = importlib.util.spec_from_file_location("site_config", site_config_path)
-    site_config = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(site_config)
-else:
+try:
+    from lib.config_loader import get_site_config
+    site_config = get_site_config()
+except (ImportError, FileNotFoundError) as e:
+    print(f"Warning: Could not load site config: {e}")
     site_config = None
 
 
@@ -134,7 +133,7 @@ def export_vector_store_to_json(vector_store_path: str, output_path: str, max_ch
         
         # Create the JSON structure for this part
         part_json_data = {
-            'site': config.SITE_NAME,
+            'site': site_config.SITE_NAME if site_config else 'Unknown Site',
             'part_index': part_idx,
             'part_documents': len(part_chunks),  # Keep key name for backward compatibility
             'embedding_dimension': embedding_dimension,

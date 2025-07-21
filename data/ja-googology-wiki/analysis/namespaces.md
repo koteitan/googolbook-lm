@@ -16,28 +16,28 @@ Analysis of content distribution across namespaces in the 巨大数研究 Wiki X
 
 | Namespace | MBytes | Pages | % | % after exclude | Examples |
 |-----------|--------|-------|---|-----------------|----------|
-| ユーザーブログ | 15.4 | 1,617 | 69.3 | 75.1 | [4765](https://googology.fandom.com/ja/?curid=4765), [2097](https://googology.fandom.com/ja/?curid=2097), [8678](https://googology.fandom.com/ja/?curid=8678) |
-| Main | 3.1 | 1,089 | 14.0 | 15.2 | [1530](https://googology.fandom.com/ja/?curid=1530), [6213](https://googology.fandom.com/ja/?curid=6213), [1517](https://googology.fandom.com/ja/?curid=1517) |
-| ユーザー | 1.1 | 274 | 5.1 | 5.5 | [5162](https://googology.fandom.com/ja/?curid=5162), [9767](https://googology.fandom.com/ja/?curid=9767), [5050](https://googology.fandom.com/ja/?curid=5050) |
-| ユーザーブログ・コメント | 0.9 | 2,345 | 4.1 | — | [7384](https://googology.fandom.com/ja/?curid=7384), [7553](https://googology.fandom.com/ja/?curid=7553), [3526](https://googology.fandom.com/ja/?curid=3526) |
-| トーク | 0.6 | 1,517 | 2.5 | 2.7 | [8353](https://googology.fandom.com/ja/?curid=8353), [5809](https://googology.fandom.com/ja/?curid=5809), [1980](https://googology.fandom.com/ja/?curid=1980) |
-| スレッド | 0.2 | 407 | 1.0 | 1.1 | [1678](https://googology.fandom.com/ja/?curid=1678), [3171](https://googology.fandom.com/ja/?curid=3171), [1715](https://googology.fandom.com/ja/?curid=1715) |
-| Board Thread | 0.2 | 505 | 1.0 | — | [4707](https://googology.fandom.com/ja/?curid=4707), [4141](https://googology.fandom.com/ja/?curid=4141), [3882](https://googology.fandom.com/ja/?curid=3882) |
-| テンプレート | 0.1 | 209 | 0.6 | — | [43](https://googology.fandom.com/ja/?curid=43), [7857](https://googology.fandom.com/ja/?curid=7857), [21](https://googology.fandom.com/ja/?curid=21) |
-| 巨大数研究 Wiki・トーク | 0.1 | 7 | 0.5 | — | [3072](https://googology.fandom.com/ja/?curid=3072), [8732](https://googology.fandom.com/ja/?curid=8732), [7870](https://googology.fandom.com/ja/?curid=7870) |
-| カテゴリ・トーク | 0.1 | 6 | 0.4 | — | [7793](https://googology.fandom.com/ja/?curid=7793), [8777](https://googology.fandom.com/ja/?curid=8777), [7889](https://googology.fandom.com/ja/?curid=7889) |
-| 巨大数研究 Wiki | 0.1 | 25 | 0.4 | 0.4 | [256](https://googology.fandom.com/ja/?curid=256), [48](https://googology.fandom.com/ja/?curid=48), [8086](https://googology.fandom.com/ja/?curid=8086) |
-| フォーラム | 0.1 | 19 | 0.3 | — | [170](https://googology.fandom.com/ja/?curid=170), [173](https://googology.fandom.com/ja/?curid=173), [802](https://googology.fandom.com/ja/?curid=802) |
-| テンプレート・トーク | 0.1 | 7 | 0.2 | — | [8796](https://googology.fandom.com/ja/?curid=8796), [8485](https://googology.fandom.com/ja/?curid=8485), [56](https://googology.fandom.com/ja/?curid=56) |
+| ユーザーブログ | 15.4 | 1,617 | 69.3 | 75.1 | [3384](https://googology.fandom.com/ja/?curid=3384), [9602](https://googology.fandom.com/ja/?curid=9602), [455](https://googology.fandom.com/ja/?curid=455) |
+| Main | 3.1 | 1,089 | 14.0 | 15.2 | [1392](https://googology.fandom.com/ja/?curid=1392), [8988](https://googology.fandom.com/ja/?curid=8988), [788](https://googology.fandom.com/ja/?curid=788) |
+| ユーザー | 1.1 | 274 | 5.1 | 5.5 | [2674](https://googology.fandom.com/ja/?curid=2674), [7986](https://googology.fandom.com/ja/?curid=7986), [6992](https://googology.fandom.com/ja/?curid=6992) |
+| ユーザーブログ・コメント | 0.9 | 2,345 | 4.1 | — | [6771](https://googology.fandom.com/ja/?curid=6771), [7634](https://googology.fandom.com/ja/?curid=7634), [7032](https://googology.fandom.com/ja/?curid=7032) |
+| トーク | 0.6 | 1,517 | 2.5 | 2.7 | [6369](https://googology.fandom.com/ja/?curid=6369), [6842](https://googology.fandom.com/ja/?curid=6842), [5629](https://googology.fandom.com/ja/?curid=5629) |
+| スレッド | 0.2 | 407 | 1.0 | 1.1 | [1779](https://googology.fandom.com/ja/?curid=1779), [3256](https://googology.fandom.com/ja/?curid=3256), [2786](https://googology.fandom.com/ja/?curid=2786) |
+| Board Thread | 0.2 | 505 | 1.0 | — | [4112](https://googology.fandom.com/ja/?curid=4112), [4640](https://googology.fandom.com/ja/?curid=4640), [4507](https://googology.fandom.com/ja/?curid=4507) |
+| テンプレート | 0.1 | 209 | 0.6 | — | [8114](https://googology.fandom.com/ja/?curid=8114), [128](https://googology.fandom.com/ja/?curid=128), [125](https://googology.fandom.com/ja/?curid=125) |
+| 巨大数研究 Wiki・トーク | 0.1 | 7 | 0.5 | — | [8764](https://googology.fandom.com/ja/?curid=8764), [163](https://googology.fandom.com/ja/?curid=163), [3072](https://googology.fandom.com/ja/?curid=3072) |
+| カテゴリ・トーク | 0.1 | 6 | 0.4 | — | [7889](https://googology.fandom.com/ja/?curid=7889), [151](https://googology.fandom.com/ja/?curid=151), [5035](https://googology.fandom.com/ja/?curid=5035) |
+| 巨大数研究 Wiki | 0.1 | 25 | 0.4 | 0.4 | [86](https://googology.fandom.com/ja/?curid=86), [328](https://googology.fandom.com/ja/?curid=328), [3214](https://googology.fandom.com/ja/?curid=3214) |
+| フォーラム | 0.1 | 19 | 0.3 | — | [783](https://googology.fandom.com/ja/?curid=783), [802](https://googology.fandom.com/ja/?curid=802), [15](https://googology.fandom.com/ja/?curid=15) |
+| テンプレート・トーク | 0.1 | 7 | 0.2 | — | [8796](https://googology.fandom.com/ja/?curid=8796), [8739](https://googology.fandom.com/ja/?curid=8739), [7585](https://googology.fandom.com/ja/?curid=7585) |
 | MediaWiki・トーク | 0.0 | 3 | 0.2 | — | [7951](https://googology.fandom.com/ja/?curid=7951), [7551](https://googology.fandom.com/ja/?curid=7551), [7864](https://googology.fandom.com/ja/?curid=7864) |
-| カテゴリ | 0.0 | 153 | 0.2 | — | [429](https://googology.fandom.com/ja/?curid=429), [664](https://googology.fandom.com/ja/?curid=664), [360](https://googology.fandom.com/ja/?curid=360) |
-| ファイル | 0.0 | 502 | 0.1 | — | [8102](https://googology.fandom.com/ja/?curid=8102), [1208](https://googology.fandom.com/ja/?curid=1208), [2893](https://googology.fandom.com/ja/?curid=2893) |
-| MediaWiki | 0.0 | 17 | 0.1 | — | [36](https://googology.fandom.com/ja/?curid=36), [93](https://googology.fandom.com/ja/?curid=93), [1722](https://googology.fandom.com/ja/?curid=1722) |
-| ファイル・トーク | 0.0 | 7 | 0.0 | — | [8721](https://googology.fandom.com/ja/?curid=8721), [8319](https://googology.fandom.com/ja/?curid=8319), [8789](https://googology.fandom.com/ja/?curid=8789) |
-| ブログ | 0.0 | 3 | 0.0 | 0.0 | [100](https://googology.fandom.com/ja/?curid=100), [3960](https://googology.fandom.com/ja/?curid=3960), [3958](https://googology.fandom.com/ja/?curid=3958) |
+| カテゴリ | 0.0 | 153 | 0.2 | — | [8645](https://googology.fandom.com/ja/?curid=8645), [385](https://googology.fandom.com/ja/?curid=385), [606](https://googology.fandom.com/ja/?curid=606) |
+| ファイル | 0.0 | 502 | 0.1 | — | [4865](https://googology.fandom.com/ja/?curid=4865), [3873](https://googology.fandom.com/ja/?curid=3873), [9845](https://googology.fandom.com/ja/?curid=9845) |
+| MediaWiki | 0.0 | 17 | 0.1 | — | [688](https://googology.fandom.com/ja/?curid=688), [1722](https://googology.fandom.com/ja/?curid=1722), [1721](https://googology.fandom.com/ja/?curid=1721) |
+| ファイル・トーク | 0.0 | 7 | 0.0 | — | [6271](https://googology.fandom.com/ja/?curid=6271), [8721](https://googology.fandom.com/ja/?curid=8721), [8332](https://googology.fandom.com/ja/?curid=8332) |
+| ブログ | 0.0 | 3 | 0.0 | 0.0 | [100](https://googology.fandom.com/ja/?curid=100), [3958](https://googology.fandom.com/ja/?curid=3958), [3960](https://googology.fandom.com/ja/?curid=3960) |
 | フォーラム・トーク | 0.0 | 1 | 0.0 | — | [8299](https://googology.fandom.com/ja/?curid=8299) |
-| Board | 0.0 | 5 | 0.0 | 0.0 | [1192](https://googology.fandom.com/ja/?curid=1192), [1193](https://googology.fandom.com/ja/?curid=1193), [1197](https://googology.fandom.com/ja/?curid=1197) |
-| メッセージウォール | 0.0 | 205 | 0.0 | — | [276](https://googology.fandom.com/ja/?curid=276), [1352](https://googology.fandom.com/ja/?curid=1352), [1684](https://googology.fandom.com/ja/?curid=1684) |
+| Board | 0.0 | 5 | 0.0 | 0.0 | [3601](https://googology.fandom.com/ja/?curid=3601), [1194](https://googology.fandom.com/ja/?curid=1194), [1192](https://googology.fandom.com/ja/?curid=1192) |
+| メッセージウォール | 0.0 | 205 | 0.0 | — | [3694](https://googology.fandom.com/ja/?curid=3694), [3083](https://googology.fandom.com/ja/?curid=3083), [7117](https://googology.fandom.com/ja/?curid=7117) |
 | ヘルプ・トーク | 0.0 | 2 | 0.0 | 0.0 | [8088](https://googology.fandom.com/ja/?curid=8088), [8089](https://googology.fandom.com/ja/?curid=8089) |
 | ヘルプ | 0.0 | 1 | 0.0 | — | [8087](https://googology.fandom.com/ja/?curid=8087) |
 | モジュール | 0.0 | 1 | 0.0 | — | [8153](https://googology.fandom.com/ja/?curid=8153) |
@@ -70,6 +70,6 @@ This analysis contains content from the **Googology Wiki** (googology.fandom.com
 - **Attribution**: Content creators and contributors of the Googology Wiki
 - **Modifications**: This analysis extracts and reorganizes data from the original wiki content
 
-*Archive fetched: 2025-07-07 05:13:39*  
+*Archive fetched: 2025-07-22 04:26:31*  
 *Generated by namespaces.py*  
-*Analysis date: 2025-07-07 06:00:56*
+*Analysis date: 2025-07-22 04:27:08*

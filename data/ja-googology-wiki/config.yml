@@ -1,0 +1,77 @@
+# Site-specific configuration for 巨大数研究 Wiki (Japanese)
+
+# Site information
+site:
+  name: "巨大数研究 Wiki"
+  url: "googology.fandom.com/ja"
+  base_url: "https://googology.fandom.com/ja"
+  archive_url: "https://s3.amazonaws.com/wikia_xml_dumps/j/ja/jagoogology_pages_current.xml.7z"
+
+# License information
+license:
+  name: "Creative Commons Attribution-ShareAlike 3.0 Unported License"
+  url: "https://creativecommons.org/licenses/by-sa/3.0/"
+  short: "CC BY-SA 3.0"
+
+# MediaWiki XML namespace URI
+mediawiki:
+  namespace_uri: "{http://www.mediawiki.org/xml/export-0.11/}"
+
+# Exclusion rules (converted from exclude.md)
+exclusions:
+  # Excluded namespaces (namespace prefixes to exclude from analysis)
+  namespaces:
+    - "ファイル"                    # File
+    - "テンプレート"                # Template
+    - "ユーザーブログ・コメント"    # User blog comment
+    - "カテゴリ"                   # Category
+    - "GeoJson"
+    - "モジュール"                 # Module
+    - "Map"
+    - "ヘルプ"                     # Help
+    - "フォーラム"                 # Forum
+    - "MediaWiki"
+    - "Special"
+    - "テンプレート・トーク"       # Template talk
+    - "ユーザー・トーク"           # User talk
+    - "巨大数研究 Wiki・トーク"    # Googology Wiki talk
+    - "カテゴリ・トーク"           # Category talk
+    - "MediaWiki・トーク"          # MediaWiki talk
+    - "ファイル・トーク"           # File talk
+    - "フォーラム・トーク"         # Forum talk
+    - "モジュール・トーク"         # Module talk
+    - "GeoJson talk"
+    - "Board Thread"
+    - "メッセージウォール"         # Message Wall
+  
+  # Excluded usernames (usernames to exclude from analysis)
+  usernames:
+    - "FANDOM"
+    - "Wikia"
+
+# Vector store configuration
+vector_store:
+  # Number of chunks to export for web interface (-1 for all)
+  sample_size: -1
+  
+  # Vector store split configuration for large datasets
+  chunks_per_part: 10000        # Number of chunks per split file
+  preliminary_per_part: 10      # Number of top chunks from each part in preliminary round
+  final_result_count: 10        # Number of final results to return from search
+
+# JavaScript web interface configuration
+web:
+  # Current site directory name
+  current_site: "ja-googology-wiki"
+  
+  # Vector store file paths (relative to site root)
+  vector_store:
+    meta_path: "data/ja-googology-wiki/vector_store_meta.json"
+    part_path_template: "data/ja-googology-wiki/vector_store_part{}.json.gz"
+  
+  # Default API settings
+  api:
+    default_top_k: 5
+    default_url: "https://api.openai.com/v1"
+    default_model: "gpt-3.5-turbo"
+    embedding_model: "Xenova/all-MiniLM-L6-v2"  # HuggingFace for retrieval
