@@ -5,10 +5,11 @@ let isLoading = false;
 // Configuration
 const CONFIG = {
     CURRENT_SITE: 'googology-wiki',
-    VECTOR_STORE_PATH: 'data/googology-wiki/vector_store.pkl.gz',
+    VECTOR_STORE_PATH: 'data/googology-wiki/vector_store.json.gz',
     DEFAULT_TOP_K: 5,
     DEFAULT_API_URL: 'https://api.openai.com/v1',
-    DEFAULT_MODEL: 'gpt-3.5-turbo'
+    DEFAULT_MODEL: 'gpt-3.5-turbo',
+    EMBEDDING_MODEL: 'text-embedding-ada-002'
 };
 
 // DOM Elements
@@ -39,7 +40,26 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Load vector store from zipped pickle file
+// Vector math utilities
+function cosineSimilarity(vecA, vecB) {
+    let dotProduct = 0;
+    let normA = 0;
+    let normB = 0;
+    
+    for (let i = 0; i < vecA.length; i++) {
+        dotProduct += vecA[i] * vecB[i];
+        normA += vecA[i] * vecA[i];
+        normB += vecB[i] * vecB[i];
+    }
+    
+    normA = Math.sqrt(normA);
+    normB = Math.sqrt(normB);
+    
+    if (normA === 0 || normB === 0) return 0;
+    return dotProduct / (normA * normB);
+}
+
+// Load vector store from compressed JSON
 async function loadVectorStore() {
     if (isLoading) return;
     
@@ -49,35 +69,53 @@ async function loadVectorStore() {
     elements.loadingStatus.textContent = 'Loading vector store...';
     
     try {
-        // Note: In a real implementation, we would need:
-        // 1. A JavaScript library to read gzipped pickle files
-        // 2. A JavaScript implementation of FAISS or similar vector search
-        // 3. Or a backend service to handle vector operations
+        // Fetch the compressed JSON file
+        const response = await fetch(CONFIG.VECTOR_STORE_PATH);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch vector store: ${response.status}`);
+        }
         
-        // For now, we'll simulate loading
-        await simulateLoading();
+        // Decompress and parse JSON
+        const blob = await response.blob();
+        const decompressedStream = blob.stream().pipeThrough(new DecompressionStream('gzip'));
+        const decompressedResponse = new Response(decompressedStream);
+        const jsonData = await decompressedResponse.json();
         
-        // In production, this would load the actual vector store
+        console.log(`Loaded ${jsonData.total_documents} documents`);
+        
+        // Create vector store with search functionality
         vectorStore = {
             loaded: true,
+            data: jsonData,
+            documents: jsonData.documents,
             search: async (query, k = CONFIG.DEFAULT_TOP_K) => {
-                // Simulated search results
-                return [
-                    {
-                        title: "Googology",
-                        content: "Googology is the study and nomenclature of large numbers...",
-                        score: 0.95,
-                        url: "https://googology.fandom.com/wiki/?curid=1897",
-                        id: "1897"
-                    },
-                    {
-                        title: "Graham's number",
-                        content: "Graham's number is an immense number that arose as an upper bound...",
-                        score: 0.89,
-                        url: "https://googology.fandom.com/wiki/?curid=2345",
-                        id: "2345"
-                    }
-                ];
+                const apiKey = elements.apiKey.value.trim();
+                if (!apiKey) {
+                    throw new Error('API key required for semantic search');
+                }
+                
+                // Get query embedding from OpenAI
+                const queryEmbedding = await getEmbedding(query, apiKey);
+                
+                // Calculate similarities
+                const similarities = [];
+                for (const doc of vectorStore.documents) {
+                    const similarity = cosineSimilarity(queryEmbedding, doc.embedding);
+                    similarities.push({
+                        ...doc,
+                        score: similarity
+                    });
+                }
+                
+                // Sort by similarity and return top k
+                similarities.sort((a, b) => b.score - a.score);
+                return similarities.slice(0, k).map(doc => ({
+                    title: doc.metadata.title || 'Unknown',
+                    content: doc.content,
+                    score: doc.score,
+                    url: doc.metadata.url || '#',
+                    id: doc.metadata.id || doc.id
+                }));
             }
         };
         
@@ -94,12 +132,30 @@ async function loadVectorStore() {
     }
 }
 
-// Simulate loading for demonstration
-async function simulateLoading() {
-    return new Promise(resolve => {
-        setTimeout(resolve, 2000);
+// Get embedding from OpenAI API
+async function getEmbedding(text, apiKey) {
+    const baseUrl = elements.baseUrl.value.trim();
+    
+    const response = await fetch(`${baseUrl}/embeddings`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+            model: CONFIG.EMBEDDING_MODEL,
+            input: text
+        })
     });
+    
+    if (!response.ok) {
+        throw new Error(`Embedding API request failed: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data.data[0].embedding;
 }
+
 
 // Handle send button click
 async function handleSend() {
