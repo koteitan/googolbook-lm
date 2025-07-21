@@ -10,36 +10,45 @@ This repository contains XML data from the Googology Wiki, specifically wiki pag
 
 ```
 /
-├── data/ # Data files
-│   ├── .dummy # Placeholder to maintain directory structure
-│   ├── googology_pages_current.xml   # Main MediaWiki XML export (210MB, not in Git)
-│   └── statistics-googology-wiki-fandom.html  # Wiki statistics page
+├── data/              # Data files
+│   └── [CURRENT_SITE]/   # Site-specific data (e.g., googology-wiki, ja-googology-wiki)
+│       ├── analysis/     # Generated analysis reports
+│       │   ├── README.md
+│       │   ├── contributors.md
+│       │   ├── namespaces.md
+│       │   ├── random.html
+│       │   └── tokens.md
+│       ├── config.py     # Site-specific configuration (contains SITE_NAME, SITE_BASE_URL, etc.)
+│       ├── exclude.md    # Site-specific exclusions
+│       ├── fetch_log.txt # Download log
+│       ├── [site]_pages_current.xml # MediaWiki XML export (e.g., googology_pages_current.xml)
+│       └── vector_store.pkl # RAG vector store cache
 ├── lib/               # Shared library modules
+│   ├── README.md      # Library documentation
+│   ├── __init__.py    # Package initialization
 │   ├── exclusions.py  # Namespace and user exclusion utilities
 │   ├── formatting.py  # Number and text formatting utilities
 │   ├── io_utils.py    # File I/O and XML detection utilities
 │   ├── reporting.py   # Report generation utilities
-│   └── xml_parser.py  # MediaWiki XML parsing utilities
+│   ├── xml_parser.py  # MediaWiki XML parsing utilities
+│   ├── rag/           # RAG (Retrieval-Augmented Generation) utilities
+│   │   ├── __init__.py    # Package initialization
+│   │   ├── custom_loader.py # Custom MWDumpLoader (unused)
+│   │   ├── loader.py      # MediaWiki document loading with curid URL support
+│   │   ├── splitter.py    # Document text splitting for chunks
+│   │   └── vectorstore.py # FAISS vector store creation and search
+│   └── test/          # Test scripts
 ├── tools/             # Analysis and processing tools
-│   ├── */             # each tool
-│   │   ├── README.md  # Tool documentation
-│   │   ├── *.py       # Script
-│   │   └── *.md       # Generated analysis report
-├── tools/             # Analysis and processing tools
-│   ├── contributors/  # Contributor analysis tool
-│   ├── large-pages/   # Large page analysis tool
-│   ├── namespaces/    # Namespace statistics tool
-│   ├── tokens/        # Token counting tool
-│   ├── random/        # Random page sampling tool
 │   ├── fetch/         # Data fetching tool
 │   │   ├── README.md  # Tool documentation
 │   │   └── fetch.py   # Data download script
-│   ├── dothemall.bash # Execute all analysis tools
-│   ├── steps.md       # Analysis steps documentation
+│   ├── rag/           # RAG (Retrieval-Augmented Generation) search tool
+│   │   ├── README.md  # RAG tool documentation
+│   │   ├── xml2vec.py # Vector store creation from XML
+│   │   └── rag_search.py # Interactive RAG search interface
 │   └── README.md      # Tools overview documentation
 ├── config.py          # Central configuration constants
 ├── exclude.md         # Exclusion rules for analysis
-├── mediawiki.md       # MediaWiki XML format documentation
 ├── CLAUDE.md          # This file
 ├── README.md          # Project description
 ├── LICENSE            # CC BY-SA 3.0 license
@@ -49,10 +58,13 @@ This repository contains XML data from the Googology Wiki, specifically wiki pag
 ## Architecture
 
 The repository follows a modular, library-based architecture:
-- **Raw Data**: MediaWiki XML export in `data/` directory (large files excluded from Git)
+- **Raw Data**: MediaWiki XML export in `data/[CURRENT_SITE]/` directory (large files excluded from Git)
 - **Shared Library**: `lib/` directory with reusable analysis utilities
 - **Analysis Tools**: `tools/` directory with specialized analysis scripts using shared library
-- **Configuration**: Centralized settings in `config.py` and user exclusions in `exclude.md`
+- **Configuration**: 
+  - Central settings in `config.py` (including `CURRENT_SITE` variable)
+  - Site-specific settings in `data/[CURRENT_SITE]/config.py`
+  - User exclusions in `data/[CURRENT_SITE]/exclude.md`
 - **Documentation**: Comprehensive MediaWiki format documentation in `mediawiki.md`
 - **Licensing**: CC BY-SA 3.0 to comply with source content licensing
 
@@ -60,13 +72,16 @@ The repository follows a modular, library-based architecture:
 
 ### Core Data Files
 
-#### `data/googology_pages_current.xml`
-- **Size**: 210MB (3.6M lines)
-- **Content**: Complete MediaWiki XML export from Googology Wiki
+#### `data/[CURRENT_SITE]/[site]_pages_current.xml`
+- **Size**: Varies by site (e.g., 210MB for English Googology Wiki)
+- **Content**: Complete MediaWiki XML export from the specified wiki
 - **Structure**: Contains site metadata, page content, revision history, and contributor information
 - **Format**: MediaWiki XML Export Schema version 0.11 with UTF-8 encoding
 - **Usage**: Primary data source for googology concepts and mathematical content
 - **Git Status**: Excluded from repository via `.gitignore` due to large file size
+- **Examples**: 
+  - `data/googology-wiki/googology_pages_current.xml` (English)
+  - `data/ja-googology-wiki/jagoogology_pages_current.xml` (Japanese)
 
 ### Documentation Files
 
@@ -119,16 +134,43 @@ See **[lib/README.md](lib/README.md)** for detailed documentation of all library
 - **Features**: Namespace-aware sampling with exclusion support
 - **Output**: `index.html` - Web interface for browsing random pages
 
+#### `tools/rag/`
+- **Purpose**: RAG (Retrieval-Augmented Generation) search system for semantic search
+- **Features**: 
+  - Vector store creation from MediaWiki XML using FAISS
+  - Interactive search with similarity scoring
+  - Curid-based URL generation for terminal compatibility
+  - Dynamic namespace filtering including User blog content
+- **Components**:
+  - `xml2vec.py`: Creates vector store from XML data
+  - `rag_search.py`: Interactive search interface
+  - `README.md`: Comprehensive documentation
+- **Output**: `data/[CURRENT_SITE]/vector_store.pkl` - Cached vector stores
+
 ### Configuration Files
 
 #### `config.py`
 - **Purpose**: Central configuration constants
-- **Contents**: Site information, file paths, MediaWiki XML namespace URI
-- **Key Constant**: `MEDIAWIKI_NS = '{http://www.mediawiki.org/xml/export-0.11/}'` for XML parsing
+- **Contents**: 
+  - `CURRENT_SITE`: Active site directory name (e.g., 'googology-wiki', 'ja-googology-wiki')
+  - `MEDIAWIKI_NS`: XML namespace URI for parsing
+  - `DATA_DIR`: Path to current site data directory
+- **Key Constants**: 
+  - `MEDIAWIKI_NS = '{http://www.mediawiki.org/xml/export-0.11/}'`
+  - `CURRENT_SITE = 'googology-wiki'` (default)
 - **Usage**: Imported by all tools and library modules
 
-#### `exclude.md`
-- **Purpose**: User-configurable exclusion rules
+#### `data/[CURRENT_SITE]/config.py`
+- **Purpose**: Site-specific configuration
+- **Contents**: Site name, base URL, excluded namespaces
+- **Examples**: 
+  - `SITE_NAME = 'Googology Wiki'`
+  - `SITE_BASE_URL = 'https://googology.fandom.com'`
+  - `EXCLUDED_NAMESPACES` list
+- **Usage**: Loaded dynamically based on `CURRENT_SITE`
+
+#### `data/[CURRENT_SITE]/exclude.md`
+- **Purpose**: Site-specific exclusion rules
 - **Format**: Markdown list of namespace prefixes and usernames to exclude
 - **Examples**: `- File:`, `- Template:`, `- <username>FANDOM</username>`
 - **Usage**: Processed by lib/exclusions.py for namespace ID-based filtering
