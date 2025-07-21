@@ -113,19 +113,19 @@ section h3 {
     position: relative;
 }
 
+.progress-bar {
+    --progress: 0%;
+}
+
 .progress-bar::after {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     height: 100%;
-    width: 0%;
+    width: var(--progress);
     background-color: #3498db;
     transition: width 0.3s ease;
-}
-
-.progress-bar.loading::after {
-    width: 100%;
 }
 
 #loading-status {

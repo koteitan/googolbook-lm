@@ -31,6 +31,46 @@ def build_title_to_page_id_mapping(xml_path: str) -> Dict[str, str]:
     return title_to_id
 
 
+def build_reverse_title_mapping(title_to_id: Dict[str, str]) -> Dict[str, str]:
+    """
+    Build a reverse mapping from source titles (without namespace prefix) to full titles.
+    
+    This helps recover the correct full title when MWDumpLoader strips namespace prefixes.
+    
+    Args:
+        title_to_id: Dictionary mapping full titles to page IDs
+        
+    Returns:
+        Dictionary mapping source titles to full titles
+    """
+    source_to_full = {}
+    
+    print("Building reverse title mapping...")
+    for full_title in title_to_id.keys():
+        # Extract source title (part after namespace prefix)
+        if ':' in full_title:
+            # Has namespace prefix - extract the part after ':'
+            source_title = full_title.split(':', 1)[1]
+        else:
+            # Main namespace - source title is the same as full title
+            source_title = full_title
+        
+        # Handle conflicts by preferring main namespace, then earliest encountered
+        if source_title in source_to_full:
+            existing_full = source_to_full[source_title]
+            # Prefer main namespace (no ':' in title)
+            if ':' not in full_title:
+                source_to_full[source_title] = full_title
+            elif ':' in existing_full:
+                # Both have namespace - keep the first one (arbitrary but consistent)
+                pass
+        else:
+            source_to_full[source_title] = full_title
+    
+    print(f"Built reverse mapping for {len(source_to_full):,} source titles")
+    return source_to_full
+
+
 def load_mediawiki_documents(xml_path: str, namespace_filter: List[int] = None) -> List[Document]:
     """
     Load documents from MediaWiki XML dump file.
@@ -80,6 +120,9 @@ def load_mediawiki_documents(xml_path: str, namespace_filter: List[int] = None) 
     # Build title-to-page-ID mapping
     title_to_id = build_title_to_page_id_mapping(xml_path)
     
+    # Build reverse mapping for source title -> full title resolution
+    source_to_full_title = build_reverse_title_mapping(title_to_id)
+    
     # Create reverse mapping: namespace ID -> namespace name
     id_to_name = {int(ns_id): ns_name for ns_id, ns_name in namespace_mapping.items() if ns_id.isdigit()}
     
@@ -92,19 +135,18 @@ def load_mediawiki_documents(xml_path: str, namespace_filter: List[int] = None) 
             source_title = doc.metadata['source']
             
             # Reconstruct full title with namespace prefix
-            # MWDumpLoader strips namespace prefixes, so we need to add them back
-            full_title = source_title
-            
-            # Reconstruct namespace prefix based on title patterns
-            # MWDumpLoader strips namespace prefixes, so we need to detect and restore them
-            
-            # User blog namespace: typically contains '/' or person names
-            if ('/' in source_title and 500 in namespace_filter and 500 in id_to_name):
-                # This is likely from User blog namespace
-                full_title = f"{id_to_name[500]}:{source_title}"
+            # MWDumpLoader strips namespace prefixes, so we use reverse mapping to find the correct full title
+            if source_title in source_to_full_title:
+                # Use reverse mapping to get the correct full title
+                full_title = source_to_full_title[source_title]
             else:
-                # Main namespace or other - no prefix needed for Main
+                # Fallback: reconstruct using heuristics (legacy approach)
                 full_title = source_title
+                
+                # User blog namespace: typically contains '/' or person names
+                if ('/' in source_title and 500 in namespace_filter and 500 in id_to_name):
+                    # This is likely from User blog namespace
+                    full_title = f"{id_to_name[500]}:{source_title}"
             
             # Skip if title starts with excluded namespace prefix
             if any(full_title.startswith(prefix) for prefix in excluded_prefixes):

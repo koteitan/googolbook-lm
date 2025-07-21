@@ -12,12 +12,16 @@ let embedder = null;
 // Configuration
 const CONFIG = {
     CURRENT_SITE: 'googology-wiki',
-    VECTOR_STORE_PATH: 'data/googology-wiki/vector_store.json.gz',
+    SITE_BASE_URL: 'https://googology.fandom.com',
+    VECTOR_STORE_META_PATH: 'data/googology-wiki/vector_store_meta.json',
+    VECTOR_STORE_PART_PATH_TEMPLATE: 'data/googology-wiki/vector_store_part{}.json.gz',
     DEFAULT_TOP_K: 5,
     DEFAULT_API_URL: 'https://api.openai.com/v1',
     DEFAULT_MODEL: 'gpt-3.5-turbo',
     EMBEDDING_MODEL: 'Xenova/all-MiniLM-L6-v2',  // HuggingFace for retrieval
-    EXPECTED_DOCUMENTS: 20000  // Expected number of documents (from VECTOR_STORE_SAMPLE_SIZE in site config)
+    // Split search configuration (will be loaded from site config)
+    PRELIMINARY_DOCS_PER_PART: 10,
+    FINAL_RESULT_COUNT: 10
 };
 
 // DOM Elements
@@ -120,7 +124,7 @@ function cosineSimilarity(vecA, vecB) {
     return similarity;
 }
 
-// Load vector store from compressed JSON
+// Load vector store from multiple compressed JSON parts
 async function loadVectorStore() {
     if (isLoading || !embedder) {
         if (!embedder) {
@@ -132,119 +136,148 @@ async function loadVectorStore() {
     isLoading = true;
     elements.loadDataBtn.disabled = true;
     elements.loadingProgress.classList.add('loading');
-    elements.loadingStatus.textContent = 'Loading data...';
+    
+    // Helper function to update progress bar
+    const updateProgress = (current, total) => {
+        const percentage = Math.round((current / total) * 100);
+        elements.loadingProgress.style.setProperty('--progress', `${percentage}%`);
+    };
+    
+    elements.loadingStatus.textContent = 'Loading metadata...';
+    updateProgress(0, 1);
     
     try {
-        console.log('Loading vector store from:', CONFIG.VECTOR_STORE_PATH);
-        
-        // Load compressed JSON
-        const response = await fetch(CONFIG.VECTOR_STORE_PATH);
-        if (!response.ok) {
-            throw new Error(`Failed to load data: ${response.status}`);
+        // First, load metadata
+        console.log('Loading metadata from:', CONFIG.VECTOR_STORE_META_PATH);
+        const metaResponse = await fetch(CONFIG.VECTOR_STORE_META_PATH);
+        if (!metaResponse.ok) {
+            throw new Error(`Failed to load metadata: ${metaResponse.status}`);
         }
         
-        const arrayBuffer = await response.arrayBuffer();
+        const metadata = await metaResponse.json();
+        console.log('Metadata loaded:', metadata);
         
-        // Decompress gzip
-        const decompressed = pako.inflate(arrayBuffer, { to: 'string' });
-        const data = JSON.parse(decompressed);
+        // Load all parts
+        const parts = [];
+        const totalSteps = metadata.num_parts;
         
-        console.log('Vector store data loaded:', {
-            totalDocuments: data.total_documents,
-            embeddingDimension: data.embedding_dimension,
-            documentsArrayLength: data.documents.length
-        });
-        
-        // Create vector store object with search functionality
-        vectorStore = {
-            documents: data.documents,
-            totalDocuments: data.total_documents,
-            embeddingDimension: data.embedding_dimension,
+        for (let partIndex = 1; partIndex <= metadata.num_parts; partIndex++) {
+            elements.loadingStatus.textContent = `Loading part ${partIndex}/${metadata.num_parts}...`;
             
-            search: async function(query, k = CONFIG.DEFAULT_TOP_K) {
+            const partPath = CONFIG.VECTOR_STORE_PART_PATH_TEMPLATE.replace('{}', String(partIndex).padStart(2, '0'));
+            console.log(`Loading part ${partIndex} from:`, partPath);
+            
+            const response = await fetch(partPath);
+            if (!response.ok) {
+                throw new Error(`Failed to load part ${partIndex}: ${response.status}`);
+            }
+            
+            const arrayBuffer = await response.arrayBuffer();
+            const decompressed = pako.inflate(arrayBuffer, { to: 'string' });
+            const partData = JSON.parse(decompressed);
+            
+            console.log(`Part ${partIndex} loaded:`, {
+                partDocuments: partData.part_documents,
+                documentsLength: partData.documents.length
+            });
+            
+            parts.push(partData);
+            
+            // Update progress bar
+            updateProgress(partIndex, totalSteps);
+        }
+        
+        // Create vector store object with preliminary-final search functionality
+        vectorStore = {
+            parts: parts,
+            metadata: metadata,
+            totalDocuments: metadata.total_documents,
+            embeddingDimension: metadata.embedding_dimension,
+            
+            search: async function(query, k = CONFIG.FINAL_RESULT_COUNT) {
                 if (!embedder) {
                     throw new Error('Embedder not initialized');
                 }
                 
-                console.log(`Searching for: "${query}" in ${this.documents.length} documents`);
+                console.log(`Starting preliminary-final search for: "${query}"`);
+                console.log(`Parts: ${this.parts.length}, Total docs: ${this.totalDocuments}`);
                 
-                // Get query embedding using HuggingFace Transformers.js (same as vector store)
+                // Get query embedding
                 console.log('Getting query embedding with HuggingFace Transformers.js...');
                 const output = await embedder(query, { pooling: 'mean', normalize: true });
                 const queryEmbedding = Array.from(output.data);
                 
                 console.log('Query embedding dimension:', queryEmbedding.length);
-                console.log('Query embedding sample:', queryEmbedding.slice(0, 5));
-                console.log('Query embedding contains NaN:', queryEmbedding.some(v => isNaN(v)));
-                console.log('Query embedding contains non-numbers:', queryEmbedding.some(v => typeof v !== 'number'));
                 
-                // Calculate similarities
-                const similarities = [];
-                let validSimilarities = 0;
-                let invalidSimilarities = 0;
+                // Phase 1: Preliminary search in each part
+                const preliminaryResults = [];
                 
-                for (let i = 0; i < this.documents.length; i++) {
-                    const doc = this.documents[i];
-                    if (!doc.embedding || !Array.isArray(doc.embedding)) {
-                        console.error(`Invalid embedding for document ${i}:`, doc);
-                        invalidSimilarities++;
-                        continue;
+                for (let partIndex = 0; partIndex < this.parts.length; partIndex++) {
+                    const part = this.parts[partIndex];
+                    const partSimilarities = [];
+                    
+                    // Search in this part
+                    for (let docIndex = 0; docIndex < part.documents.length; docIndex++) {
+                        const doc = part.documents[docIndex];
+                        if (!doc.embedding || !Array.isArray(doc.embedding)) {
+                            continue;
+                        }
+                        
+                        const similarity = cosineSimilarity(queryEmbedding, doc.embedding);
+                        if (!isNaN(similarity)) {
+                            partSimilarities.push({
+                                id: doc.id,
+                                content: doc.content,
+                                metadata: doc.metadata,
+                                score: similarity,
+                                partIndex: partIndex
+                            });
+                        }
                     }
                     
-                    const similarity = cosineSimilarity(queryEmbedding, doc.embedding);
-                    if (isNaN(similarity)) {
-                        console.error(`NaN similarity for document ${i}:`, {
-                            docId: doc.id,
-                            queryEmbedding: queryEmbedding.slice(0, 5),
-                            docEmbedding: doc.embedding.slice(0, 5),
-                            similarity
-                        });
-                        invalidSimilarities++;
-                    } else {
-                        validSimilarities++;
-                        similarities.push({
-                            id: doc.id,
-                            content: doc.content,
-                            metadata: doc.metadata,
-                            score: similarity
-                        });
+                    // Get top preliminary results from this part
+                    partSimilarities.sort((a, b) => b.score - a.score);
+                    const topFromPart = partSimilarities.slice(0, CONFIG.PRELIMINARY_DOCS_PER_PART);
+                    preliminaryResults.push(...topFromPart);
+                    
+                    console.log(`Part ${partIndex + 1}: ${topFromPart.length} preliminary results`);
+                }
+                
+                console.log(`Preliminary phase complete: ${preliminaryResults.length} candidates`);
+                
+                // Phase 2: Final ranking of all preliminary results
+                preliminaryResults.sort((a, b) => b.score - a.score);
+                const finalResults = preliminaryResults.slice(0, k);
+                
+                console.log(`Final phase complete: ${finalResults.length} results`);
+                
+                // Format results
+                const formattedResults = finalResults.map(doc => {
+                    // Generate curid-based URL for reliable access
+                    let url = '#';
+                    const pageId = doc.metadata ? doc.metadata.id : doc.id;
+                    
+                    if (doc.metadata && doc.metadata.id && doc.metadata.id.match(/^\d+$/)) {
+                        // If id is a numeric page ID, use curid format
+                        url = `${CONFIG.SITE_BASE_URL}/?curid=${doc.metadata.id}`;
+                        console.log(`Using curid format: ID=${doc.metadata.id}, URL=${url}`);
+                    } else if (doc.metadata && doc.metadata.url) {
+                        // Fallback to original URL if page_id is not available
+                        url = doc.metadata.url;
+                        console.log(`Using fallback URL: ID=${pageId}, URL=${url}`);
                     }
                     
-                    // Log progress for large datasets
-                    if (i > 0 && i % 5000 === 0) {
-                        console.log(`Processed ${i}/${this.documents.length} documents`);
-                    }
-                }
-                
-                console.log(`Similarity calculation complete: ${validSimilarities} valid, ${invalidSimilarities} invalid`);
-                
-                if (validSimilarities === 0) {
-                    console.error('No valid similarities calculated!');
-                    return [];
-                }
-                
-                // Sort by similarity and return top k
-                similarities.sort((a, b) => b.score - a.score);
-                
-                // Log statistics
-                const scores = similarities.map(s => s.score);
-                console.log('Score statistics:', {
-                    max: Math.max(...scores),
-                    min: Math.min(...scores),
-                    mean: scores.reduce((a, b) => a + b, 0) / scores.length,
-                    nonZero: scores.filter(s => s > 0).length
+                    return {
+                        title: doc.metadata.title || 'Unknown',
+                        content: doc.content,
+                        score: doc.score,
+                        url: url,
+                        id: pageId
+                    };
                 });
                 
-                const topResults = similarities.slice(0, k).map(doc => ({
-                    title: doc.metadata.title || 'Unknown',
-                    content: doc.content,
-                    score: doc.score,
-                    url: doc.metadata.url || '#',
-                    id: doc.metadata.id || doc.id
-                }));
-                
-                console.log('Top results:', topResults.map(r => ({ title: r.title, score: r.score })));
-                return topResults;
+                console.log('Final results:', formattedResults.map(r => ({ title: r.title, score: r.score.toFixed(4) })));
+                return formattedResults;
             }
         };
         
@@ -361,7 +394,7 @@ function displayRAGResults(results) {
             <div class="result-header">
                 <span class="result-number">${index + 1}.</span>
                 <a href="${result.url}" target="_blank" class="result-title">${result.title}</a>
-                <span class="result-score">Score: ${result.score.toFixed(4)}</span>
+                <span class="result-score">Score: ${result.score.toFixed(4)} | ID: ${result.id}</span>
             </div>
             <div class="result-content">
                 ${result.content.substring(0, 300)}${result.content.length > 300 ? '...' : ''}

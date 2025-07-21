@@ -32,21 +32,25 @@ else:
     site_config = None
 
 
-def export_vector_store_to_json(vector_store_path: str, output_path: str, max_docs: int = None):
+def export_vector_store_to_json(vector_store_path: str, output_path: str, max_chunks: int = None):
     """
     Export vector store to JSON format.
     
     Args:
         vector_store_path: Path to the vector store pickle file
         output_path: Path for the output JSON file
-        max_docs: Maximum number of documents to export (None for all)
+        max_chunks: Maximum number of chunks to export (None for all)
     """
     print(f"Loading vector store from: {vector_store_path}")
+    
+    # Convert output_path to Path object if it's a string
+    if isinstance(output_path, str):
+        output_path = Path(output_path)
     
     with open(vector_store_path, 'rb') as f:
         vector_store = pickle.load(f)
     
-    print("Extracting documents and embeddings...")
+    print("Extracting chunks and embeddings...")
     
     # Extract documents with their embeddings
     documents = []
@@ -58,84 +62,129 @@ def export_vector_store_to_json(vector_store_path: str, output_path: str, max_do
     # Get index to docstore ID mapping
     index_to_docstore_id = vector_store.index_to_docstore_id
     
-    # Determine number of documents to process
-    total_docs = index.ntotal
-    print(f"Total documents in vector store: {total_docs}")
+    # Determine number of chunks to process
+    total_chunks = index.ntotal
+    embedding_dimension = index.d  # Get embedding dimension from FAISS index
+    print(f"Total chunks in vector store: {total_chunks}")
+    print(f"Embedding dimension: {embedding_dimension}")
     
-    # Validate and adjust max_docs
-    if max_docs is None or max_docs <= 0 or max_docs > total_docs:
-        if max_docs is not None:
-            if max_docs <= 0:
-                print(f"Warning: max_docs ({max_docs}) is invalid, using all documents")
-            elif max_docs > total_docs:
-                print(f"Warning: max_docs ({max_docs}) exceeds total documents ({total_docs}), using all documents")
-        num_docs = total_docs
+    # Validate and adjust max_chunks
+    if max_chunks is None or max_chunks <= 0 or max_chunks > total_chunks:
+        if max_chunks is not None:
+            if max_chunks <= 0:
+                print(f"Warning: max_chunks ({max_chunks}) is invalid, using all chunks")
+            elif max_chunks > total_chunks:
+                print(f"Warning: max_chunks ({max_chunks}) exceeds total chunks ({total_chunks}), using all chunks")
+        num_chunks = total_chunks
     else:
-        num_docs = max_docs
+        num_chunks = max_chunks
     
-    print(f"Processing {num_docs} documents...")
+    # Get chunks per part from site configuration
+    chunks_per_part = getattr(site_config, 'DOCUMENTS_PER_PART', 10000)
     
-    for idx in range(num_docs):
-        if idx > 0 and idx % 1000 == 0:
-            print(f"  Processed {idx}/{num_docs} documents...")
-        
-        # Get document ID from index
-        if idx in index_to_docstore_id:
-            doc_id = index_to_docstore_id[idx]
-            doc = docstore.search(doc_id)
-            
-            if doc:
-                # Get the embedding vector for this document
-                embedding = index.reconstruct(idx)
-                
-                # Create document entry
-                doc_entry = {
-                    'id': doc_id,
-                    'content': doc.page_content,  # Keep full content for proper search
-                    'metadata': doc.metadata,
-                    'embedding': embedding.tolist()  # Convert numpy array to list
-                }
-                documents.append(doc_entry)
+    print(f"Processing {num_chunks} chunks in parts of {chunks_per_part}...")
     
-    print(f"Extracted {len(documents)} documents")
+    # Calculate number of parts needed
+    num_parts = (num_chunks + chunks_per_part - 1) // chunks_per_part
+    print(f"Creating {num_parts} part files...")
     
-    # Create the JSON structure
-    json_data = {
-        'site': config.SITE_NAME,
-        'total_documents': len(documents),
-        'embedding_dimension': len(documents[0]['embedding']) if documents else 0,
-        'documents': documents
+    # Create metadata file
+    meta_data = {
+        'total_documents': num_chunks,  # Keep key name for backward compatibility
+        'num_parts': num_parts,
+        'docs_per_part': chunks_per_part,  # Keep key name for backward compatibility
+        'embedding_dimension': embedding_dimension
     }
     
-    # Save to JSON
-    print(f"Saving to JSON: {output_path}")
-    with open(output_path, 'w', encoding='utf-8') as f:
-        json.dump(json_data, f, ensure_ascii=False, indent=2)
+    meta_path = output_path.parent / 'vector_store_meta.json'
+    with open(meta_path, 'w', encoding='utf-8') as f:
+        json.dump(meta_data, f, indent=2)
+    print(f"Metadata written to: {meta_path}")
     
-    file_size = os.path.getsize(output_path) / 1024 / 1024
-    print(f"✓ JSON export complete! Size: {file_size:.1f} MB")
+    # Process chunks in parts
+    for part_idx in range(num_parts):
+        part_start = part_idx * chunks_per_part
+        part_end = min(part_start + chunks_per_part, num_chunks)
+        part_size = part_end - part_start
+        
+        print(f"\nProcessing part {part_idx + 1}/{num_parts} ({part_size} chunks)...")
+        
+        part_chunks = []
+        
+        for idx in range(part_start, part_end):
+            # Get document ID from index
+            if idx in index_to_docstore_id:
+                doc_id = index_to_docstore_id[idx]
+                doc = docstore.search(doc_id)
+                
+                if doc:
+                    # Get the embedding vector for this document
+                    embedding = index.reconstruct(idx)
+                    
+                    # Create document entry
+                    doc_entry = {
+                        'id': doc_id,
+                        'content': doc.page_content,  # Keep full content for proper search
+                        'metadata': doc.metadata,
+                        'embedding': embedding.tolist()  # Convert numpy array to list
+                    }
+                    part_chunks.append(doc_entry)
+        
+        print(f"  Part {part_idx + 1}: Extracted {len(part_chunks)} chunks")
+        
+        # Create the JSON structure for this part
+        part_json_data = {
+            'site': config.SITE_NAME,
+            'part_index': part_idx,
+            'part_documents': len(part_chunks),  # Keep key name for backward compatibility
+            'embedding_dimension': embedding_dimension,
+            'documents': part_chunks  # Keep key name for backward compatibility
+        }
+        
+        # Save part to JSON  
+        part_output_path = output_path.parent / f'vector_store_part{part_idx + 1:02d}.json'
+        print(f"  Saving part to JSON: {part_output_path}")
+        with open(part_output_path, 'w', encoding='utf-8') as f:
+            json.dump(part_json_data, f, ensure_ascii=False, indent=2)
+        
+        part_file_size = os.path.getsize(part_output_path) / 1024 / 1024
+        print(f"  ✓ Part {part_idx + 1} JSON complete! Size: {part_file_size:.1f} MB")
+        
+        # Also create a compressed version for this part
+        part_gz_path = str(part_output_path) + '.gz'
+        print(f"  Creating compressed version: {part_gz_path}")
+        with gzip.open(part_gz_path, 'wt', encoding='utf-8') as f:
+            json.dump(part_json_data, f, ensure_ascii=False)
+        
+        part_gz_size = os.path.getsize(part_gz_path) / 1024 / 1024
+        print(f"  ✓ Part {part_idx + 1} compression complete! Size: {part_gz_size:.1f} MB")
     
-    # Also create a compressed version
-    gz_path = output_path + '.gz'
-    print(f"Creating compressed version: {gz_path}")
-    with gzip.open(gz_path, 'wt', encoding='utf-8') as f:
-        json.dump(json_data, f, ensure_ascii=False)
+    print(f"\n✓ All {num_parts} parts created successfully!")
+    print(f"Files created:")
+    print(f"  - {meta_path}")
+    for i in range(num_parts):
+        print(f"  - vector_store_part{i + 1:02d}.json")
+        print(f"  - vector_store_part{i + 1:02d}.json.gz")
     
-    gz_size = os.path.getsize(gz_path) / 1024 / 1024
-    print(f"✓ Compressed JSON saved! Size: {gz_size:.1f} MB")
-    
-    return json_data
+    return meta_data
 
 
 def main():
-    # Get default max_docs from site config with validation
-    default_max_docs = None
+    # Get default max_chunks from site config with validation
+    default_max_chunks = None
     if site_config and hasattr(site_config, 'VECTOR_STORE_SAMPLE_SIZE'):
         sample_size = site_config.VECTOR_STORE_SAMPLE_SIZE
-        if isinstance(sample_size, int) and sample_size > 0:
-            default_max_docs = sample_size
+        if isinstance(sample_size, int):
+            if sample_size == -1:
+                print(f"Using VECTOR_STORE_SAMPLE_SIZE ({sample_size}) from site config: export all chunks")
+                default_max_chunks = -1  # Will be converted to all chunks in export function
+            elif sample_size > 0:
+                print(f"Using VECTOR_STORE_SAMPLE_SIZE ({sample_size}) from site config")
+                default_max_chunks = sample_size
+            else:
+                print(f"Warning: Invalid VECTOR_STORE_SAMPLE_SIZE ({sample_size}) in site config, will use all chunks")
         else:
-            print(f"Warning: Invalid VECTOR_STORE_SAMPLE_SIZE ({sample_size}) in site config, will use all documents")
+            print(f"Warning: Invalid VECTOR_STORE_SAMPLE_SIZE ({sample_size}) in site config, will use all chunks")
     
     parser = argparse.ArgumentParser(
         description='Export vector store to JSON format for web use'
@@ -150,16 +199,16 @@ def main():
         default=str(config.DATA_DIR / 'vector_store.json'),
         help='Output path for JSON file'
     )
-    help_text = 'Maximum number of documents to export'
-    if default_max_docs:
-        help_text += f' (default: {default_max_docs} from site config)'
+    help_text = 'Maximum number of chunks to export'
+    if default_max_chunks:
+        help_text += f' (default: {default_max_chunks} from site config)'
     else:
-        help_text += ' (default: all documents)'
+        help_text += ' (default: all chunks)'
     
     parser.add_argument(
-        '--max-docs',
+        '--max-chunks',
         type=int,
-        default=default_max_docs,
+        default=default_max_chunks,
         help=help_text
     )
     
@@ -170,7 +219,7 @@ def main():
         print("Please run xml2vec.py first to create the vector store.")
         sys.exit(1)
     
-    export_vector_store_to_json(args.input, args.output, args.max_docs)
+    export_vector_store_to_json(args.input, args.output, args.max_chunks)
 
 
 if __name__ == '__main__':

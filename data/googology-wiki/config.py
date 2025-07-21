@@ -48,4 +48,9 @@ EXCLUDED_USERNAMES = [
 ]
 
 # Vector store configuration
-VECTOR_STORE_SAMPLE_SIZE = 20000  # Number of documents to export for web interface
+VECTOR_STORE_SAMPLE_SIZE = -1  # Number of documents to export for web interface
+
+# Vector store split configuration for large datasets
+DOCUMENTS_PER_PART = 10000        # Number of chunks per split file
+PRELIMINARY_DOCS_PER_PART = 10    # Number of top chunks from each part in preliminary round
+FINAL_RESULT_COUNT = 10           # Number of final results to return from search
