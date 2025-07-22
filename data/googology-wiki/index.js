@@ -1,5 +1,5 @@
 // Site-specific entry point for English Googology Wiki
-import { initializeRAG } from '../../rag-common.js';
+import { initializeRAG } from '../../lib/rag-common.js';
 
 // Site configuration
 const currentSite = 'googology-wiki';

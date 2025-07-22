@@ -22,6 +22,7 @@ This directory contains a set of Python modules designed for analyzing MediaWiki
 | `io_utils.py` | File I/O utilities for finding and reading XML files |
 | `reporting.py` | Report generation utilities with licensing information |
 | `xml_parser.py` | XML parsing utilities for MediaWiki exports |
+| `rag-common.js` | JavaScript module for RAG (Retrieval-Augmented Generation) web interface |
 
 ## Module Documentation
 
