@@ -100,6 +100,10 @@ def export_vector_store_to_json(vector_store_path: str, output_path: str, max_ch
         json.dump(meta_data, f, indent=2)
     print(f"Metadata written to: {meta_path}")
     
+    # Track total file sizes
+    total_json_size = 0
+    total_gz_size = 0
+    
     # Process chunks in parts
     for part_idx in range(num_parts):
         part_start = part_idx * chunks_per_part
@@ -147,6 +151,7 @@ def export_vector_store_to_json(vector_store_path: str, output_path: str, max_ch
             json.dump(part_json_data, f, ensure_ascii=False, indent=2)
         
         part_file_size = os.path.getsize(part_output_path) / 1024 / 1024
+        total_json_size += part_file_size
         print(f"  ✓ Part {part_idx + 1} JSON complete! Size: {part_file_size:.1f} MB")
         
         # Also create a compressed version for this part
@@ -156,9 +161,23 @@ def export_vector_store_to_json(vector_store_path: str, output_path: str, max_ch
             json.dump(part_json_data, f, ensure_ascii=False)
         
         part_gz_size = os.path.getsize(part_gz_path) / 1024 / 1024
+        total_gz_size += part_gz_size
         print(f"  ✓ Part {part_idx + 1} compression complete! Size: {part_gz_size:.1f} MB")
     
     print(f"\n✓ All {num_parts} parts created successfully!")
+    print(f"Total sizes:")
+    print(f"  - JSON files: {total_json_size:.1f} MB")
+    print(f"  - Compressed files: {total_gz_size:.1f} MB")
+    
+    # Update metadata with size information
+    meta_data['total_json_size_mb'] = round(total_json_size, 1)
+    meta_data['total_gz_size_mb'] = round(total_gz_size, 1)
+    
+    # Rewrite metadata with size information
+    with open(meta_path, 'w', encoding='utf-8') as f:
+        json.dump(meta_data, f, indent=2)
+    print(f"\nMetadata updated with size information: {meta_path}")
+    
     print(f"Files created:")
     print(f"  - {meta_path}")
     for i in range(num_parts):

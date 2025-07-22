@@ -534,7 +534,24 @@ async function initializeRAG(currentSite) {
     try {
         embedder = await pipeline('feature-extraction', CONFIG.EMBEDDING_MODEL);
         console.log('HuggingFace embedding pipeline initialized successfully');
-        elements.loadingStatus.textContent = 'Embedding model ready - click "Load Data"';
+        
+        // Try to load metadata to show file sizes
+        try {
+            const metaResponse = await fetch('./vector_store_meta.json');
+            if (metaResponse.ok) {
+                const metadata = await metaResponse.json();
+                if (metadata.total_gz_size_mb && metadata.total_json_size_mb) {
+                    elements.loadingStatus.textContent = `Download ${Math.round(metadata.total_gz_size_mb)}MB, Memory ${Math.round(metadata.total_json_size_mb)}MB`;
+                } else {
+                    elements.loadingStatus.textContent = 'Embedding model ready - click "Load Data"';
+                }
+            } else {
+                elements.loadingStatus.textContent = 'Embedding model ready - click "Load Data"';
+            }
+        } catch (error) {
+            console.warn('Could not load metadata for size info:', error);
+            elements.loadingStatus.textContent = 'Embedding model ready - click "Load Data"';
+        }
     } catch (error) {
         console.error('Failed to initialize embedding pipeline:', error);
         elements.loadingStatus.textContent = 'Failed to initialize embedding model';
