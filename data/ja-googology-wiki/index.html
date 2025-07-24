@@ -29,6 +29,29 @@
         </header>
 
         <main>
+            <!-- Configuration Section -->
+            <section class="config-section">
+                <h2>設定</h2>
+                <div class="config-grid">
+                    <div class="config-item">
+                        <label for="base-url">LLM API ベース URL:</label>
+                        <input type="url" id="base-url" placeholder="https://api.openai.com/v1">
+                    </div>
+                    <div class="config-item">
+                        <label for="api-key">API キー:</label>
+                        <input type="password" id="api-key" placeholder="OpenAI API key または HuggingFace token">
+                        <small><a href="https://platform.openai.com/api-keys">OpenAI API key</a>および互換 API (Azure OpenAI など)のみ対応です。たぶん。</small>
+                    </div>
+                </div>
+                <div class="data-loading">
+                    <button id="load-data-btn" class="btn btn-primary">データ読み込み</button>
+                    <div class="progress-container">
+                        <div id="loading-progress" class="progress-bar"></div>
+                        <span id="loading-status">未読み込み</span>
+                    </div>
+                </div>
+            </section>
+
             <!-- Question Section -->
             <section class="question-section">
                 <h2>質問を入力してください</h2>
@@ -54,29 +77,6 @@
                 <h2>RAG 検索結果</h2>
                 <div id="rag-window" class="content-window">
                     <p class="placeholder">関連する文書がここに表示されます...</p>
-                </div>
-            </section>
-
-            <!-- Configuration Section -->
-            <section class="config-section">
-                <h2>設定</h2>
-                <div class="config-grid">
-                    <div class="config-item">
-                        <label for="base-url">LLM API ベース URL:</label>
-                        <input type="url" id="base-url" placeholder="https://api.openai.com/v1">
-                    </div>
-                    <div class="config-item">
-                        <label for="api-key">API キー:</label>
-                        <input type="password" id="api-key" placeholder="OpenAI API key または HuggingFace token">
-                        <small><a href="https://platform.openai.com/api-keys">OpenAI API key</a>および互換 API (Azure OpenAI など)のみ対応です。たぶん。</small>
-                    </div>
-                </div>
-                <div class="data-loading">
-                    <button id="load-data-btn" class="btn btn-primary">データ読み込み</button>
-                    <div class="progress-container">
-                        <div id="loading-progress" class="progress-bar"></div>
-                        <span id="loading-status">未読み込み</span>
-                    </div>
                 </div>
             </section>
         </main>

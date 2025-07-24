@@ -365,12 +365,12 @@ function checkAndShowErrors() {
     });
     
     if (!baseUrl || !apiKey) {
-        errors.push('Please configure LLM API settings in the Configuration section below');
+        errors.push('上記の設定でLLM API設定を行ってください');
     }
     
     // Check vector store
     if (!vectorStore) {
-        errors.push('Please load the data in the Configuration section below');
+        errors.push('上記の設定でデータを読み込んでください');
     }
     
     // Show or clear error messages
