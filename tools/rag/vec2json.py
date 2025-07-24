@@ -12,6 +12,7 @@ import pickle
 import gzip
 import argparse
 import numpy as np
+import struct
 import importlib.util
 from pathlib import Path
 
@@ -31,7 +32,19 @@ except (ImportError, FileNotFoundError) as e:
     site_config = None
 
 
-def export_vector_store_to_json(vector_store_path: str, output_path: str, max_chunks: int = None, force_single_part: bool = False):
+def float64_to_float32_base64(float_list):
+    """Convert float64 list to base64-encoded float32 binary"""
+    import base64
+    # Convert to float32 numpy array
+    float32_array = np.array(float_list, dtype=np.float32)
+    # Get binary representation
+    binary_data = float32_array.tobytes()
+    # Encode to base64 for JSON compatibility
+    base64_data = base64.b64encode(binary_data).decode('utf-8')
+    return base64_data
+
+
+def export_vector_store_to_json(vector_store_path: str, output_path: str, max_chunks: int = None, force_single_part: bool = False, use_binary: bool = False):
     """
     Export vector store to JSON format.
     
@@ -106,7 +119,8 @@ def export_vector_store_to_json(vector_store_path: str, output_path: str, max_ch
     else:
         meta_path = output_path.parent / 'vector_store_meta.json'
     with open(meta_path, 'w', encoding='utf-8') as f:
-        json.dump(meta_data, f, indent=2)
+        # No indentation for smaller file size
+        json.dump(meta_data, f, separators=(',', ':'))
     print(f"Metadata written to: {meta_path}")
     
     # Track total file sizes
@@ -134,12 +148,23 @@ def export_vector_store_to_json(vector_store_path: str, output_path: str, max_ch
                     embedding = index.reconstruct(idx)
                     
                     # Create document entry
-                    doc_entry = {
-                        'id': doc_id,
-                        'content': doc.page_content,  # Keep full content for proper search
-                        'metadata': doc.metadata,
-                        'embedding': embedding.tolist()  # Convert numpy array to list
-                    }
+                    if use_binary:
+                        # Convert to float32 binary format
+                        doc_entry = {
+                            'id': doc_id,
+                            'content': doc.page_content,  # Keep full content for proper search
+                            'metadata': doc.metadata,
+                            'embedding_binary': float64_to_float32_base64(embedding),
+                            'embedding_format': 'float32_base64'
+                        }
+                    else:
+                        # Original float list format
+                        doc_entry = {
+                            'id': doc_id,
+                            'content': doc.page_content,  # Keep full content for proper search
+                            'metadata': doc.metadata,
+                            'embedding': embedding.tolist()  # Convert numpy array to list
+                        }
                     part_chunks.append(doc_entry)
         
         print(f"  Part {part_idx + 1}: Extracted {len(part_chunks)} chunks")
@@ -160,7 +185,8 @@ def export_vector_store_to_json(vector_store_path: str, output_path: str, max_ch
             part_output_path = output_path.parent / f'vector_store_part{part_idx + 1:02d}.json'
         print(f"  Saving part to JSON: {part_output_path}")
         with open(part_output_path, 'w', encoding='utf-8') as f:
-            json.dump(part_json_data, f, ensure_ascii=False, indent=2)
+            # No indentation for smaller file size
+            json.dump(part_json_data, f, ensure_ascii=False, separators=(',', ':'))
         
         part_file_size = os.path.getsize(part_output_path) / 1024 / 1024
         total_json_size += part_file_size
@@ -187,7 +213,8 @@ def export_vector_store_to_json(vector_store_path: str, output_path: str, max_ch
     
     # Rewrite metadata with size information
     with open(meta_path, 'w', encoding='utf-8') as f:
-        json.dump(meta_data, f, indent=2)
+        # No indentation for smaller file size
+        json.dump(meta_data, f, separators=(',', ':'))
     print(f"\nMetadata updated with size information: {meta_path}")
     
     # Determine file prefix for display
@@ -251,6 +278,12 @@ def main():
         help='Process title vector store only instead of both (default: process both body and title)'
     )
     
+    parser.add_argument(
+        '--body-only',
+        action='store_true',
+        help='Process body vector store only instead of both (default: process both body and title)'
+    )
+    
     args = parser.parse_args()
     
     if args.title_only:
@@ -276,7 +309,20 @@ def main():
             sys.exit(1)
         
         print("Processing title vector store only...")
-        export_vector_store_to_json(input_path, output_path, args.max_chunks, force_single_part=True)
+        export_vector_store_to_json(input_path, output_path, args.max_chunks, force_single_part=True, use_binary=True)
+        
+    elif args.body_only:
+        # Process body vector store only
+        body_input = args.input
+        body_output = args.output
+        
+        if not os.path.exists(body_input):
+            print(f"Error: Body vector store not found at {body_input}")
+            print("Please run xml2vec.py --body-only first to create the body vector store.")
+            sys.exit(1)
+        
+        print("Processing body vector store only...")
+        export_vector_store_to_json(body_input, body_output, args.max_chunks, use_binary=True)
         
     else:
         # Default: Process both body and title vector stores
@@ -292,7 +338,7 @@ def main():
             print("Please run xml2vec.py first to create the vector stores.")
             sys.exit(1)
         
-        export_vector_store_to_json(body_input, body_output, args.max_chunks)
+        export_vector_store_to_json(body_input, body_output, args.max_chunks, use_binary=True)
         
         # Process title vector store
         print("\n=== Processing title vector store ===")
@@ -300,7 +346,7 @@ def main():
         title_output = args.output.replace('.json', '_titles.json')
         
         if os.path.exists(title_input):
-            export_vector_store_to_json(title_input, title_output, args.max_chunks, force_single_part=True)
+            export_vector_store_to_json(title_input, title_output, args.max_chunks, force_single_part=True, use_binary=True)
             print(f"\n✓ Both vector stores processed successfully!")
         else:
             print(f"Warning: Title vector store not found at {title_input}")

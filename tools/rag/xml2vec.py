@@ -21,6 +21,8 @@ from lib.rag import (
     split_documents,
     create_vector_store
 )
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.schema import Document
 from lib.io_utils import find_xml_file
 from lib.formatting import format_number
 from lib.config_loader import get_site_config
@@ -88,7 +90,8 @@ def create_and_save_title_vector_store(
     xml_path: str,
     output_path: str,
     use_openai: bool = False,
-    embedding_model: str = "all-MiniLM-L6-v2"
+    embedding_model: str = "all-MiniLM-L6-v2",
+    title_embedding_dim: int = 96  # Reduced dimension for titles
 ):
     """Create title-only vector store from XML and save to disk."""
     
@@ -129,6 +132,46 @@ def create_and_save_title_vector_store(
         tokenize_config=tokenize_config
     )
     
+    # Apply PCA dimension reduction for titles to reduce file size
+    if title_embedding_dim < 384:  # Only if reduction is needed
+        print(f"Applying PCA dimension reduction: 384 → {title_embedding_dim}")
+        from sklearn.decomposition import PCA
+        import numpy as np
+        
+        # Get embeddings from vector store
+        embeddings = []
+        for idx in range(title_vector_store.index.ntotal):
+            if idx in title_vector_store.index_to_docstore_id:
+                embedding = title_vector_store.index.reconstruct(idx)
+                embeddings.append(embedding)
+        
+        if len(embeddings) > 0:
+            embeddings_array = np.array(embeddings)
+            
+            # Apply PCA
+            pca = PCA(n_components=title_embedding_dim)
+            reduced_embeddings = pca.fit_transform(embeddings_array)
+            
+            print(f"PCA explained variance ratio: {pca.explained_variance_ratio_.sum():.3f}")
+            
+            # Create new FAISS index with reduced dimensions
+            import faiss
+            new_index = faiss.IndexFlatIP(title_embedding_dim)
+            new_index.add(reduced_embeddings.astype('float32'))
+            
+            # Update vector store with reduced index
+            title_vector_store.index = new_index
+            
+            print(f"✓ Dimension reduction complete: {embeddings_array.shape[1]} → {title_embedding_dim}")
+            
+            # Save PCA model for query transformation
+            pca_path = output_path.replace('.pkl', '_pca.pkl')
+            with open(pca_path, 'wb') as f:
+                pickle.dump(pca, f)
+            print(f"✓ PCA model saved: {pca_path}")
+        else:
+            print("Warning: No embeddings found for dimension reduction")
+    
     print(f"Saving title vector store to: {output_path}")
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     
@@ -139,11 +182,12 @@ def create_and_save_title_vector_store(
     print(f"  File size: {os.path.getsize(output_path) / 1024 / 1024:.1f} MB")
     
     # Create metadata file for title vector store
+    actual_embedding_dim = title_vector_store.index.d if hasattr(title_vector_store.index, 'd') else title_embedding_dim
     meta_data = {
         'total_documents': len(title_documents),
         'num_parts': 1,  # Title vector store is single file
         'docs_per_part': len(title_documents),
-        'embedding_dimension': title_vector_store.index.d if hasattr(title_vector_store.index, 'd') else 384
+        'embedding_dimension': actual_embedding_dim
     }
     
     # Save metadata with _titles suffix
@@ -154,6 +198,163 @@ def create_and_save_title_vector_store(
     print(f"✓ Title metadata saved: {meta_path}")
     
     return title_vector_store
+
+
+def create_both_vector_stores(
+    xml_path: str,
+    body_output: str,
+    title_output: str,
+    chunk_size: int = 1000,
+    chunk_overlap: int = 200,
+    use_openai: bool = False,
+    embedding_model: str = "all-MiniLM-L6-v2",
+    title_embedding_dim: int = 96
+):
+    """Create both body and title vector stores from single XML read."""
+    
+    # Load tokenization configuration
+    site_config = get_site_config(config.CURRENT_SITE)
+    tokenize_config = getattr(site_config, 'tokenize', {'mode': 'normal'})
+    
+    print(f"Loading documents from: {xml_path}")
+    print(f"Tokenization mode: {tokenize_config.get('mode', 'normal')}")
+    
+    # Single XML read for both body and title processing
+    documents = load_mediawiki_documents(xml_path)
+    print(f"✓ Loaded {format_number(len(documents))} documents")
+    
+    # Split documents for body chunks and title processing
+    print("\n=== Processing body chunks ===")
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
+        length_function=len,
+    )
+    
+    body_chunks = text_splitter.split_documents(documents)
+    print(f"✓ Created {format_number(len(body_chunks))} body chunks")
+    
+    print("\n=== Processing title documents ===")
+    title_documents = []
+    for doc in documents:
+        if hasattr(doc, 'metadata') and doc.metadata and 'title' in doc.metadata:
+            title_doc = Document(
+                page_content=doc.metadata['title'],
+                metadata=doc.metadata.copy()
+            )
+            title_documents.append(title_doc)
+    
+    print(f"✓ Created {format_number(len(title_documents))} title documents")
+    
+    # Create body vector store
+    print(f"\n=== Creating body vector store ===")
+    if use_openai:
+        print("  Using OpenAI embeddings")
+    else:
+        print(f"  Using HuggingFace embeddings: {embedding_model}")
+    
+    body_vector_store = create_vector_store(
+        body_chunks,
+        embedding_model=embedding_model,
+        use_openai=use_openai,
+        tokenize_config=tokenize_config
+    )
+    
+    # Save body vector store
+    print(f"Saving body vector store to: {body_output}")
+    os.makedirs(os.path.dirname(body_output), exist_ok=True)
+    
+    with open(body_output, 'wb') as f:
+        pickle.dump(body_vector_store, f)
+    print(f"✓ Body vector store saved successfully!")
+    print(f"  File size: {os.path.getsize(body_output) / 1024 / 1024:.1f} MB")
+    
+    # Create title vector store with dimension reduction
+    print(f"\n=== Creating title vector store ===")
+    title_vector_store = create_vector_store(
+        title_documents, 
+        embedding_model=embedding_model,
+        use_openai=use_openai,
+        tokenize_config=tokenize_config
+    )
+    
+    # Apply PCA dimension reduction for titles
+    if title_embedding_dim < 384:
+        print(f"Applying PCA dimension reduction: 384 → {title_embedding_dim}")
+        from sklearn.decomposition import PCA
+        import numpy as np
+        
+        # Get embeddings from vector store
+        embeddings = []
+        for idx in range(title_vector_store.index.ntotal):
+            if idx in title_vector_store.index_to_docstore_id:
+                embedding = title_vector_store.index.reconstruct(idx)
+                embeddings.append(embedding)
+        
+        if len(embeddings) > 0:
+            embeddings_array = np.array(embeddings)
+            
+            # Apply PCA
+            pca = PCA(n_components=title_embedding_dim)
+            reduced_embeddings = pca.fit_transform(embeddings_array)
+            
+            print(f"PCA explained variance ratio: {pca.explained_variance_ratio_.sum():.3f}")
+            
+            # Create new FAISS index with reduced dimensions
+            import faiss
+            new_index = faiss.IndexFlatIP(title_embedding_dim)
+            new_index.add(reduced_embeddings.astype('float32'))
+            
+            # Update vector store with reduced index
+            title_vector_store.index = new_index
+            
+            print(f"✓ Dimension reduction complete: {embeddings_array.shape[1]} → {title_embedding_dim}")
+            
+            # Save PCA model for query transformation  
+            pca_path = title_output.replace('.pkl', '_pca.pkl')
+            with open(pca_path, 'wb') as f:
+                pickle.dump(pca, f)
+            print(f"✓ PCA model saved: {pca_path}")
+    
+    # Save title vector store
+    print(f"Saving title vector store to: {title_output}")
+    os.makedirs(os.path.dirname(title_output), exist_ok=True)
+    
+    with open(title_output, 'wb') as f:
+        pickle.dump(title_vector_store, f)
+    print(f"✓ Title vector store saved successfully!")
+    print(f"  File size: {os.path.getsize(title_output) / 1024 / 1024:.1f} MB")
+    
+    # Create metadata files
+    # Body metadata
+    body_meta_data = {
+        'total_documents': len(body_chunks),
+        'num_parts': 1,
+        'docs_per_part': len(body_chunks),
+        'embedding_dimension': body_vector_store.index.d if hasattr(body_vector_store.index, 'd') else 384
+    }
+    
+    body_meta_path = body_output.replace('.pkl', '_meta.json')
+    import json
+    with open(body_meta_path, 'w', encoding='utf-8') as f:
+        json.dump(body_meta_data, f, indent=2)
+    print(f"✓ Body metadata saved: {body_meta_path}")
+    
+    # Title metadata
+    actual_title_dim = title_vector_store.index.d if hasattr(title_vector_store.index, 'd') else title_embedding_dim
+    title_meta_data = {
+        'total_documents': len(title_documents),
+        'num_parts': 1,
+        'docs_per_part': len(title_documents),
+        'embedding_dimension': actual_title_dim
+    }
+    
+    title_meta_path = title_output.replace('.pkl', '_meta.json')
+    with open(title_meta_path, 'w', encoding='utf-8') as f:
+        json.dump(title_meta_data, f, indent=2)
+    print(f"✓ Title metadata saved: {title_meta_path}")
+    
+    return body_vector_store, title_vector_store
 
 
 def main():
@@ -198,6 +399,12 @@ def main():
         help='Create title-only vector store instead of both (default: create both body and title)'
     )
     
+    parser.add_argument(
+        '--body-only',
+        action='store_true',
+        help='Create body-only vector store instead of both (default: create both body and title)'
+    )
+    
     args = parser.parse_args()
     
     # Always overwrite existing vector store
@@ -225,16 +432,13 @@ def main():
                 xml_path,
                 title_output,
                 use_openai=args.use_openai,
-                embedding_model=args.embedding_model
+                embedding_model=args.embedding_model,
+                title_embedding_dim=96  # Reduced dimension for smaller file size
             )
             print(f"\\nTitle vector store created successfully!")
             print(f"Output: {title_output}")
-        else:
-            # Default: Create both body and title vector stores
-            print("Creating both body and title vector stores...")
-            
-            # Create body chunk vector store
-            print("\n=== Creating body vector store ===")
+        elif args.body_only:
+            # Create body-only vector store
             create_and_save_vector_store(
                 xml_path,
                 args.output,
@@ -243,15 +447,21 @@ def main():
                 use_openai=args.use_openai,
                 embedding_model=args.embedding_model
             )
-            
-            # Create title vector store
-            print("\n=== Creating title vector store ===")
+            print(f"\\nBody vector store created successfully!")
+            print(f"Output: {args.output}")
+        else:
+            # Default: Create both body and title vector stores in one pass
+            print("Creating both body and title vector stores in one pass...")
             title_output = args.output.replace('.pkl', '_titles.pkl')
-            create_and_save_title_vector_store(
+            create_both_vector_stores(
                 xml_path,
-                title_output,
+                body_output=args.output,
+                title_output=title_output,
+                chunk_size=args.chunk_size,
+                chunk_overlap=args.chunk_overlap,
                 use_openai=args.use_openai,
-                embedding_model=args.embedding_model
+                embedding_model=args.embedding_model,
+                title_embedding_dim=96  # Reduced dimension for smaller file size
             )
             
             print(f"\n✓ Both vector stores created successfully!")
