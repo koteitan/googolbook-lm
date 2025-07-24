@@ -170,5 +170,6 @@ See **[lib/README.md](lib/README.md)** for detailed documentation of all library
 - **Key Exclusions**: Large XML data file, Python cache files, IDE settings
 
 ## rules
+- Speak to me in Japanese.
 - Always get user permission before git commit
 - Don't use `git push`
