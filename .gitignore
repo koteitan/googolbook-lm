@@ -26,9 +26,12 @@ Thumbs.db
 data/*/*_pages_current.xml
 data/*/*_pages_current.xml
 data/*/vector_store.pkl
+data/*/vector_store_titles.pkl
 data/*/vector_store.pkl.gz
 data/*/vector_store_part*.json
+data/*/vector_store_titles_part*.json
 data/*/vector_store_part*.json.gz
+data/*/vector_store_titles_part*.json.gz
 
 # Configuration backup files
 data/*/config.py.bak

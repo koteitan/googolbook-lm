@@ -31,7 +31,7 @@ except (ImportError, FileNotFoundError) as e:
     site_config = None
 
 
-def export_vector_store_to_json(vector_store_path: str, output_path: str, max_chunks: int = None):
+def export_vector_store_to_json(vector_store_path: str, output_path: str, max_chunks: int = None, force_single_part: bool = False):
     """
     Export vector store to JSON format.
     
@@ -84,8 +84,13 @@ def export_vector_store_to_json(vector_store_path: str, output_path: str, max_ch
     print(f"Processing {num_chunks} chunks in parts of {chunks_per_part}...")
     
     # Calculate number of parts needed
-    num_parts = (num_chunks + chunks_per_part - 1) // chunks_per_part
-    print(f"Creating {num_parts} part files...")
+    if force_single_part:
+        num_parts = 1
+        chunks_per_part = num_chunks
+        print(f"Creating single file (all {num_chunks} chunks)...")
+    else:
+        num_parts = (num_chunks + chunks_per_part - 1) // chunks_per_part
+        print(f"Creating {num_parts} part files...")
     
     # Create metadata file
     meta_data = {
@@ -95,7 +100,11 @@ def export_vector_store_to_json(vector_store_path: str, output_path: str, max_ch
         'embedding_dimension': embedding_dimension
     }
     
-    meta_path = output_path.parent / 'vector_store_meta.json'
+    # Create metadata file with appropriate name
+    if '_titles.json' in str(output_path):
+        meta_path = output_path.parent / 'vector_store_titles_meta.json'
+    else:
+        meta_path = output_path.parent / 'vector_store_meta.json'
     with open(meta_path, 'w', encoding='utf-8') as f:
         json.dump(meta_data, f, indent=2)
     print(f"Metadata written to: {meta_path}")
@@ -144,8 +153,11 @@ def export_vector_store_to_json(vector_store_path: str, output_path: str, max_ch
             'documents': part_chunks  # Keep key name for backward compatibility
         }
         
-        # Save part to JSON  
-        part_output_path = output_path.parent / f'vector_store_part{part_idx + 1:02d}.json'
+        # Save part to JSON with appropriate prefix
+        if '_titles.json' in str(output_path):
+            part_output_path = output_path.parent / f'vector_store_titles_part{part_idx + 1:02d}.json'
+        else:
+            part_output_path = output_path.parent / f'vector_store_part{part_idx + 1:02d}.json'
         print(f"  Saving part to JSON: {part_output_path}")
         with open(part_output_path, 'w', encoding='utf-8') as f:
             json.dump(part_json_data, f, ensure_ascii=False, indent=2)
@@ -178,11 +190,14 @@ def export_vector_store_to_json(vector_store_path: str, output_path: str, max_ch
         json.dump(meta_data, f, indent=2)
     print(f"\nMetadata updated with size information: {meta_path}")
     
+    # Determine file prefix for display
+    file_prefix = "vector_store_titles_part" if '_titles.json' in str(output_path) else "vector_store_part"
+    
     print(f"Files created:")
     print(f"  - {meta_path}")
     for i in range(num_parts):
-        print(f"  - vector_store_part{i + 1:02d}.json")
-        print(f"  - vector_store_part{i + 1:02d}.json.gz")
+        print(f"  - {file_prefix}{i + 1:02d}.json")
+        print(f"  - {file_prefix}{i + 1:02d}.json.gz")
     
     return meta_data
 
@@ -230,14 +245,66 @@ def main():
         help=help_text
     )
     
+    parser.add_argument(
+        '--title-only',
+        action='store_true',
+        help='Process title vector store only instead of both (default: process both body and title)'
+    )
+    
     args = parser.parse_args()
     
-    if not os.path.exists(args.input):
-        print(f"Error: Vector store not found at {args.input}")
-        print("Please run xml2vec.py first to create the vector store.")
-        sys.exit(1)
-    
-    export_vector_store_to_json(args.input, args.output, args.max_chunks)
+    if args.title_only:
+        # Process title vector store only
+        input_path = args.input
+        output_path = args.output
+        
+        # Adjust input path for titles
+        if input_path == str(config.DATA_DIR / 'vector_store.pkl'):
+            input_path = str(config.DATA_DIR / 'vector_store_titles.pkl')
+        elif not input_path.endswith('_titles.pkl'):
+            input_path = input_path.replace('.pkl', '_titles.pkl')
+        
+        # Adjust output path for titles  
+        if output_path == str(config.DATA_DIR / 'vector_store.json'):
+            output_path = str(config.DATA_DIR / 'vector_store_titles.json')
+        elif not output_path.endswith('_titles.json'):
+            output_path = output_path.replace('.json', '_titles.json')
+        
+        if not os.path.exists(input_path):
+            print(f"Error: Title vector store not found at {input_path}")
+            print("Please run xml2vec.py --title-only first to create the title vector store.")
+            sys.exit(1)
+        
+        print("Processing title vector store only...")
+        export_vector_store_to_json(input_path, output_path, args.max_chunks, force_single_part=True)
+        
+    else:
+        # Default: Process both body and title vector stores
+        print("Processing both body and title vector stores...")
+        
+        # Process body vector store
+        print("\n=== Processing body vector store ===")
+        body_input = args.input
+        body_output = args.output
+        
+        if not os.path.exists(body_input):
+            print(f"Error: Body vector store not found at {body_input}")
+            print("Please run xml2vec.py first to create the vector stores.")
+            sys.exit(1)
+        
+        export_vector_store_to_json(body_input, body_output, args.max_chunks)
+        
+        # Process title vector store
+        print("\n=== Processing title vector store ===")
+        title_input = args.input.replace('.pkl', '_titles.pkl')
+        title_output = args.output.replace('.json', '_titles.json')
+        
+        if os.path.exists(title_input):
+            export_vector_store_to_json(title_input, title_output, args.max_chunks, force_single_part=True)
+            print(f"\n✓ Both vector stores processed successfully!")
+        else:
+            print(f"Warning: Title vector store not found at {title_input}")
+            print("Only body vector store was processed.")
 
 
 if __name__ == '__main__':
