@@ -119,19 +119,12 @@ def main():
         default='all-MiniLM-L6-v2',
         help='HuggingFace embedding model (default: all-MiniLM-L6-v2)'
     )
-    parser.add_argument(
-        '--force',
-        action='store_true',
-        help='Overwrite existing vector store'
-    )
     
     args = parser.parse_args()
     
-    # Check if output file exists
-    if os.path.exists(args.output) and not args.force:
-        print(f"Error: Output file already exists: {args.output}")
-        print("Use --force to overwrite")
-        sys.exit(1)
+    # Always overwrite existing vector store
+    if os.path.exists(args.output):
+        print(f"Overwriting existing vector store: {args.output}")
     
     # Find XML file
     if args.xml_file:
