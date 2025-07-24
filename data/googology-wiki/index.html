@@ -29,6 +29,29 @@
         </header>
 
         <main>
+            <!-- Configuration Section -->
+            <section class="config-section">
+                <h2>Configuration</h2>
+                <div class="config-grid">
+                    <div class="config-item">
+                        <label for="base-url">LLM API Base URL:</label>
+                        <input type="url" id="base-url" placeholder="https://api.openai.com/v1">
+                    </div>
+                    <div class="config-item">
+                        <label for="api-key">API Key:</label>
+                        <input type="password" id="api-key" placeholder="OpenAI API key or HuggingFace token">
+                        <small>Only <a href="https://platform.openai.com/api-keys">OpenAI API key</a> (or compatible) is supported.</small>
+                    </div>
+                </div>
+                <div class="data-loading">
+                    <button id="load-data-btn" class="btn btn-primary">Load Data</button>
+                    <div class="progress-container">
+                        <div id="loading-progress" class="progress-bar"></div>
+                        <span id="loading-status">Not loaded</span>
+                    </div>
+                </div>
+            </section>
+
             <!-- Question Section -->
             <section class="question-section">
                 <h2>Ask a Question</h2>
@@ -54,29 +77,6 @@
                 <h2>RAG Search Results</h2>
                 <div id="rag-window" class="content-window">
                     <p class="placeholder">Related documents from the wiki will appear here...</p>
-                </div>
-            </section>
-
-            <!-- Configuration Section -->
-            <section class="config-section">
-                <h2>Configuration</h2>
-                <div class="config-grid">
-                    <div class="config-item">
-                        <label for="base-url">LLM API Base URL:</label>
-                        <input type="url" id="base-url" placeholder="https://api.openai.com/v1">
-                    </div>
-                    <div class="config-item">
-                        <label for="api-key">API Key:</label>
-                        <input type="password" id="api-key" placeholder="OpenAI API key or HuggingFace token">
-                        <small>Only <a href="https://platform.openai.com/api-keys">OpenAI API key</a> (or compatible) is supported.</small>
-                    </div>
-                </div>
-                <div class="data-loading">
-                    <button id="load-data-btn" class="btn btn-primary">Load Data</button>
-                    <div class="progress-container">
-                        <div id="loading-progress" class="progress-bar"></div>
-                        <span id="loading-status">Not loaded</span>
-                    </div>
                 </div>
             </section>
         </main>
