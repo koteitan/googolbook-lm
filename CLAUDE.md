@@ -171,5 +171,18 @@ See **[lib/README.md](lib/README.md)** for detailed documentation of all library
 
 ## rules
 - Speak to me in Japanese.
-- Always get user permission before git commit
+- git commit is denied. Please suggest the commit message by the following format:
+```markdown
+-----------------------------commit message begin
+[top line]
+
+- [details]
+- [details]
+- [details]
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+-----------------------------commit message end
+```
 - Don't use `git push`
