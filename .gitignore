@@ -1,7 +1,3 @@
-# Large XML files excluded from version control
-data/ja-googology-wiki/jagoogology_pages_current.xml
-data/googology-wiki/googology_pages_current.xml
-
 # Python cache
 __pycache__/
 *.py[cod]
@@ -26,11 +22,11 @@ Thumbs.db
 *.tmp
 *.temp
 
-# Vector store files (generated content)
+# Large XML files excluded from version control
+data/*/*_pages_current.xml
+data/*/*_pages_current.xml
 data/*/vector_store.pkl
 data/*/vector_store.pkl.gz
-data/*/vector_store.json
-data/*/vector_store.json.gz
 data/*/vector_store_part*.json
 data/*/vector_store_part*.json.gz
 
