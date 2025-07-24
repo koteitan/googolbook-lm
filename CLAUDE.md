@@ -186,3 +186,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 -----------------------------commit message end
 ```
 - Don't use `git push`
+- I run the following commands because it will take a long time to run. Please  request me to run these commands:
+  - tools/rag/xml2vec.py
+  - tools/rag/vec2json.py
+  - tools/fetch/fetch.py
