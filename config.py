@@ -9,8 +9,8 @@ from pathlib import Path
 from lib.config_loader import get_site_config
 
 # Current site configuration (change this to switch sites)
-#CURRENT_SITE = 'ja-googology-wiki'
-CURRENT_SITE = 'googology-wiki'
+CURRENT_SITE = 'ja-googology-wiki'
+#CURRENT_SITE = 'googology-wiki'
 
 # Load site-specific configuration from YAML
 PROJECT_ROOT = Path(__file__).parent.resolve()
@@ -31,6 +31,7 @@ EXCLUDED_USERNAMES = site_config.EXCLUDED_USERNAMES
 # Site-specific paths (calculated in root config)
 DATA_DIR = PROJECT_ROOT / 'data' / CURRENT_SITE
 FETCH_LOG_FILE = str(DATA_DIR / 'fetch_log.txt')
+EXCLUDE_FILE = str(DATA_DIR / 'exclude.md')
 
 # Progress reporting interval (shared)
 PROGRESS_INTERVAL = 10000

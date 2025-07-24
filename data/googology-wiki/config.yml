@@ -69,6 +69,8 @@ web:
     # part_path_template: "./vector_store_part{}.json.gz"
     # External CDN hosting for large vector store files
     part_path_template: "https://www.ukaibutton.com/googolbook-lm/data/googology-wiki/vector_store_part{}.json.gz"
+    # Auto switch to local files when accessing from localhost
+    auto_part_path: true
   
   # Default API settings
   api:
