@@ -91,7 +91,7 @@ def create_and_save_title_vector_store(
     output_path: str,
     use_openai: bool = False,
     embedding_model: str = "all-MiniLM-L6-v2",
-    title_embedding_dim: int = 96  # Reduced dimension for titles
+    title_embedding_dim: int = 384  # Keep full dimension to match query embeddings
 ):
     """Create title-only vector store from XML and save to disk."""
     
@@ -133,7 +133,7 @@ def create_and_save_title_vector_store(
     )
     
     # Apply PCA dimension reduction for titles to reduce file size
-    if title_embedding_dim < 384:  # Only if reduction is needed
+    if title_embedding_dim < 384:  # Only if reduction is needed (disabled for now to avoid dimension mismatch)
         print(f"Applying PCA dimension reduction: 384 → {title_embedding_dim}")
         from sklearn.decomposition import PCA
         import numpy as np
@@ -208,7 +208,7 @@ def create_both_vector_stores(
     chunk_overlap: int = 200,
     use_openai: bool = False,
     embedding_model: str = "all-MiniLM-L6-v2",
-    title_embedding_dim: int = 96
+    title_embedding_dim: int = 384
 ):
     """Create both body and title vector stores from single XML read."""
     
@@ -278,7 +278,7 @@ def create_both_vector_stores(
         tokenize_config=tokenize_config
     )
     
-    # Apply PCA dimension reduction for titles
+    # Apply PCA dimension reduction for titles (disabled for now to avoid dimension mismatch)
     if title_embedding_dim < 384:
         print(f"Applying PCA dimension reduction: 384 → {title_embedding_dim}")
         from sklearn.decomposition import PCA
@@ -433,7 +433,7 @@ def main():
                 title_output,
                 use_openai=args.use_openai,
                 embedding_model=args.embedding_model,
-                title_embedding_dim=96  # Reduced dimension for smaller file size
+                title_embedding_dim=384  # Keep full dimension to match query embeddings
             )
             print(f"\\nTitle vector store created successfully!")
             print(f"Output: {title_output}")
@@ -461,7 +461,7 @@ def main():
                 chunk_overlap=args.chunk_overlap,
                 use_openai=args.use_openai,
                 embedding_model=args.embedding_model,
-                title_embedding_dim=96  # Reduced dimension for smaller file size
+                title_embedding_dim=384  # Keep full dimension to match query embeddings
             )
             
             print(f"\n✓ Both vector stores created successfully!")

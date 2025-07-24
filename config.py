@@ -9,8 +9,8 @@ from pathlib import Path
 from lib.config_loader import get_site_config
 
 # Current site configuration (change this to switch sites)
-CURRENT_SITE = 'googology-wiki'
-#CURRENT_SITE = 'ja-googology-wiki'
+#CURRENT_SITE = 'googology-wiki'
+CURRENT_SITE = 'ja-googology-wiki'
 
 # Load site-specific configuration from YAML
 PROJECT_ROOT = Path(__file__).parent.resolve()
