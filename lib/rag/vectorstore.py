@@ -1,6 +1,6 @@
 """Vector store creation and search utilities."""
 
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict, Any
 from langchain_core.documents import Document
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
@@ -10,11 +10,14 @@ except ImportError:
     # Fallback to old import for compatibility
     from langchain_community.embeddings import HuggingFaceEmbeddings
 
+from .embeddings import JapaneseMorphologicalEmbeddings
+
 
 def create_vector_store(
     documents: List[Document],
     embedding_model: str = "all-MiniLM-L6-v2",
-    use_openai: bool = False
+    use_openai: bool = False,
+    tokenize_config: Optional[Dict[str, Any]] = None
 ) -> FAISS:
     """
     Create a FAISS vector store from documents.
@@ -23,14 +26,27 @@ def create_vector_store(
         documents: List of Document objects to index
         embedding_model: Model name for embeddings (for HuggingFace)
         use_openai: Whether to use OpenAI embeddings (requires API key)
+        tokenize_config: Tokenization configuration (from config.yml)
         
     Returns:
         FAISS vector store instance
     """
+    # Initialize base embeddings
     if use_openai:
-        embeddings = OpenAIEmbeddings()
+        base_embeddings = OpenAIEmbeddings()
     else:
-        embeddings = HuggingFaceEmbeddings(model_name=embedding_model)
+        base_embeddings = HuggingFaceEmbeddings(model_name=embedding_model)
+    
+    # Apply tokenization wrapper if configured
+    tokenize_config = tokenize_config or {}
+    tokenize_mode = tokenize_config.get('mode', 'normal')
+    
+    if tokenize_mode == 'mecab':
+        print("Using Japanese morphological analysis with MeCab")
+        embeddings = JapaneseMorphologicalEmbeddings(base_embeddings)
+    else:
+        print("Using standard tokenization")
+        embeddings = base_embeddings
     
     vector_store = FAISS.from_documents(documents, embeddings)
     return vector_store

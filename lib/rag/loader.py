@@ -88,7 +88,8 @@ def load_mediawiki_documents(xml_path: str, namespace_filter: List[int] = None) 
     print(f"Parsed {len(namespace_mapping)} namespaces from XML")
     
     # Load site configuration
-    site_config = get_site_config()
+    import config as global_config
+    site_config = get_site_config(global_config.CURRENT_SITE)
     
     if namespace_filter is None:
         # Build list of included namespaces by excluding the ones in EXCLUDED_NAMESPACES

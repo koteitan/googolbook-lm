@@ -59,6 +59,10 @@ vector_store:
   preliminary_per_part: 10      # Number of top chunks from each part in preliminary round
   final_result_count: 10        # Number of final results to return from search
 
+# Tokenization configuration
+tokenize:
+  mode: "mecab"  # "normal" or "mecab"
+
 # JavaScript web interface configuration
 web:
   # Current site directory name

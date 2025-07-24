@@ -82,6 +82,11 @@ class SiteConfig:
     @property
     def FINAL_RESULT_COUNT(self):
         return self._config['vector_store']['final_result_count']
+    
+    @property
+    def tokenize(self):
+        """Get tokenization configuration."""
+        return self._config.get('tokenize', {'mode': 'normal'})
 
 
 # Global site configuration cache

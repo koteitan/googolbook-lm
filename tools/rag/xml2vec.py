@@ -23,6 +23,7 @@ from lib.rag import (
 )
 from lib.io_utils import find_xml_file
 from lib.formatting import format_number
+from lib.config_loader import get_site_config
 import config
 
 
@@ -35,6 +36,12 @@ def create_and_save_vector_store(
     embedding_model: str = "all-MiniLM-L6-v2"
 ):
     """Create vector store from XML and save to disk."""
+    
+    # Load tokenization configuration
+    site_config = get_site_config(config.CURRENT_SITE)
+    tokenize_config = getattr(site_config, 'tokenize', {'mode': 'normal'})
+    
+    print(f"Tokenization mode: {tokenize_config.get('mode', 'normal')}")
     
     print(f"Loading documents from: {xml_path}")
     documents = load_mediawiki_documents(xml_path)  # Use default namespace_filter (all except excluded)
@@ -53,7 +60,8 @@ def create_and_save_vector_store(
     vector_store = create_vector_store(
         chunks, 
         embedding_model=embedding_model,
-        use_openai=use_openai
+        use_openai=use_openai,
+        tokenize_config=tokenize_config
     )
     
     print(f"Saving vector store to: {output_path}")
