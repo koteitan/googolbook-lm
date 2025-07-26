@@ -76,6 +76,9 @@ web:
     # Auto switch to local files when accessing from localhost
     auto_part_path: true
   
+  # Compressed XML file for dynamic content loading
+  xml_gz_path: "./googology_pages_current.xml.gz"
+  
   # Default API settings
   api:
     default_top_k: 5

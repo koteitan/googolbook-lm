@@ -147,24 +147,32 @@ def export_vector_store_to_json(vector_store_path: str, output_path: str, max_ch
                     # Get the embedding vector for this document
                     embedding = index.reconstruct(idx)
                     
-                    # Create document entry
+                    # Create minimal document entry - content will be fetched from XML
                     if use_binary:
                         # Convert to float32 binary format
                         doc_entry = {
                             'id': doc_id,
-                            'content': doc.page_content,  # Keep full content for proper search
-                            'metadata': doc.metadata,
+                            'curid': doc.metadata.get('curid'),
                             'embedding_binary': float64_to_float32_base64(embedding),
                             'embedding_format': 'float32_base64'
                         }
+                        # Add chunk info only for body chunks
+                        if 'chunk_index' in doc.metadata:
+                            doc_entry['chunk_index'] = doc.metadata.get('chunk_index', 0)
+                            doc_entry['chunk_start'] = doc.metadata.get('chunk_start', 0)
+                            doc_entry['chunk_end'] = doc.metadata.get('chunk_end', len(doc.page_content))
                     else:
-                        # Original float list format
+                        # Original float list format (legacy support)
                         doc_entry = {
                             'id': doc_id,
-                            'content': doc.page_content,  # Keep full content for proper search
-                            'metadata': doc.metadata,
+                            'curid': doc.metadata.get('curid'),
                             'embedding': embedding.tolist()  # Convert numpy array to list
                         }
+                        # Add chunk info only for body chunks
+                        if 'chunk_index' in doc.metadata:
+                            doc_entry['chunk_index'] = doc.metadata.get('chunk_index', 0)
+                            doc_entry['chunk_start'] = doc.metadata.get('chunk_start', 0)
+                            doc_entry['chunk_end'] = doc.metadata.get('chunk_end', len(doc.page_content))
                     part_chunks.append(doc_entry)
         
         print(f"  Part {part_idx + 1}: Extracted {len(part_chunks)} chunks")

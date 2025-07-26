@@ -46,5 +46,38 @@ def split_documents(
         ]
     )
     
-    chunks = text_splitter.split_documents(documents)
-    return chunks
+    # Split documents and track character positions
+    all_chunks = []
+    
+    for doc in documents:
+        # Split the document text
+        text_chunks = text_splitter.split_text(doc.page_content)
+        
+        # Track character position in original document
+        current_pos = 0
+        
+        for chunk_index, chunk_text in enumerate(text_chunks):
+            # Find the actual position of this chunk in the original text
+            chunk_start = doc.page_content.find(chunk_text, current_pos)
+            if chunk_start == -1:
+                # Fallback if exact match not found (shouldn't happen)
+                chunk_start = current_pos
+            
+            chunk_end = chunk_start + len(chunk_text)
+            
+            # Create chunk document with position metadata
+            chunk_metadata = doc.metadata.copy()
+            chunk_metadata['chunk_index'] = chunk_index
+            chunk_metadata['chunk_start'] = chunk_start
+            chunk_metadata['chunk_end'] = chunk_end
+            
+            chunk_doc = Document(
+                page_content=chunk_text,
+                metadata=chunk_metadata
+            )
+            all_chunks.append(chunk_doc)
+            
+            # Update position for next search
+            current_pos = chunk_start + 1
+    
+    return all_chunks

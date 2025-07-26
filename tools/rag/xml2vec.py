@@ -11,6 +11,7 @@ import sys
 import argparse
 import pickle
 import gzip
+import shutil
 from pathlib import Path
 
 # Add parent directory to path for imports
@@ -106,13 +107,14 @@ def create_and_save_title_vector_store(
     documents = load_mediawiki_documents(xml_path)
     print(f"✓ Loaded {format_number(len(documents))} documents")
     
-    # Create title-only documents (no chunking for titles)
+    # Create title-based documents (title + full content for better search)
     title_documents = []
     for doc in documents:
         if hasattr(doc, 'metadata') and doc.metadata and 'title' in doc.metadata:
-            # Create a document with title as content
+            # Create a document with title and full content for title-based search
+            # This allows title search to return meaningful content, not just titles
             title_doc = type(doc)(
-                page_content=doc.metadata['title'],
+                page_content=doc.page_content,  # Use full content, not just title
                 metadata=doc.metadata
             )
             title_documents.append(title_doc)
@@ -239,7 +241,7 @@ def create_both_vector_stores(
     for doc in documents:
         if hasattr(doc, 'metadata') and doc.metadata and 'title' in doc.metadata:
             title_doc = Document(
-                page_content=doc.metadata['title'],
+                page_content=doc.page_content,  # Use full content, not just title
                 metadata=doc.metadata.copy()
             )
             title_documents.append(title_doc)
@@ -357,6 +359,34 @@ def create_both_vector_stores(
     return body_vector_store, title_vector_store
 
 
+def compress_xml_file(xml_path: str):
+    """Create a gzipped version of the XML file for web use."""
+    gz_path = str(xml_path) + '.gz'
+    
+    print(f"\nCreating compressed XML file for web use...")
+    print(f"  Source: {xml_path}")
+    print(f"  Output: {gz_path}")
+    
+    # Get original file size
+    original_size = os.path.getsize(xml_path) / (1024 * 1024)  # MB
+    
+    # Compress the file
+    with open(xml_path, 'rb') as f_in:
+        with gzip.open(gz_path, 'wb', compresslevel=9) as f_out:
+            shutil.copyfileobj(f_in, f_out)
+    
+    # Get compressed file size
+    compressed_size = os.path.getsize(gz_path) / (1024 * 1024)  # MB
+    compression_ratio = (1 - compressed_size / original_size) * 100
+    
+    print(f"✓ XML compression complete!")
+    print(f"  Original size: {original_size:.1f} MB")
+    print(f"  Compressed size: {compressed_size:.1f} MB")
+    print(f"  Compression ratio: {compression_ratio:.1f}%")
+    
+    return gz_path
+
+
 def main():
     parser = argparse.ArgumentParser(
         description=f'Create vector store for {config.SITE_NAME} RAG system'
@@ -467,6 +497,9 @@ def main():
             print(f"\n✓ Both vector stores created successfully!")
             print(f"Body output: {args.output}")
             print(f"Title output: {title_output}")
+        
+        # Create compressed XML file for web use
+        compress_xml_file(xml_path)
         
         print(f"\nVector store created successfully!")
         print(f"Now you can search using:")
