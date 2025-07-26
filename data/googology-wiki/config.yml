@@ -53,9 +53,9 @@ vector_store:
   sample_size: -1
   
   # Vector store split configuration for large datasets
-  chunks_per_part: 10000        # Number of chunks per split file
-  preliminary_per_part: 10      # Number of top chunks from each part in preliminary round
-  final_result_count: 10        # Number of final results to return from search
+  chunks_per_part: 10000               # Number of chunks per split file
+  content_search_per_part: 10          # Content-based search: chunks from each part in preliminary round
+  content_search_final_count: 5        # Content-based search: final results sent to LLM
 
 # Tokenization configuration
 tokenize:
@@ -84,5 +84,5 @@ web:
   api:
     default_top_k: 5
     default_url: "https://api.openai.com/v1"
-    default_model: "gpt-3.5-turbo"
-    embedding_model: "Xenova/all-MiniLM-L6-v2"  # HuggingFace for retrieval
+    default_model: "gpt-4o"  # Default model - can be changed in UI
+    embedding_model: "Xenova/all-MiniLM-L6-v2"  # Original model (384 dimensions)

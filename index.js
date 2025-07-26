@@ -34,12 +34,12 @@ async function loadConfig() {
             SITE_BASE_URL: config.site.base_url,
             VECTOR_STORE_META_PATH: config.web.vector_store.meta_path,
             VECTOR_STORE_PART_PATH_TEMPLATE: config.web.vector_store.part_path_template,
-            DEFAULT_TOP_K: config.web.api.default_top_k,
+            DEFAULT_TOP_K: config.vector_store.content_search_final_count,
             DEFAULT_API_URL: config.web.api.default_url,
             DEFAULT_MODEL: config.web.api.default_model,
             EMBEDDING_MODEL: config.web.api.embedding_model,
-            PRELIMINARY_DOCS_PER_PART: config.vector_store.preliminary_per_part,
-            FINAL_RESULT_COUNT: config.vector_store.final_result_count
+            PRELIMINARY_DOCS_PER_PART: config.vector_store.content_search_per_part,
+            FINAL_RESULT_COUNT: config.vector_store.content_search_final_count
         };
         
         console.log('Configuration loaded successfully:', CONFIG);
