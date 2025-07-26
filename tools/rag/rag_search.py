@@ -24,6 +24,7 @@ from lib.rag import (
     create_vector_store,
     search_documents
 )
+from lib.rag.prompt_builder import create_full_prompt, format_results_with_citations
 from lib.io_utils import find_xml_file
 from lib.formatting import format_number
 import config
@@ -64,10 +65,22 @@ def load_vector_store(cache_path: str) -> object:
     return result
 
 
-def format_search_results(results):
-    """Format search results for display."""
+def format_search_results(results, show_prompt=False):
+    """Format search results for display with optional LLM prompt."""
     output = []
     
+    # Convert results to the format expected by prompt_builder
+    formatted_results = []
+    for doc, score in results:
+        metadata = doc.metadata
+        formatted_results.append({
+            'title': metadata.get('title', 'Unknown'),
+            'content': doc.page_content,
+            'url': metadata.get('url', 'N/A'),
+            'score': score
+        })
+    
+    # Show traditional search results
     for i, (doc, score) in enumerate(results, 1):
         output.append(f"\n{'='*60}")
         output.append(f"Result {i} (Score: {score:.4f})")
@@ -90,6 +103,25 @@ def format_search_results(results):
         
         output.append(f"\nContent Preview:")
         output.append(content)
+    
+    # Show LLM prompt if requested
+    if show_prompt and formatted_results:
+        output.append(f"\n{'='*60}")
+        output.append("LLM PROMPT CONTEXT (with citations)")
+        output.append(f"{'='*60}")
+        
+        # Use body_results for content-based search
+        combined_context, citations = format_results_with_citations(
+            title_results=None,
+            body_results=formatted_results
+        )
+        
+        output.append("\nContext that would be sent to LLM:")
+        output.append(combined_context)
+        
+        output.append(f"\nCitations generated:")
+        for citation in citations:
+            output.append(f"[{citation['number']}] {citation['title']} - {citation['url']}")
     
     return '\n'.join(output)
 
@@ -120,6 +152,11 @@ def main():
         type=float,
         help='Minimum similarity score threshold'
     )
+    parser.add_argument(
+        '--show-prompt',
+        action='store_true',
+        help='Show the LLM prompt context with citations'
+    )
     
     args = parser.parse_args()
     
@@ -139,7 +176,7 @@ def main():
             if not results:
                 print("No results found.")
             else:
-                print(format_search_results(results))
+                print(format_search_results(results, show_prompt=args.show_prompt))
         
         # Interactive mode if no argument
         else:
@@ -164,7 +201,7 @@ def main():
                     if not results:
                         print("No results found.")
                     else:
-                        print(format_search_results(results))
+                        print(format_search_results(results, show_prompt=args.show_prompt))
                     
                     print()  # Empty line before next prompt
                     

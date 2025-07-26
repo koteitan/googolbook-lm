@@ -77,7 +77,7 @@ web:
     auto_part_path: true
   
   # Compressed XML file for dynamic content loading
-  xml_gz_path: "./googology_pages_current.xml.gz"
+  xml_gz_path: "https://www.ukaibutton.com/googolbook-lm/data/googology-wiki/googology_pages_current.xml.gz"
   
   # Default API settings
   api:

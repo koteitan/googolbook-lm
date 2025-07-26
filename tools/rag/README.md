@@ -7,28 +7,48 @@ This RAG system works with any MediaWiki site configured in `config.py`. The def
 The LangChain RAG system follows a clear data processing pipeline from MediaWiki XML dumps to searchable vector representations:
 
 ```mermaid
+%% Rule of mermaind
+%% - The object is written as vertex.
+%% - The function or process are written as edge.
+%% - The subgraph is user operation to run.
 graph TD
     subgraph xml2vec["xml2vec.py"]
-        A[xml] -->|MWDumpLoader.load| B[Document documents]
-        B -->|RecursiveCharacterTextSplitter.split_documents| C[Document chunks]
+        A[MediaWiki XML] -->|MWDumpLoader.load| B[Document documents]
+        B -->|RecursiveCharacterTextSplitter| C[Document chunks]
         C -->|FAISS.from_documents| D[vector_store.pkl]
+        A -->|gzip compression| E[XML.gz for web]
     end
     
     subgraph vec2json["vec2json.py"]
-        D --> G[vector_store.json.gz]
+        D -->|pickle.load| F[vector_store_part.json.gz]
+        D -->|json.dump| G[vector_store_meta.json]
     end
     
-    subgraph web_interface["index.js Web Interface"]
-        G -->|pako.inflate + JSON.parse| H[vectorStore object]
-        I[user query] -->|"pipeline('feature-extraction').embedder"| J[query embedding]
-        H -->|cosineSimilarity| K[search results]
-        J -->|cosineSimilarity| K
-        K -->|OpenAI API| L[AI response]
+    subgraph load_data["Load Data Button"]
+        F -->|pako.inflate| H[Minimal Vector Store]
+        G --> H
+        E -->|loadCompressedXML| I[Compressed XML Data]
     end
     
-    subgraph python_search["rag_search.py Python"]
-        E[query] -->|similarity_search_with_score| F[results]
-        D -->|similarity_search_with_score| F
+    subgraph send_button["Send Button"]
+        J[User Query] -->|HuggingFace embeddings| K[Query Vector]
+        K -->|cosineSimilarity| L[Search Results with chunk positions]
+        H -->|cosineSimilarity| L
+        I -->|getPageFromXML| M[Page Data Object]
+        L --> N[Chunk Start/End Positions]
+        M -->|extractChunkContent| O[Extracted Chunk Content]
+        N -->|extractChunkContent| O
+        O -->|map with citations| P[Context with Citations]
+        P -->|template literal| Q[System Prompt]
+        Q -->|fetch OpenAI API| R[LLM Response with Citations]
+    end
+    
+    subgraph python_search["rag_search.py"]
+        S[Query] -->|similarity_search| T[Python Search Results]
+        D -->|similarity_search| T
+        T -->|format_results_with_citations| U[Python Context with Citations]
+        U -->|build_system_prompt| V[Python System Prompt]
+        V -->|--show-prompt flag| W[Display LLM Context]
     end
 ```
 

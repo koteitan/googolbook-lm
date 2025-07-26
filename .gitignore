@@ -25,9 +25,9 @@ Thumbs.db
 # Large XML files excluded from version control
 data/*/*_pages_current.xml
 data/*/*_pages_current.xml
+data/*/*_pages_current.xml.gz
 data/*/vector_store.pkl
 data/*/vector_store_titles.pkl
-data/*/vector_store.pkl.gz
 data/*/vector_store_part*.json
 data/*/vector_store_titles_part*.json
 data/*/vector_store_part*.json.gz

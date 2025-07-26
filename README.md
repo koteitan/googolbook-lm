@@ -18,6 +18,61 @@ This system uses content from:
 - [Googology Wiki](https://googology.fandom.com/) - The English googology community wiki
 - [巨大数研究 Wiki](https://googology.fandom.com/ja/) - The Japanese googology community wiki
 
+## System Architecture
+
+The RAG system follows a clear data processing pipeline from MediaWiki XML dumps to searchable vector representations:
+
+```mermaid
+%% Rule of mermaid
+%% - The object is written as vertex.
+%% - The function or process are written as edge.
+%% - The subgraph is user operation to run.
+graph TD
+    subgraph fetch_xml["fetch.py"]
+        Z[MediaWiki Archive URL] -->|download| Y[Compressed Archive]
+        Y -->|py7zr.unpack| A[MediaWiki XML]
+    end
+    
+    subgraph xml2vec["xml2vec.py"]
+        A -->|MWDumpLoader.load| B[Document documents]
+        B -->|RecursiveCharacterTextSplitter| C[Document chunks]
+        C -->|FAISS.from_documents| D[vector_store.pkl]
+        A -->|gzip compression| E[XML.gz for web]
+    end
+    
+    subgraph vec2json["vec2json.py"]
+        D -->|pickle.load| F[vector_store_part.json.gz]
+        D -->|json.dump| G[vector_store_meta.json]
+    end
+    
+    subgraph load_data["Load Data Button"]
+        F -->|pako.inflate| H[Minimal Vector Store]
+        G --> H
+        E -->|loadCompressedXML| I[Compressed XML Data]
+    end
+    
+    subgraph send_button["Send Button"]
+        J[User Query] -->|HuggingFace embeddings| K[Query Vector]
+        K -->|cosineSimilarity| L[Search Results with chunk positions]
+        H -->|cosineSimilarity| L
+        I -->|getPageFromXML| M[Page Data Object]
+        L --> N[Chunk Start/End Positions]
+        M -->|extractChunkContent| O[Extracted Chunk Content]
+        N -->|extractChunkContent| O
+        O -->|map with citations| P[Context with Citations]
+        P -->|template literal| Q[System Prompt]
+        Q -->|fetch OpenAI API| R[LLM Response with Citations]
+    end
+    
+    subgraph python_search["rag_search.py"]
+        S[Query] -->|similarity_search| T[Python Search Results]
+        D -->|similarity_search| T
+        T -->|format_results_with_citations| U[Python Context with Citations]
+        U -->|build_system_prompt| V[Python System Prompt]
+        V -->|--show-prompt flag| W[Display LLM Context]
+    end
+```
+
 ## Multi-Site Architecture
 
 The project supports multiple wiki sites with independent interfaces:
