@@ -170,6 +170,7 @@ def load_mediawiki_documents(xml_path: str, namespace_filter: List[int] = None) 
             doc.metadata.update({
                 'title': full_title,
                 'id': page_id or f'page_{full_title.replace(" ", "_")}',
+                'curid': page_id,  # Add curid for XML content lookup
                 'url': url,
                 'namespace': 'auto'  # Auto-detected from title
             })

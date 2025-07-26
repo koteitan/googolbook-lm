@@ -10,7 +10,7 @@ except ImportError:
     # Fallback to old import for compatibility
     from langchain_community.embeddings import HuggingFaceEmbeddings
 
-from .embeddings import JapaneseMorphologicalEmbeddings
+from .embeddings import JapaneseMorphologicalEmbeddings, TinySegmenterEmbeddings
 
 
 def create_vector_store(
@@ -44,6 +44,9 @@ def create_vector_store(
     if tokenize_mode == 'mecab':
         print("Using Japanese morphological analysis with MeCab")
         embeddings = JapaneseMorphologicalEmbeddings(base_embeddings)
+    elif tokenize_mode == 'tinysegmenter':
+        print("Using Japanese morphological analysis with TinySegmenter")
+        embeddings = TinySegmenterEmbeddings(base_embeddings)
     else:
         print("Using standard tokenization")
         embeddings = base_embeddings

@@ -2,6 +2,7 @@
 
 from typing import List
 from langchain.embeddings.base import Embeddings
+from .tinysegmenter import tokenize_with_tinysegmenter
 
 
 class JapaneseMorphologicalEmbeddings(Embeddings):
@@ -103,6 +104,68 @@ class JapaneseMorphologicalEmbeddings(Embeddings):
     def embed_query(self, text: str) -> List[float]:
         """
         Embed a query text with morphological preprocessing.
+        
+        Args:
+            text: Query text to embed
+            
+        Returns:
+            Embedding vector
+        """
+        processed_text = self._preprocess(text)
+        return self.base_embeddings.embed_query(processed_text)
+
+
+class TinySegmenterEmbeddings(Embeddings):
+    """
+    Wrapper for embeddings that performs Japanese morphological analysis
+    using TinySegmenter before passing text to the base embedding model.
+    This matches the browser-side JavaScript implementation.
+    """
+    
+    def __init__(self, base_embeddings: Embeddings):
+        """
+        Initialize with a base embeddings model.
+        
+        Args:
+            base_embeddings: The base embedding model to wrap
+        """
+        self.base_embeddings = base_embeddings
+        print("✓ TinySegmenter initialized successfully for morphological analysis")
+    
+    def _preprocess(self, text: str) -> str:
+        """
+        Preprocess text using TinySegmenter morphological analysis.
+        
+        Args:
+            text: Input text to tokenize
+            
+        Returns:
+            Tokenized text (space-separated tokens)
+        """
+        try:
+            # TinySegmenter tokenization (matches JavaScript implementation)
+            tokenized = tokenize_with_tinysegmenter(text)
+            return tokenized
+        except Exception as e:
+            print(f"⚠ Warning: TinySegmenter tokenization failed: {e}")
+            return text
+    
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        """
+        Embed a list of documents with TinySegmenter preprocessing.
+        
+        Args:
+            texts: List of document texts to embed
+            
+        Returns:
+            List of embedding vectors
+        """
+        processed_texts = [self._preprocess(text) for text in texts]
+        return self.base_embeddings.embed_documents(processed_texts)
+    
+    def embed_query(self, text: str) -> List[float]:
+        """
+        Embed a query text with TinySegmenter preprocessing.
         
         Args:
             text: Query text to embed

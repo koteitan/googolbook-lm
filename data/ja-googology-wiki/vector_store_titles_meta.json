@@ -1,6 +1,1 @@
-{
-  "total_documents": 4926,
-  "num_parts": 1,
-  "docs_per_part": 4926,
-  "embedding_dimension": 384
-}
+{"total_documents":8439,"num_parts":1,"docs_per_part":8439,"embedding_dimension":384}

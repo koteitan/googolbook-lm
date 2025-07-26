@@ -66,6 +66,9 @@ web:
   # Current site directory name
   current_site: "googology-wiki"
   
+  # Auto switch to local files when accessing from localhost
+  auto_local_path: true
+  
   # Vector store file paths
   vector_store:
     meta_path: "./vector_store_meta.json"
@@ -73,8 +76,6 @@ web:
     # part_path_template: "./vector_store_part{}.json.gz"
     # External CDN hosting for large vector store files
     part_path_template: "https://www.ukaibutton.com/googolbook-lm/data/googology-wiki/vector_store_part{}.json.gz"
-    # Auto switch to local files when accessing from localhost
-    auto_part_path: true
   
   # Compressed XML file for dynamic content loading
   xml_gz_path: "https://www.ukaibutton.com/googolbook-lm/data/googology-wiki/googology_pages_current.xml.gz"

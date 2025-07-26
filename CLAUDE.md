@@ -109,7 +109,7 @@ This site is a chat with RAG for MediaWiki. The site user put the question in th
 
 ## rules
 - Speak to me in Japanese.
-- git commit is denied. Please suggest the commit message by the following format:
+- git commit is denied. Please suggest the commit message in English by the following format:
 ```markdown
 -----------------------------commit message begin
 [top line]
@@ -128,5 +128,4 @@ Co-Authored-By: Claude <noreply@anthropic.com>
   - tools/fetch/fetch.py
   - tools/rag/xml2vec.py
   - tools/rag/vec2json.py
-
-
+- I check browser by myself. Please don't check browser.

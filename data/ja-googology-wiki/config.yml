@@ -30,6 +30,7 @@ exclusions:
     - "Map"
     - "ヘルプ"                     # Help
     - "フォーラム"                 # Forum
+    - "トーク"                     # Talk
     - "MediaWiki"
     - "Special"
     - "テンプレート・トーク"       # Template talk
@@ -61,12 +62,15 @@ vector_store:
 
 # Tokenization configuration
 tokenize:
-  mode: "mecab"  # "normal" or "mecab"
+  mode: "tinysegmenter"  # "normal", "mecab", or "tinysegmenter" - Using TinySegmenter for Japanese morphological analysis
 
 # JavaScript web interface configuration
 web:
   # Current site directory name
   current_site: "ja-googology-wiki"
+  
+  # Auto switch to local files when accessing from localhost
+  auto_local_path: true
   
   # Vector store file paths
   vector_store:
@@ -75,8 +79,6 @@ web:
     # part_path_template: "./vector_store_part{}.json.gz"
     # External CDN hosting for large vector store files
     part_path_template: "https://www.ukaibutton.com/googolbook-lm/data/ja-googology-wiki/vector_store_part{}.json.gz"
-    # Auto switch to local files when accessing from localhost
-    auto_part_path: true
   
   # Compressed XML file for dynamic content loading
   xml_gz_path: "https://www.ukaibutton.com/googolbook-lm/data/ja-googology-wiki/jagoogology_pages_current.xml.gz"
@@ -86,4 +88,4 @@ web:
     default_top_k: 5
     default_url: "https://api.openai.com/v1"
     default_model: "gpt-3.5-turbo"
-    embedding_model: "Xenova/all-MiniLM-L6-v2"  # HuggingFace for retrieval
+    embedding_model: "Xenova/all-MiniLM-L6-v2"  # Original model (384 dimensions)

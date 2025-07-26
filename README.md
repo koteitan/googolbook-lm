@@ -33,10 +33,11 @@ graph TD
         Y -->|py7zr.unpack| A[MediaWiki XML]
     end
     
-    subgraph xml2vec["xml2vec.py"]
-        A -->|MWDumpLoader.load| B[Document documents]
-        B -->|RecursiveCharacterTextSplitter| C[Document chunks]
-        C -->|FAISS.from_documents| D[vector_store.pkl]
+    subgraph xml2vec["xml2vec.js"]
+        A -->|XMLParser| B[Document documents]
+        B -->|TinySegmenter tokenization| B2[Tokenized documents]
+        B2 -->|Transformers.js| C[Document embeddings]
+        C -->|JSON.stringify| D[vector_store_part.json.gz]
         A -->|gzip compression| E[XML.gz for web]
     end
     
@@ -52,7 +53,7 @@ graph TD
     end
     
     subgraph send_button["Send Button"]
-        J[User Query] -->|HuggingFace embeddings| K[Query Vector]
+        J[User Query] -->|TinySegmenter + Transformers.js| K[Query Vector]
         K -->|cosineSimilarity| L[Search Results with chunk positions]
         H -->|cosineSimilarity| L
         I -->|getPageFromXML| M[Page Data Object]
@@ -90,13 +91,14 @@ Shared components are located in the root directory (`index.css`) and lib direct
 
 ## Requirements
 
-Python 3.x is required. Install the following dependencies:
+### Python Backend (optional, for XML processing)
+Python 3.x is required only if using Python tools:
 
 ```bash
 # For data fetching (tools/fetch/)
 pip install py7zr
 
-# For RAG system (tools/rag/)
+# For RAG system (tools/rag/ - Python version)
 pip install langchain langchain-community langchain-text-splitters langchain-openai
 pip install langchain-huggingface  # For HuggingFace embeddings
 pip install faiss-cpu  # or faiss-gpu for GPU support
@@ -105,6 +107,17 @@ pip install lxml  # For XML parsing
 pip install mwxml  # For MediaWiki XML parsing
 pip install mwparserfromhell  # For MediaWiki markup parsing
 ```
+
+### Node.js Frontend (recommended)
+For the unified JavaScript/Node.js workflow:
+
+```bash
+npm install  # Installs @xenova/transformers and other dependencies
+```
+
+The system now supports two approaches:
+1. **Node.js-only**: Use `tools/rag/xml2vec.js` for consistent embedding generation
+2. **Python backend**: Use `tools/rag/xml2vec.py` + `tools/rag/vec2json.py` (legacy)
 
 For detailed tool-specific documentation, see:
 - [tools/fetch/README.md](tools/fetch/README.md) - Data fetching tool

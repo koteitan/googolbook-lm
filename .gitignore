@@ -41,3 +41,22 @@ data/*/config.py.bak
 
 # ctags files
 tags
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Test and temporary files
+test.py
+test_vector_store_titles.pkl
+
+# Root level vector store files (generated outputs)
+/vector_store_meta.json
+/vector_store_part*.json
+/vector_store_part*.json.gz
+/vector_store_titles_meta.json
+/vector_store_titles_part*.json
+/vector_store_titles_part*.json.gz

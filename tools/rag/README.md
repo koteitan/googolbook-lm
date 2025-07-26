@@ -1,6 +1,6 @@
-# LangChain RAG System Specification
+# RAG System Specification
 
-This RAG system works with any MediaWiki site configured in `config.py`. The default paths shown below use the current site configuration.
+This RAG system works with any MediaWiki site configured in `config.py`. The system supports both Node.js (recommended) and Python approaches for vector store generation.
 
 ## RAG Processing Flow
 
@@ -12,10 +12,11 @@ The LangChain RAG system follows a clear data processing pipeline from MediaWiki
 %% - The function or process are written as edge.
 %% - The subgraph is user operation to run.
 graph TD
-    subgraph xml2vec["xml2vec.py"]
-        A[MediaWiki XML] -->|MWDumpLoader.load| B[Document documents]
-        B -->|RecursiveCharacterTextSplitter| C[Document chunks]
-        C -->|FAISS.from_documents| D[vector_store.pkl]
+    subgraph xml2vec["xml2vec.js"]
+        A[MediaWiki XML] -->|XMLParser| B[Document documents]
+        B -->|TinySegmenter tokenization| B2[Tokenized documents]
+        B2 -->|Transformers.js| C[Document embeddings]
+        C -->|JSON.stringify| D[vector_store_part.json.gz]
         A -->|gzip compression| E[XML.gz for web]
     end
     
@@ -31,7 +32,7 @@ graph TD
     end
     
     subgraph send_button["Send Button"]
-        J[User Query] -->|HuggingFace embeddings| K[Query Vector]
+        J[User Query] -->|TinySegmenter + Transformers.js| K[Query Vector]
         K -->|cosineSimilarity| L[Search Results with chunk positions]
         H -->|cosineSimilarity| L
         I -->|getPageFromXML| M[Page Data Object]
@@ -54,11 +55,19 @@ graph TD
 
 ## Requirements
 
-To use the RAG system, install the following Python packages:
+### Node.js Approach (Recommended)
+For the unified JavaScript/Node.js workflow:
+
+```bash
+npm install  # Installs @xenova/transformers and other dependencies
+```
+
+### Python Approach (Legacy)
+To use the Python RAG system, install the following Python packages:
 
 ```bash
 pip install langchain langchain-community langchain-text-splitters langchain-openai
-pip install langchain-huggingface  # For HuggingFace embeddings (new package)
+pip install langchain-huggingface  # For HuggingFace embeddings
 pip install faiss-cpu  # or faiss-gpu for GPU support
 pip install sentence-transformers  # For HuggingFace model downloads
 pip install lxml  # For XML parsing
@@ -68,10 +77,29 @@ pip install mwparserfromhell  # For MediaWiki markup parsing
 
 ## Usage
 
-The RAG system uses a three-step process:
+### Node.js Approach (Recommended)
+
+The recommended workflow uses Node.js for consistent embedding generation:
+
+1. **Create vector store** (one-time setup):
+```bash
+cd tools/rag/
+node xml2vec.js
+```
+
+This single command will:
+- Load and process the MediaWiki XML file
+- Apply TinySegmenter tokenization for Japanese text
+- Create embeddings using Transformers.js
+- Save the vector store directly as JSON/gzip format
+- No separate export step needed
+
+### Python Approach (Legacy)
+
+The traditional Python workflow uses a three-step process:
 
 1. **Create vector store** (one-time setup, may take several minutes)
-2. **Export to JSON** (for web interface usage)
+2. **Export to JSON** (for web interface usage)  
 3. **Search** (fast, interactive queries)
 
 ### Step 1: Create Vector Store
@@ -223,6 +251,24 @@ Options:
   --top-k K               Number of results to return (default: 10)
   --score-threshold SCORE Minimum similarity score threshold
 ```
+
+## Japanese Tokenization Testing
+
+The system includes test tools for validating Japanese tokenization:
+
+### Node.js tokenization test:
+```bash
+cd lib/test/
+node test-token.js
+```
+
+### Python tokenization test:
+```bash
+cd lib/test/
+python3 test-token-python.py
+```
+
+Both tools test TinySegmenter tokenization to ensure consistent results across platforms.
 
 ## Examples
 

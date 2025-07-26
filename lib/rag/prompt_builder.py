@@ -18,6 +18,13 @@ def build_system_prompt(citations):
 
 Please provide detailed and informative answers based strictly on the provided context. Explain concepts clearly and include relevant definitions, examples, and background information when available in the context. Structure your response in a logical manner.
 
+LANGUAGE REQUIREMENTS:
+- Respond in the same language as the user's question
+- If the user asks in Japanese, respond in Japanese
+- If the user asks in English, respond in English
+- If the user asks in any other language, respond in that language
+- Maintain technical accuracy while using natural language appropriate to the user's language
+
 CRITICAL CITATION REQUIREMENTS:
 - You MUST cite sources for ALL factual claims and information using the provided reference numbers in square brackets (e.g., [1], [2], [3])
 - Each source document in the context is numbered with [1], [2], etc. - use these exact numbers
