@@ -109,6 +109,7 @@ This site is a chat with RAG for MediaWiki. The site user put the question in th
 
 ## rules
 - Speak to me in Japanese.
+- git add . is denied because it may include unnecessary files. Please add files one by one.
 - git commit is denied. Please suggest the commit message in English by the following format:
 ```markdown
 -----------------------------commit message begin
