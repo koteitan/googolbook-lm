@@ -87,5 +87,5 @@ web:
   api:
     default_top_k: 5
     default_url: "https://api.openai.com/v1"
-    default_model: "gpt-3.5-turbo"
+    default_model: "gpt-4o"  # Default model - can be changed in UI
     embedding_model: "Xenova/all-MiniLM-L6-v2"  # Original model (384 dimensions)

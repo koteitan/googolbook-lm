@@ -76,18 +76,30 @@ section h3 {
     color: #555;
 }
 
-.config-item input {
+.config-item input,
+.config-item select {
     width: 100%;
     padding: 10px;
     border: 2px solid #e0e0e0;
     border-radius: 5px;
     font-size: 1rem;
     transition: border-color 0.3s;
+    background-color: white;
 }
 
-.config-item input:focus {
+.config-item input:focus,
+.config-item select:focus {
     outline: none;
     border-color: #3498db;
+}
+
+.config-item select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3e%3cpath fill='%23666' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 00-1.414-1.414z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 35px;
 }
 
 /* Data Loading */
