@@ -160,9 +160,43 @@ function splitText(text, chunkSize = 1200, chunkOverlap = 300) {
 }
 
 /**
+ * Check if a page should be excluded based on exclusion rules
+ */
+function shouldExcludePage(pageTitle, config) {
+    // Ensure pageTitle is a string
+    if (!pageTitle || typeof pageTitle !== 'string' || !config?.exclusions) {
+        if (pageTitle && typeof pageTitle !== 'string') {
+            console.warn(`⚠️ Page title is not a string:`, typeof pageTitle, pageTitle);
+        }
+        return false;
+    }
+    
+    // Check namespace exclusions
+    if (config.exclusions.namespaces) {
+        for (const namespace of config.exclusions.namespaces) {
+            if (pageTitle.startsWith(namespace + ':')) {
+                // Silently exclude - no log output
+                return true;
+            }
+        }
+    }
+    
+    // Check username exclusions (for user pages)
+    if (config.exclusions.usernames && pageTitle.startsWith('ユーザー:')) {
+        const username = pageTitle.split(':')[1]?.split('/')[0];
+        if (username && config.exclusions.usernames.includes(username)) {
+            // Silently exclude - no log output
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+/**
  * MediaWiki XMLを解析してドキュメントを抽出
  */
-async function loadMediaWikiDocuments(xmlPath, createTitleStore = false, chunkSize = 1200, chunkOverlap = 300) {
+async function loadMediaWikiDocuments(xmlPath, createTitleStore = false, chunkSize = 1200, chunkOverlap = 300, config = null) {
     console.log(`Loading XML from: ${xmlPath}`);
     console.log(`Mode: ${createTitleStore ? 'Title store' : 'Content store with chunking'}`);
     
@@ -179,9 +213,15 @@ async function loadMediaWikiDocuments(xmlPath, createTitleStore = false, chunkSi
     
     const documents = [];
     let totalChunks = 0;
+    let excludedCount = 0;
     
     for (const page of pages) {
         if (page.revision && page.revision.text && page.revision.text['#text']) {
+            // Check if page should be excluded
+            if (shouldExcludePage(page.title, config)) {
+                excludedCount++;
+                continue;
+            }
             const fullContent = page.revision.text['#text'];
             
             if (createTitleStore) {
@@ -220,6 +260,8 @@ async function loadMediaWikiDocuments(xmlPath, createTitleStore = false, chunkSi
             }
         }
     }
+    
+    console.log(`Exclusion summary: ${excludedCount} pages excluded, ${documents.length} pages included`);
     
     if (createTitleStore) {
         console.log(`✓ Loaded ${documents.length} title documents`);
@@ -267,8 +309,8 @@ async function createEmbeddings(documents, tokenizeMode = 'normal') {
             embedding: embedding
         });
         
-        if ((i + 1) % 10000 === 0) {
-            console.log(`  Processed ${i + 1}/${documents.length} documents`);
+        if ((i + 1) % 100 === 0) {
+            process.stdout.write(`\rProcessing ${i + 1}/${documents.length} documents...`);
         }
     }
     
@@ -446,8 +488,8 @@ async function main() {
             const contentOutputPath = path.join(__dirname, '../../data/ja-googology-wiki/vector_store_part01.json');
             console.log(`Output Path: ${contentOutputPath}`);
             
-            const contentDocuments = await loadMediaWikiDocuments(xmlPath, false, finalChunkSize, finalChunkOverlap);
-            const contentResult = await createEmbeddings(contentDocuments, 'tinysegmenter');
+            const contentDocuments = await loadMediaWikiDocuments(xmlPath, false, finalChunkSize, finalChunkOverlap, config);
+            const contentResult = await createEmbeddings(contentDocuments, config.tokenize?.mode || 'tinysegmenter');
             const contentFileSizes = await saveAsJSON(contentResult, contentOutputPath, true);
             await saveMetadata(contentResult, contentOutputPath, true, contentFileSizes);
             
@@ -459,8 +501,8 @@ async function main() {
             const titleOutputPath = path.join(__dirname, '../../data/ja-googology-wiki/vector_store_titles_part01.json');
             console.log(`Output Path: ${titleOutputPath}`);
             
-            const titleDocuments = await loadMediaWikiDocuments(xmlPath, true, finalChunkSize, finalChunkOverlap);
-            const titleResult = await createEmbeddings(titleDocuments, 'tinysegmenter');
+            const titleDocuments = await loadMediaWikiDocuments(xmlPath, true, finalChunkSize, finalChunkOverlap, config);
+            const titleResult = await createEmbeddings(titleDocuments, config.tokenize?.mode || 'tinysegmenter');
             const titleFileSizes = await saveAsJSON(titleResult, titleOutputPath, false);
             await saveMetadata(titleResult, titleOutputPath, false, titleFileSizes);
             
@@ -482,8 +524,8 @@ async function main() {
             }
             
             const createTitleStore = (mode === 'title');
-            const documents = await loadMediaWikiDocuments(xmlPath, createTitleStore, finalChunkSize, finalChunkOverlap);
-            const result = await createEmbeddings(documents, 'tinysegmenter');
+            const documents = await loadMediaWikiDocuments(xmlPath, createTitleStore, finalChunkSize, finalChunkOverlap, config);
+            const result = await createEmbeddings(documents, config.tokenize?.mode || 'tinysegmenter');
             const isContentStore = (mode === 'content');
             const fileSizes = await saveAsJSON(result, singleOutputPath, isContentStore);
             await saveMetadata(result, singleOutputPath, isContentStore, fileSizes);

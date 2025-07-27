@@ -55,7 +55,7 @@ vector_store:
   # Vector store split configuration for large datasets
   chunks_per_part: 10000               # Number of chunks per split file
   content_search_per_part: 10          # Content-based search: chunks from each part in preliminary round
-  content_search_final_count: 5        # Content-based search: final results sent to LLM
+  content_search_final_count: 10       # Content-based search: final results sent to LLM
 
 # Tokenization configuration
 tokenize:
