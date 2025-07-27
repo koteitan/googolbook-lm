@@ -294,7 +294,7 @@ async function loadMediaWikiDocuments(xmlPath, createTitleStore = false, chunkSi
         // Check if this is a redirect page (check redirect tag first)
         if (page.redirect && page.redirect['@_title']) {
             // This is a redirect page
-            if (originalTitle === '超限順序数の一覧' || originalTitle === '2147483647') {
+            if (originalTitle === '超限順序数の一覧' || originalTitle === '2147483647' || originalTitle === 'グラハム数') {
                 console.log(`DEBUG: Found redirect page ${originalTitle}, createTitleStore=${createTitleStore}, page.redirect=`, page.redirect);
             }
             
@@ -323,7 +323,7 @@ async function loadMediaWikiDocuments(xmlPath, createTitleStore = false, chunkSi
             }
         } else if (page.revision && page.revision.text && page.revision.text['#text']) {
             // Regular page with content (not a redirect)
-            if (originalTitle === '超限順序数の一覧' || originalTitle === '2147483647') {
+            if (originalTitle === '超限順序数の一覧' || originalTitle === '2147483647' || originalTitle === 'グラハム数') {
                 console.log(`DEBUG: Processing regular page ${originalTitle}, page.redirect=`, page.redirect, 'hasRedirect=', !!page.redirect);
             }
             contentToUse = page.revision.text['#text'];
@@ -338,6 +338,9 @@ async function loadMediaWikiDocuments(xmlPath, createTitleStore = false, chunkSi
                         source: originalTitle
                     }
                 };
+                if (originalTitle === 'グラハム数') {
+                    console.log(`DEBUG: Adding ${originalTitle} to title store with curid=${page.id}`);
+                }
                 documents.push(doc);
             } else {
                 // コンテンツストア用：通常ページの内容をチャンク分割
@@ -454,6 +457,11 @@ async function saveAsJSON(data, outputPath, isContentStore = false) {
             
             // すべてのストアでmetadataを含める（タイトル検索に必要）
             baseDoc.metadata = doc.metadata;
+            
+            // デバッグ: グラハム数の保存を確認
+            if (doc.metadata && doc.metadata.title === 'グラハム数') {
+                console.log(`🔍 DEBUG: Saving グラハム数 with curid=${doc.curid}, metadata=`, doc.metadata);
+            }
             
             return baseDoc;
         })
