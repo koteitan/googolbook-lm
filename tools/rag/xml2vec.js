@@ -163,11 +163,13 @@ function splitText(text, chunkSize = 1200, chunkOverlap = 300) {
  * Check if a page should be excluded based on exclusion rules
  */
 function shouldExcludePage(pageTitle, config) {
-    // Ensure pageTitle is a string
-    if (!pageTitle || typeof pageTitle !== 'string' || !config?.exclusions) {
-        if (pageTitle && typeof pageTitle !== 'string') {
-            console.warn(`⚠️ Page title is not a string:`, typeof pageTitle, pageTitle);
-        }
+    // Convert numeric titles to strings
+    if (pageTitle && typeof pageTitle !== 'string') {
+        pageTitle = pageTitle.toString();
+    }
+    
+    // Ensure pageTitle is valid and config exists
+    if (!pageTitle || !config?.exclusions) {
         return false;
     }
     
@@ -211,35 +213,135 @@ async function loadMediaWikiDocuments(xmlPath, createTitleStore = false, chunkSi
     
     console.log(`Found ${pages.length} pages in XML`);
     
+    // Step 1: Build redirect mapping and page content mapping
+    const redirectMap = new Map(); // redirect title -> target title
+    const pageContentMap = new Map(); // page title -> {content, id, ...}
+    const titleToIdMap = new Map(); // page title -> page id
+    let redirectCount = 0;
+    
+    // First pass: collect all pages and build redirect mapping
+    for (const page of pages) {
+        // Convert numeric titles to strings
+        let title = page.title;
+        if (title && typeof title !== 'string') {
+            title = title.toString();
+        }
+        const id = page.id?.toString() || '';
+        
+        titleToIdMap.set(title, id);
+        
+        // Check if this is a redirect page
+        if (page.redirect && page.redirect['@_title']) {
+            const redirectTarget = page.redirect['@_title'];
+            redirectMap.set(title, redirectTarget);
+            redirectCount++;
+        } else if (page.revision && page.revision.text && page.revision.text['#text']) {
+            // Regular page with content
+            pageContentMap.set(title, {
+                content: page.revision.text['#text'],
+                id: id,
+                page: page
+            });
+        }
+    }
+    
+    console.log(`Found ${redirectCount} redirect pages, building redirect chain resolution...`);
+    
+    // Debug: Check a few redirect examples
+    const redirectExamples = Array.from(redirectMap.entries()).slice(0, 3);
+    console.log(`Redirect examples:`, redirectExamples);
+    
+    // Function to resolve redirect chains
+    function resolveRedirectChain(title, visited = new Set()) {
+        if (visited.has(title)) {
+            console.warn(`Circular redirect detected for: ${title}`);
+            return title; // Return original to avoid infinite loop
+        }
+        
+        visited.add(title);
+        const target = redirectMap.get(title);
+        
+        if (target && redirectMap.has(target)) {
+            return resolveRedirectChain(target, visited);
+        }
+        
+        return target || title;
+    }
+    
     const documents = [];
     let totalChunks = 0;
     let excludedCount = 0;
+    let redirectResolvedCount = 0;
     
+    // Step 2: Process all pages, resolving redirects for content
     for (const page of pages) {
-        if (page.revision && page.revision.text && page.revision.text['#text']) {
-            // Check if page should be excluded
-            if (shouldExcludePage(page.title, config)) {
-                excludedCount++;
-                continue;
+        // Convert numeric titles to strings
+        let originalTitle = page.title;
+        if (originalTitle && typeof originalTitle !== 'string') {
+            originalTitle = originalTitle.toString();
+        }
+        
+        // Check if page should be excluded
+        if (shouldExcludePage(originalTitle, config)) {
+            excludedCount++;
+            continue;
+        }
+        
+        let contentToUse = null;
+        let targetTitle = originalTitle;
+        let targetId = page.id?.toString() || '';
+        
+        // Check if this is a redirect page (check redirect tag first)
+        if (page.redirect && page.redirect['@_title']) {
+            // This is a redirect page
+            if (originalTitle === '超限順序数の一覧' || originalTitle === '2147483647') {
+                console.log(`DEBUG: Found redirect page ${originalTitle}, createTitleStore=${createTitleStore}, page.redirect=`, page.redirect);
             }
-            const fullContent = page.revision.text['#text'];
             
             if (createTitleStore) {
-                // タイトルストア用：タイトルのみ
+                // For title store: include redirect pages with original title
+                const redirectTarget = page.redirect['@_title'];
                 const doc = {
-                    pageContent: page.title,
+                    pageContent: originalTitle,
                     metadata: {
-                        title: page.title,
+                        title: originalTitle,
                         curid: page.id?.toString() || '',
-                        source: page.title
+                        source: originalTitle,
+                        redirect_target: redirectTarget
+                    }
+                };
+                documents.push(doc);
+                redirectResolvedCount++;
+            } else {
+                // For content store: skip redirect pages to avoid duplication
+                // The target page will already be included with its own content
+                if (originalTitle === '超限順序数の一覧' || originalTitle === '2147483647') {
+                    console.log(`DEBUG: Skipping redirect page ${originalTitle} for content store`);
+                }
+                redirectResolvedCount++;
+                continue;
+            }
+        } else if (page.revision && page.revision.text && page.revision.text['#text']) {
+            // Regular page with content (not a redirect)
+            if (originalTitle === '超限順序数の一覧' || originalTitle === '2147483647') {
+                console.log(`DEBUG: Processing regular page ${originalTitle}, page.redirect=`, page.redirect, 'hasRedirect=', !!page.redirect);
+            }
+            contentToUse = page.revision.text['#text'];
+            
+            if (createTitleStore) {
+                // タイトルストア用：通常ページのタイトル
+                const doc = {
+                    pageContent: originalTitle,
+                    metadata: {
+                        title: originalTitle,
+                        curid: page.id?.toString() || '',
+                        source: originalTitle
                     }
                 };
                 documents.push(doc);
             } else {
-                // コンテンツストア用：チャンク分割
-                const chunks = splitText(fullContent, chunkSize, chunkOverlap);
-                
-                // チャンク分割ログを非表示
+                // コンテンツストア用：通常ページの内容をチャンク分割
+                const chunks = splitText(contentToUse, chunkSize, chunkOverlap);
                 
                 totalChunks += chunks.length;
                 
@@ -248,9 +350,9 @@ async function loadMediaWikiDocuments(xmlPath, createTitleStore = false, chunkSi
                     const doc = {
                         pageContent: chunk,
                         metadata: {
-                            title: page.title,
+                            title: originalTitle,
                             curid: page.id?.toString() || '',
-                            source: page.title,
+                            source: originalTitle,
                             chunk_index: i,
                             total_chunks: chunks.length
                         }
@@ -258,10 +360,18 @@ async function loadMediaWikiDocuments(xmlPath, createTitleStore = false, chunkSi
                     documents.push(doc);
                 }
             }
+        } else {
+            // Skip pages without content
+            continue;
         }
     }
     
     console.log(`Exclusion summary: ${excludedCount} pages excluded, ${documents.length} pages included`);
+    if (createTitleStore) {
+        console.log(`Redirect processing: ${redirectResolvedCount} redirect pages included in title store`);
+    } else {
+        console.log(`Redirect processing: ${redirectResolvedCount} redirect pages skipped to avoid content duplication`);
+    }
     
     if (createTitleStore) {
         console.log(`✓ Loaded ${documents.length} title documents`);
@@ -309,9 +419,7 @@ async function createEmbeddings(documents, tokenizeMode = 'normal') {
             embedding: embedding
         });
         
-        if ((i + 1) % 100 === 0) {
-            process.stdout.write(`\rProcessing ${i + 1}/${documents.length} documents...`);
-        }
+        process.stdout.write(`\rProcessing ${i + 1}/${documents.length} documents...`);
     }
     
     console.log('✓ All embeddings generated');
@@ -323,6 +431,7 @@ async function createEmbeddings(documents, tokenizeMode = 'normal') {
  */
 async function saveAsJSON(data, outputPath, isContentStore = false) {
     console.log(`Saving to: ${outputPath}`);
+    console.log(`🔍 DEBUG: Saving ${data.documents.length} documents`);
     
     // バイナリ形式で保存（Web版互換）
     const jsonData = {
@@ -362,6 +471,10 @@ async function saveAsJSON(data, outputPath, isContentStore = false) {
     const compressed = await gzipAsync(jsonString);
     await fs.writeFile(outputPath + '.gz', compressed);
     console.log('✓ Compressed JSON file saved');
+    
+    // 実際に保存されたファイルの検証
+    const savedData = JSON.parse(jsonString);
+    console.log(`🔍 DEBUG: Verification - saved ${savedData.documents.length} documents to file`);
     
     // ファイルサイズ情報を取得
     const stat = await fs.stat(outputPath);
