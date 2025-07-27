@@ -6,14 +6,16 @@ current site selection, now using YAML configuration files.
 """
 
 from pathlib import Path
+import yaml
 from lib.config_loader import get_site_config
 
-# Current site configuration (change this to switch sites)
-#CURRENT_SITE = 'googology-wiki'
-CURRENT_SITE = 'ja-googology-wiki'
+# Load root configuration to determine current site
+PROJECT_ROOT = Path(__file__).parent.resolve()
+with open(PROJECT_ROOT / 'config.yml', 'r', encoding='utf-8') as f:
+    root_config = yaml.safe_load(f)
+    CURRENT_SITE = root_config['current_site']
 
 # Load site-specific configuration from YAML
-PROJECT_ROOT = Path(__file__).parent.resolve()
 site_config = get_site_config(CURRENT_SITE)
 
 # Export site-specific values for backward compatibility
