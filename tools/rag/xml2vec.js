@@ -11,9 +11,42 @@ import fs from 'fs/promises';
 import path from 'path';
 import { XMLParser } from 'fast-xml-parser';
 import { fileURLToPath } from 'url';
+import yaml from 'js-yaml';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+/**
+ * YAML設定ファイルから設定を読み込み
+ */
+async function loadConfig(site = 'ja-googology-wiki') {
+    const configPath = path.join(__dirname, `../../data/${site}/config.yml`);
+    
+    try {
+        const configContent = await fs.readFile(configPath, 'utf-8');
+        const config = yaml.load(configContent);
+        
+        console.log(`Configuration loaded from: ${configPath}`);
+        console.log(`Tokenization mode: ${config.tokenize?.mode || 'normal'}`);
+        
+        return config;
+    } catch (error) {
+        console.warn(`Failed to load config from ${configPath}:`, error.message);
+        console.log('Using default configuration');
+        
+        // デフォルト設定
+        return {
+            vector_store: {
+                chunks_per_part: 10000,
+                content_search_per_part: 10,
+                content_search_final_count: 5
+            },
+            tokenize: {
+                mode: 'tinysegmenter'
+            }
+        };
+    }
+}
 
 // TinySegmenterの実装（rag-common.jsと同じ）
 class TinySegmenter {
@@ -75,10 +108,63 @@ class TinySegmenter {
 }
 
 /**
+ * テキストを指定されたサイズでチャンクに分割
+ */
+function splitText(text, chunkSize = 1200, chunkOverlap = 300) {
+    if (!text || text.length <= chunkSize) {
+        return [text];
+    }
+    
+    const chunks = [];
+    let start = 0;
+    
+    while (start < text.length) {
+        let end = start + chunkSize;
+        
+        // チャンクの境界で文や段落の区切りを探す
+        if (end < text.length) {
+            // まず段落区切り（\n\n）を探す
+            const paragraphBreak = text.lastIndexOf('\n\n', end);
+            if (paragraphBreak > start + chunkSize * 0.5) {
+                end = paragraphBreak + 2;
+            } else {
+                // 次に文区切り（。！？）を探す
+                const sentenceBreak = text.search(/[。！？][^\w]/);
+                if (sentenceBreak > start + chunkSize * 0.7 && sentenceBreak < end) {
+                    end = sentenceBreak + 1;
+                } else {
+                    // 最後に改行を探す
+                    const lineBreak = text.lastIndexOf('\n', end);
+                    if (lineBreak > start + chunkSize * 0.7) {
+                        end = lineBreak + 1;
+                    }
+                }
+            }
+        }
+        
+        const chunk = text.substring(start, end).trim();
+        if (chunk) {
+            chunks.push(chunk);
+        }
+        
+        // オーバーラップを考慮して次の開始位置を設定
+        start = Math.max(start + chunkSize - chunkOverlap, end);
+        
+        // 無限ループ防止
+        if (start === end - chunkOverlap) {
+            start = end;
+        }
+    }
+    
+    return chunks.filter(chunk => chunk.length > 50); // 短すぎるチャンクは除外
+}
+
+/**
  * MediaWiki XMLを解析してドキュメントを抽出
  */
-async function loadMediaWikiDocuments(xmlPath) {
+async function loadMediaWikiDocuments(xmlPath, createTitleStore = false, chunkSize = 1200, chunkOverlap = 300) {
     console.log(`Loading XML from: ${xmlPath}`);
+    console.log(`Mode: ${createTitleStore ? 'Title store' : 'Content store with chunking'}`);
     
     const xmlContent = await fs.readFile(xmlPath, 'utf-8');
     const parser = new XMLParser({
@@ -92,21 +178,55 @@ async function loadMediaWikiDocuments(xmlPath) {
     console.log(`Found ${pages.length} pages in XML`);
     
     const documents = [];
+    let totalChunks = 0;
+    
     for (const page of pages) {
         if (page.revision && page.revision.text && page.revision.text['#text']) {
-            const doc = {
-                pageContent: page.title, // titleベクターストア用にタイトルのみ使用
-                metadata: {
-                    title: page.title,
-                    curid: page.id?.toString() || '',
-                    source: page.title
+            const fullContent = page.revision.text['#text'];
+            
+            if (createTitleStore) {
+                // タイトルストア用：タイトルのみ
+                const doc = {
+                    pageContent: page.title,
+                    metadata: {
+                        title: page.title,
+                        curid: page.id?.toString() || '',
+                        source: page.title
+                    }
+                };
+                documents.push(doc);
+            } else {
+                // コンテンツストア用：チャンク分割
+                const chunks = splitText(fullContent, chunkSize, chunkOverlap);
+                
+                // チャンク分割ログを非表示
+                
+                totalChunks += chunks.length;
+                
+                for (let i = 0; i < chunks.length; i++) {
+                    const chunk = chunks[i];
+                    const doc = {
+                        pageContent: chunk,
+                        metadata: {
+                            title: page.title,
+                            curid: page.id?.toString() || '',
+                            source: page.title,
+                            chunk_index: i,
+                            total_chunks: chunks.length
+                        }
+                    };
+                    documents.push(doc);
                 }
-            };
-            documents.push(doc);
+            }
         }
     }
     
-    console.log(`✓ Loaded ${documents.length} documents`);
+    if (createTitleStore) {
+        console.log(`✓ Loaded ${documents.length} title documents`);
+    } else {
+        console.log(`✓ Loaded ${documents.length} content chunks (total processed chunks: ${totalChunks})`);
+    }
+    
     return documents;
 }
 
@@ -147,7 +267,7 @@ async function createEmbeddings(documents, tokenizeMode = 'normal') {
             embedding: embedding
         });
         
-        if ((i + 1) % 100 === 0) {
+        if ((i + 1) % 10000 === 0) {
             console.log(`  Processed ${i + 1}/${documents.length} documents`);
         }
     }
@@ -159,7 +279,7 @@ async function createEmbeddings(documents, tokenizeMode = 'normal') {
 /**
  * JSONファイルとして保存
  */
-async function saveAsJSON(data, outputPath) {
+async function saveAsJSON(data, outputPath, isContentStore = false) {
     console.log(`Saving to: ${outputPath}`);
     
     // バイナリ形式で保存（Web版互換）
@@ -168,15 +288,28 @@ async function saveAsJSON(data, outputPath) {
         part_index: 0,
         part_documents: data.documents.length,
         embedding_dimension: 384,
-        documents: data.documents.map(doc => ({
-            id: doc.id,
-            curid: doc.curid,
-            embedding_binary: arrayToBase64(doc.embedding),
-            embedding_format: 'float32_base64'
-        }))
+        documents: data.documents.map(doc => {
+            const baseDoc = {
+                id: doc.id,
+                curid: doc.curid,
+                embedding_binary: arrayToBase64(doc.embedding),
+                embedding_format: 'float32_base64'
+            };
+            
+            // コンテンツストアの場合はcontentも含める
+            if (isContentStore) {
+                baseDoc.content = doc.content;
+            }
+            
+            // すべてのストアでmetadataを含める（タイトル検索に必要）
+            baseDoc.metadata = doc.metadata;
+            
+            return baseDoc;
+        })
     };
     
-    await fs.writeFile(outputPath, JSON.stringify(jsonData));
+    const jsonString = JSON.stringify(jsonData);
+    await fs.writeFile(outputPath, jsonString);
     console.log('✓ JSON file saved');
     
     // 圧縮版も作成
@@ -184,9 +317,55 @@ async function saveAsJSON(data, outputPath) {
     const { promisify } = await import('util');
     const gzipAsync = promisify(gzip);
     
-    const compressed = await gzipAsync(JSON.stringify(jsonData));
+    const compressed = await gzipAsync(jsonString);
     await fs.writeFile(outputPath + '.gz', compressed);
     console.log('✓ Compressed JSON file saved');
+    
+    // ファイルサイズ情報を取得
+    const stat = await fs.stat(outputPath);
+    const statGz = await fs.stat(outputPath + '.gz');
+    const jsonSizeMB = stat.size / (1024 * 1024);
+    const gzSizeMB = statGz.size / (1024 * 1024);
+    
+    console.log(`  JSON size: ${jsonSizeMB.toFixed(1)} MB`);
+    console.log(`  Compressed size: ${gzSizeMB.toFixed(1)} MB`);
+    console.log(`  Compression ratio: ${((1 - gzSizeMB / jsonSizeMB) * 100).toFixed(1)}%`);
+    
+    return { jsonSizeMB, gzSizeMB };
+}
+
+/**
+ * メタデータファイルを生成
+ */
+async function saveMetadata(data, outputPath, isContentStore = false, fileSizes = null) {
+    let metaPath;
+    if (isContentStore) {
+        // コンテンツストアの場合: vector_store_part01.json → vector_store_meta.json
+        metaPath = outputPath.replace('_part01.json', '_meta.json');
+    } else {
+        // タイトルストアの場合: vector_store_titles_part01.json → vector_store_titles_meta.json
+        metaPath = outputPath.replace('.json', '_meta.json');
+    }
+    
+    console.log(`Saving metadata to: ${metaPath}`);
+    
+    const metadata = {
+        total_documents: data.documents.length,
+        num_parts: 1, // 現在は1パートのみ
+        docs_per_part: data.documents.length,
+        embedding_dimension: 384
+    };
+    
+    // ファイルサイズ情報があれば追加
+    if (fileSizes) {
+        metadata.total_json_size_mb = parseFloat(fileSizes.jsonSizeMB.toFixed(1));
+        metadata.total_gz_size_mb = parseFloat(fileSizes.gzSizeMB.toFixed(1));
+    }
+    
+    await fs.writeFile(metaPath, JSON.stringify(metadata, null, 2));
+    console.log('✓ Metadata file saved');
+    
+    return metaPath;
 }
 
 /**
@@ -208,24 +387,117 @@ function arrayToBase64(floatArray) {
  */
 async function main() {
     const args = process.argv.slice(2);
-    const xmlPath = args[0] || path.join(__dirname, '../../data/ja-googology-wiki/jagoogology_pages_current.xml');
-    const outputPath = args[1] || path.join(__dirname, '../../data/ja-googology-wiki/vector_store_titles_part01.json');
+    
+    // コマンドライン引数の解析
+    let mode = 'both'; // デフォルトは両方作成
+    let xmlPath = path.join(__dirname, '../../data/ja-googology-wiki/jagoogology_pages_current.xml');
+    let outputPath = null;
+    let chunkSize = null;
+    let chunkOverlap = null;
+    let site = 'ja-googology-wiki';
+    
+    for (let i = 0; i < args.length; i++) {
+        if (args[i] === '--content') {
+            mode = 'content';
+        } else if (args[i] === '--title') {
+            mode = 'title';
+        } else if (args[i] === '--both') {
+            mode = 'both';
+        } else if (args[i] === '--xml' && i + 1 < args.length) {
+            xmlPath = args[i + 1];
+            i++;
+        } else if (args[i] === '--output' && i + 1 < args.length) {
+            outputPath = args[i + 1];
+            i++;
+        } else if (args[i] === '--chunk-size' && i + 1 < args.length) {
+            chunkSize = parseInt(args[i + 1]);
+            i++;
+        } else if (args[i] === '--chunk-overlap' && i + 1 < args.length) {
+            chunkOverlap = parseInt(args[i + 1]);
+            i++;
+        } else if (args[i] === '--site' && i + 1 < args.length) {
+            site = args[i + 1];
+            i++;
+        } else if (!args[i].startsWith('--')) {
+            // 最初の非オプション引数はXMLパス
+            if (!xmlPath || xmlPath.includes('jagoogology_pages_current.xml')) {
+                xmlPath = args[i];
+            }
+        }
+    }
     
     try {
-        console.log('=== Node.js Vector Store Creation (Title Mode) ===');
+        console.log(`=== Node.js Vector Store Creation (${mode.toUpperCase()} Mode) ===`);
+        console.log(`XML Path: ${xmlPath}`);
         
-        // 1. XMLからドキュメントを読み込み
-        const documents = await loadMediaWikiDocuments(xmlPath);
+        // 0. 設定ファイルを読み込み
+        const config = await loadConfig(site);
         
-        // 2. Embeddingを生成（TinySegmenterモード）
-        const result = await createEmbeddings(documents, 'tinysegmenter');
+        // チャンクサイズを決定（優先度: コマンドライン > 設定ファイル > デフォルト）
+        const finalChunkSize = chunkSize || (config.vector_store?.chunk_size) || 1200;
+        const finalChunkOverlap = chunkOverlap || (config.vector_store?.chunk_overlap) || 300;
         
-        // 3. JSONとして保存
-        await saveAsJSON(result, outputPath);
-        
-        console.log('\n✓ Vector store creation complete!');
-        console.log(`Total documents: ${result.documents.length}`);
-        console.log(`Output: ${outputPath}`);
+        if (mode === 'both') {
+            // 両方のベクターストアを作成
+            console.log(`Chunk settings: size=${finalChunkSize}, overlap=${finalChunkOverlap}`);
+            
+            // 1. コンテンツベクターストア作成
+            console.log('\n=== Creating Content Vector Store ===');
+            const contentOutputPath = path.join(__dirname, '../../data/ja-googology-wiki/vector_store_part01.json');
+            console.log(`Output Path: ${contentOutputPath}`);
+            
+            const contentDocuments = await loadMediaWikiDocuments(xmlPath, false, finalChunkSize, finalChunkOverlap);
+            const contentResult = await createEmbeddings(contentDocuments, 'tinysegmenter');
+            const contentFileSizes = await saveAsJSON(contentResult, contentOutputPath, true);
+            await saveMetadata(contentResult, contentOutputPath, true, contentFileSizes);
+            
+            console.log(`✓ Content store complete! Total chunks: ${contentResult.documents.length}`);
+            console.log(`Content store created with ${finalChunkSize}-char chunks and ${finalChunkOverlap}-char overlap`);
+            
+            // 2. タイトルベクターストア作成
+            console.log('\n=== Creating Title Vector Store ===');
+            const titleOutputPath = path.join(__dirname, '../../data/ja-googology-wiki/vector_store_titles_part01.json');
+            console.log(`Output Path: ${titleOutputPath}`);
+            
+            const titleDocuments = await loadMediaWikiDocuments(xmlPath, true, finalChunkSize, finalChunkOverlap);
+            const titleResult = await createEmbeddings(titleDocuments, 'tinysegmenter');
+            const titleFileSizes = await saveAsJSON(titleResult, titleOutputPath, false);
+            await saveMetadata(titleResult, titleOutputPath, false, titleFileSizes);
+            
+            console.log(`✓ Title store complete! Total documents: ${titleResult.documents.length}`);
+            
+            console.log('\n✅ Both vector stores created successfully!');
+            console.log('This should resolve the issue with oversized documents in LLM prompts');
+            
+        } else {
+            // 単一モード（従来の動作）
+            const singleOutputPath = outputPath || (mode === 'content' 
+                ? path.join(__dirname, '../../data/ja-googology-wiki/vector_store_part01.json')
+                : path.join(__dirname, '../../data/ja-googology-wiki/vector_store_titles_part01.json'));
+            
+            console.log(`Output Path: ${singleOutputPath}`);
+            
+            if (mode === 'content') {
+                console.log(`Chunk settings: size=${finalChunkSize}, overlap=${finalChunkOverlap}`);
+            }
+            
+            const createTitleStore = (mode === 'title');
+            const documents = await loadMediaWikiDocuments(xmlPath, createTitleStore, finalChunkSize, finalChunkOverlap);
+            const result = await createEmbeddings(documents, 'tinysegmenter');
+            const isContentStore = (mode === 'content');
+            const fileSizes = await saveAsJSON(result, singleOutputPath, isContentStore);
+            await saveMetadata(result, singleOutputPath, isContentStore, fileSizes);
+            
+            console.log('\n✓ Vector store creation complete!');
+            console.log(`Mode: ${mode}`);
+            console.log(`Total documents: ${result.documents.length}`);
+            console.log(`Output: ${singleOutputPath}`);
+            
+            if (mode === 'content') {
+                console.log(`\nContent store created with ${finalChunkSize}-char chunks and ${finalChunkOverlap}-char overlap`);
+                console.log('This should resolve the issue with oversized documents in LLM prompts');
+            }
+        }
         
     } catch (error) {
         console.error('Error:', error);

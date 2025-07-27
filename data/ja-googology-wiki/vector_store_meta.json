@@ -1,1 +1,8 @@
-{"total_documents":17373,"num_parts":2,"docs_per_part":10000,"embedding_dimension":384,"total_json_size_mb":35.9,"total_gz_size_mb":25.5}
+{
+  "total_documents": 21656,
+  "num_parts": 1,
+  "docs_per_part": 21656,
+  "embedding_dimension": 384,
+  "total_json_size_mb": 72.3,
+  "total_gz_size_mb": 38.2
+}

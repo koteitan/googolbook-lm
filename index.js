@@ -168,6 +168,7 @@ function cosineSimilarity(vecA, vecB) {
 
 // Load vector store from multiple compressed JSON parts
 async function loadVectorStore() {
+    console.log('🚀 loadVectorStore() called from index.js');
     if (isLoading || !embedder) {
         if (!embedder) {
             alert('Embedding model not ready yet. Please wait for initialization.');
@@ -190,7 +191,8 @@ async function loadVectorStore() {
     
     try {
         // First, load metadata
-        console.log('Loading metadata from:', CONFIG.VECTOR_STORE_META_PATH);
+        console.log('🔄 Loading vector store metadata from:', CONFIG.VECTOR_STORE_META_PATH);
+        console.log('🔄 Vector store part template:', CONFIG.VECTOR_STORE_PART_PATH_TEMPLATE);
         const metaResponse = await fetch(CONFIG.VECTOR_STORE_META_PATH);
         if (!metaResponse.ok) {
             throw new Error(`Failed to load metadata: ${metaResponse.status}`);
@@ -207,12 +209,16 @@ async function loadVectorStore() {
             elements.loadingStatus.textContent = `Loading part ${partIndex}/${metadata.num_parts}...`;
             
             const partPath = CONFIG.VECTOR_STORE_PART_PATH_TEMPLATE.replace('{}', String(partIndex).padStart(2, '0'));
-            console.log(`Loading part ${partIndex} from:`, partPath);
+            console.log(`📥 Loading part ${partIndex}/${metadata.num_parts} from: ${partPath}`);
             
             const response = await fetch(partPath);
             if (!response.ok) {
+                console.error(`❌ Failed to fetch part ${partIndex}:`, response.status, response.statusText);
                 throw new Error(`Failed to load part ${partIndex}: ${response.status}`);
             }
+            console.log(`✅ Part ${partIndex} fetch successful (${response.headers.get('content-length')} bytes)`);
+            
+            console.log(`🔧 Decompressing part ${partIndex}...`);
             
             const arrayBuffer = await response.arrayBuffer();
             const decompressed = pako.inflate(arrayBuffer, { to: 'string' });
@@ -222,6 +228,38 @@ async function loadVectorStore() {
                 partDocuments: partData.part_documents,
                 documentsLength: partData.documents.length
             });
+            
+            // チャンクサイズ確認ログ（大きなチャンクのみ表示）
+            const largeChunks = partData.documents.filter(doc => {
+                const contentLength = doc.content ? doc.content.length : 0;
+                return contentLength > 10000; // 10,000文字以上のチャンクをログ出力
+            });
+            
+            if (largeChunks.length > 0) {
+                console.log(`🔍 Large chunks found in part ${partIndex}:`);
+                largeChunks.forEach(doc => {
+                    const title = doc.metadata?.title || 'Unknown';
+                    const contentLength = doc.content ? doc.content.length : 0;
+                    console.log(`  [${largeChunks.indexOf(doc) + 1}] "${title}": ${contentLength} chars`);
+                });
+            }
+            
+            // ペア数列の停止性のチャンク数をチェック
+            const pairSequenceChunks = partData.documents.filter(doc => 
+                doc.metadata?.title && doc.metadata.title.includes('ペア数列の停止性'));
+            if (pairSequenceChunks.length > 0) {
+                console.log(`🎯 Found "ペア数列の停止性": ${pairSequenceChunks.length} chunks in part ${partIndex}`);
+                if (pairSequenceChunks.length === 1) {
+                    console.log(`⚠️ Only 1 chunk found - this is the OLD vector store!`);
+                } else {
+                    console.log(`✅ Multiple chunks found - this is the NEW chunked vector store!`);
+                }
+                
+                // 最初のチャンクのコンテンツサイズもチェック
+                const firstChunk = pairSequenceChunks[0];
+                const contentLength = firstChunk.content ? firstChunk.content.length : 0;
+                console.log(`   First chunk size: ${contentLength} chars`);
+            }
             
             parts.push(partData);
             
@@ -324,6 +362,28 @@ async function loadVectorStore() {
         };
         
         elements.loadingStatus.textContent = 'Data loaded successfully';
+        
+        // ベクターストア読み込み完了の確認ログ
+        console.log(`📊 Vector Store Loaded Summary:`);
+        console.log(`   Total parts: ${vectorStore.parts.length}`);
+        console.log(`   Total documents: ${vectorStore.totalDocuments}`);
+        console.log(`   Embedding dimension: ${vectorStore.embeddingDimension}`);
+        
+        // ペア数列の総チャンク数を確認
+        const totalPairChunks = vectorStore.parts.reduce((count, part) => {
+            return count + part.documents.filter(doc => 
+                doc.metadata?.title && doc.metadata.title.includes('ペア数列の停止性')
+            ).length;
+        }, 0);
+        
+        if (totalPairChunks > 0) {
+            console.log(`🎯 "ペア数列の停止性" total chunks across all parts: ${totalPairChunks}`);
+            if (totalPairChunks === 1) {
+                console.log(`🚨 WARNING: Only 1 chunk total - OLD vector store is loaded!`);
+            } else {
+                console.log(`🎉 SUCCESS: ${totalPairChunks} chunks total - NEW chunked vector store is loaded!`);
+            }
+        }
         
         // Update error messages after vector store is loaded
         checkAndShowErrors();
@@ -453,9 +513,13 @@ async function generateAIResponse(query, searchResults, apiKey) {
         const baseUrl = elements.baseUrl.value.trim();
         
         // Create context from search results
-        const context = searchResults.map(result => 
-            `**${result.title}**\n${result.content}`
-        ).join('\n\n');
+        const context = searchResults.map((result, index) => {
+            const docContent = `**${result.title}**\n${result.content}`;
+            console.log(`📄 Document ${index + 1}: "${result.title}" - ${result.content.length} chars`);
+            return docContent;
+        }).join('\n\n');
+        
+        console.log(`📊 Total context size: ${context.length} chars`);
         
         const systemPrompt = `You are a helpful assistant that answers questions about googology using the provided context from the Googology Wiki. 
         
@@ -463,6 +527,8 @@ Use the following context to answer the user's question. If the context doesn't 
 
 Context from Googology Wiki:
 ${context}`;
+        
+        console.log(`📋 System prompt size: ${systemPrompt.length} chars`);
 
         const response = await fetch(`${baseUrl}/chat/completions`, {
             method: 'POST',
