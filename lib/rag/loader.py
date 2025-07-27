@@ -25,8 +25,8 @@ def build_title_to_page_id_mapping(xml_path: str) -> Dict[str, str]:
         if elements.get('id') and elements.get('title'):
             title_to_id[elements['title']] = elements['id']
             
-        if page_count % 10000 == 0:
-            print(f"Processed {page_count:,} pages for ID mapping...")
+        if page_count % 1000 == 0:
+            print(f"Processed {page_count:,} chunks for ID mapping...", end='\r')
     
     print(f"Built mapping for {len(title_to_id):,} pages")
     return title_to_id

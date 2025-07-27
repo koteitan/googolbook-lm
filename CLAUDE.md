@@ -107,6 +107,14 @@ This site is a chat with RAG for MediaWiki. The site user put the question in th
 └── .gitignore               # Git ignore rules
 ```
 
+## implementation notes
+- data/[site]/vector_store_\*.json.gz don't include titles and bodies. They include only curids. The titles and bodies are in .xml by curid.
+- For body search, the page bodies are converted to vector store.
+- For title search, the page titles are converted to vector store.
+- The redirecting page behavior:
+  - For body search, the redirecting page is not included in the vector store. (because the body is no information)
+  - For title search, the redirecting page is included in the vector store and if the vector store is hit, the body of the destination page is shown to the LLM.
+
 ## rules
 - Speak to me in Japanese.
 - git add . is denied because it may include unnecessary files. Please add files one by one.
@@ -124,9 +132,7 @@ This site is a chat with RAG for MediaWiki. The site user put the question in th
 Co-Authored-By: Claude <noreply@anthropic.com>
 -----------------------------commit message end
 ```
-- Don't use `git push`
-- I run the following commands because it will take a long time to run. Please  request me to run these commands:
-  - tools/fetch/fetch.py
-  - tools/rag/xml2vec.py
-  - tools/rag/vec2json.py
-- I check browser by myself. Please don't check browser.
+  - When you make the commit message, please check `git log -1` and avoid duplicating the last commit message.
+  - Don't use `git push`
+  - I check browser by myself. Please don't check browser.
+
