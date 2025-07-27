@@ -60,3 +60,7 @@ test_vector_store_titles.pkl
 /vector_store_titles_meta.json
 /vector_store_titles_part*.json
 /vector_store_titles_part*.json.gz
+
+# Test results
+test/compare/*.json
+
