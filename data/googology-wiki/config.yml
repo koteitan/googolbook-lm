@@ -6,6 +6,8 @@ site:
   url: "googology.fandom.com"
   base_url: "https://googology.fandom.com"
   archive_url: "https://s3.amazonaws.com/wikia_xml_dumps/g/go/googology_pages_current.xml.7z"
+  language: "en"
+  xml_filename: "googology_pages_current.xml"
 
 # License information
 license:
@@ -30,6 +32,7 @@ exclusions:
     - "Map"
     - "Help"
     - "Forum"
+    - "Talk"
     - "MediaWiki"
     - "Special"
     - "Template talk"
@@ -41,6 +44,8 @@ exclusions:
     - "Forum talk"
     - "Module talk"
     - "GeoJson talk"
+    - "Board Thread"
+    - "Message Wall"
   
   # Excluded usernames (usernames to exclude from analysis)
   usernames:
@@ -59,7 +64,7 @@ vector_store:
 
 # Tokenization configuration
 tokenize:
-  mode: "normal"  # "normal" or "mecab"
+  mode: "normal"  # "normal", "mecab", or "tinysegmenter" - Using normal for English
 
 # JavaScript web interface configuration
 web:
@@ -82,7 +87,6 @@ web:
   
   # Default API settings
   api:
-    default_top_k: 5
     default_url: "https://api.openai.com/v1"
     default_model: "gpt-4o"  # Default model - can be changed in UI
     embedding_model: "Xenova/all-MiniLM-L6-v2"  # Original model (384 dimensions)
