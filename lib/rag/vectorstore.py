@@ -10,14 +10,13 @@ except ImportError:
     # Fallback to old import for compatibility
     from langchain_community.embeddings import HuggingFaceEmbeddings
 
-from .embeddings import JapaneseMorphologicalEmbeddings, TinySegmenterEmbeddings
+# Note: Direct multilingual model usage (no morphological analysis wrapper needed)
 
 
 def create_vector_store(
     documents: List[Document],
-    embedding_model: str = "all-MiniLM-L6-v2",
-    use_openai: bool = False,
-    tokenize_config: Optional[Dict[str, Any]] = None
+    embedding_model: str = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2",
+    use_openai: bool = False
 ) -> FAISS:
     """
     Create a FAISS vector store from documents.
@@ -26,7 +25,6 @@ def create_vector_store(
         documents: List of Document objects to index
         embedding_model: Model name for embeddings (for HuggingFace)
         use_openai: Whether to use OpenAI embeddings (requires API key)
-        tokenize_config: Tokenization configuration (from config.yml)
         
     Returns:
         FAISS vector store instance
@@ -35,21 +33,15 @@ def create_vector_store(
     if use_openai:
         base_embeddings = OpenAIEmbeddings()
     else:
-        base_embeddings = HuggingFaceEmbeddings(model_name=embedding_model)
+        # Normalize embeddings to match JavaScript behavior
+        base_embeddings = HuggingFaceEmbeddings(
+            model_name=embedding_model,
+            encode_kwargs={'normalize_embeddings': True}
+        )
     
-    # Apply tokenization wrapper if configured
-    tokenize_config = tokenize_config or {}
-    tokenize_mode = tokenize_config.get('mode', 'normal')
-    
-    if tokenize_mode == 'mecab':
-        print("Using Japanese morphological analysis with MeCab")
-        embeddings = JapaneseMorphologicalEmbeddings(base_embeddings)
-    elif tokenize_mode == 'tinysegmenter':
-        print("Using Japanese morphological analysis with TinySegmenter")
-        embeddings = TinySegmenterEmbeddings(base_embeddings)
-    else:
-        print("Using standard tokenization")
-        embeddings = base_embeddings
+    # Use the base embeddings directly (multilingual model handles Japanese internally)
+    print(f"Using multilingual embedding model: {embedding_model}")
+    embeddings = base_embeddings
     
     vector_store = FAISS.from_documents(documents, embeddings)
     return vector_store

@@ -62,9 +62,8 @@ vector_store:
   content_search_per_part: 10          # Content-based search: chunks from each part in preliminary round
   content_search_final_count: 10       # Content-based search: final results sent to LLM
 
-# Tokenization configuration
-tokenize:
-  mode: "normal"  # "normal", "mecab", or "tinysegmenter" - Using normal for English
+# Tokenization configuration (using multilingual model's internal tokenizer)
+# Note: Morphological analysis removed - multilingual models handle all languages internally
 
 # JavaScript web interface configuration
 web:
@@ -89,4 +88,4 @@ web:
   api:
     default_url: "https://api.openai.com/v1"
     default_model: "gpt-4o"  # Default model - can be changed in UI
-    embedding_model: "Xenova/all-MiniLM-L6-v2"  # Original model (384 dimensions)
+    embedding_model: "Xenova/paraphrase-multilingual-mpnet-base-v2"  # Multilingual model (768 dimensions)
