@@ -6,6 +6,8 @@ site:
   url: "googology.fandom.com/ja"
   base_url: "https://googology.fandom.com/ja"
   archive_url: "https://s3.amazonaws.com/wikia_xml_dumps/j/ja/jagoogology_pages_current.xml.7z"
+  language: "ja"
+  xml_filename: "jagoogology_pages_current.xml"
 
 # License information
 license:

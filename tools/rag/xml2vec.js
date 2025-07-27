@@ -4,6 +4,10 @@
  * 
  * Pythonのxml2vec.pyをNode.jsに移植
  * Transformers.jsを使用してWeb版と完全に同じembeddingを生成
+ * 
+ * Usage:
+ *   CURRENT_SITE=site-name ./xml2vec.js
+ *   ./xml2vec.js
  */
 
 import { pipeline } from '@xenova/transformers';
@@ -19,32 +23,40 @@ const __dirname = path.dirname(__filename);
 /**
  * YAML設定ファイルから設定を読み込み
  */
-async function loadConfig(site = 'ja-googology-wiki') {
-    const configPath = path.join(__dirname, `../../data/${site}/config.yml`);
+async function loadConfig(site = null) {
+    let CURRENT_SITE = site || process.env.CURRENT_SITE;
+    
+    // ルートのconfig.ymlからCURRENT_SITEを読み込み
+    if (!CURRENT_SITE) {
+        try {
+            const rootConfigPath = path.join(__dirname, '../../config.yml');
+            const rootConfigContent = await fs.readFile(rootConfigPath, 'utf-8');
+            const rootConfig = yaml.load(rootConfigContent);
+            CURRENT_SITE = rootConfig.current_site;
+            console.log(`CURRENT_SITE loaded from root config: ${CURRENT_SITE}`);
+        } catch (error) {
+            throw new Error('CURRENT_SITE not found in environment variable or root config.yml');
+        }
+    }
+    
+    const configPath = path.join(__dirname, `../../data/${CURRENT_SITE}/config.yml`);
     
     try {
         const configContent = await fs.readFile(configPath, 'utf-8');
         const config = yaml.load(configContent);
         
+        // CURRENT_SITEをconfigに追加
+        config.current_site = CURRENT_SITE;
+        
         console.log(`Configuration loaded from: ${configPath}`);
+        console.log(`Site: ${CURRENT_SITE}`);
+        console.log(`XML filename: ${config.site?.xml_filename || 'unknown'}`);
         console.log(`Tokenization mode: ${config.tokenize?.mode || 'normal'}`);
         
         return config;
     } catch (error) {
         console.warn(`Failed to load config from ${configPath}:`, error.message);
-        console.log('Using default configuration');
-        
-        // デフォルト設定
-        return {
-            vector_store: {
-                chunks_per_part: 10000,
-                content_search_per_part: 10,
-                content_search_final_count: 5
-            },
-            tokenize: {
-                mode: 'tinysegmenter'
-            }
-        };
+        throw error;
     }
 }
 
@@ -404,6 +416,18 @@ async function createEmbeddings(documents, tokenizeMode = 'normal') {
         const doc = documents[i];
         let text = doc.pageContent;
         
+        // テキストがstringであることを確認
+        if (typeof text !== 'string') {
+            console.warn(`Document ${i}: pageContent is not a string (type: ${typeof text}), converting...`);
+            text = String(text || '');
+        }
+        
+        // 空文字列チェック
+        if (!text || text.trim().length === 0) {
+            console.warn(`Document ${i}: Empty content, skipping...`);
+            continue;
+        }
+        
         // TinySegmenter処理
         if (tokenizeMode === 'tinysegmenter') {
             text = tinySegmenter.tokenizeWakati(text);
@@ -415,7 +439,7 @@ async function createEmbeddings(documents, tokenizeMode = 'normal') {
         
         embeddings.push(embedding);
         processedDocs.push({
-            id: `doc_${i}`,
+            id: `doc_${processedDocs.length}`,
             content: doc.pageContent,
             metadata: doc.metadata,
             curid: doc.metadata.curid,
@@ -432,13 +456,13 @@ async function createEmbeddings(documents, tokenizeMode = 'normal') {
 /**
  * JSONファイルとして保存
  */
-async function saveAsJSON(data, outputPath, isContentStore = false) {
+async function saveAsJSON(data, outputPath, isContentStore = false, config = null) {
     console.log(`Saving to: ${outputPath}`);
     console.log(`🔍 DEBUG: Saving ${data.documents.length} documents`);
     
     // バイナリ形式で保存（Web版互換）
     const jsonData = {
-        site: 'ja-googology-wiki',
+        site: config?.current_site || 'unknown',
         part_index: 0,
         part_documents: data.documents.length,
         embedding_dimension: 384,
@@ -551,13 +575,19 @@ function arrayToBase64(floatArray) {
 async function main() {
     const args = process.argv.slice(2);
     
+    // 0. 設定ファイルを読み込み（引数解析前に必要）
+    const config = await loadConfig();
+    
     // コマンドライン引数の解析
     let mode = 'both'; // デフォルトは両方作成
-    let xmlPath = path.join(__dirname, '../../data/ja-googology-wiki/jagoogology_pages_current.xml');
+    const CURRENT_SITE = config.current_site;
+    // XMLファイル名を設定から取得
+    const xmlFileName = config.site?.xml_filename || 'pages_current.xml';
+    let xmlPath = path.join(__dirname, `../../data/${CURRENT_SITE}/${xmlFileName}`);
     let outputPath = null;
     let chunkSize = null;
     let chunkOverlap = null;
-    let site = 'ja-googology-wiki';
+    let site = CURRENT_SITE;
     
     for (let i = 0; i < args.length; i++) {
         if (args[i] === '--content') {
@@ -583,7 +613,7 @@ async function main() {
             i++;
         } else if (!args[i].startsWith('--')) {
             // 最初の非オプション引数はXMLパス
-            if (!xmlPath || xmlPath.includes('jagoogology_pages_current.xml')) {
+            if (!xmlPath || xmlPath.includes(xmlFileName)) {
                 xmlPath = args[i];
             }
         }
@@ -592,9 +622,6 @@ async function main() {
     try {
         console.log(`=== Node.js Vector Store Creation (${mode.toUpperCase()} Mode) ===`);
         console.log(`XML Path: ${xmlPath}`);
-        
-        // 0. 設定ファイルを読み込み
-        const config = await loadConfig(site);
         
         // チャンクサイズを決定（優先度: コマンドライン > 設定ファイル > デフォルト）
         const finalChunkSize = chunkSize || (config.vector_store?.chunk_size) || 1200;
@@ -606,12 +633,12 @@ async function main() {
             
             // 1. コンテンツベクターストア作成
             console.log('\n=== Creating Content Vector Store ===');
-            const contentOutputPath = path.join(__dirname, '../../data/ja-googology-wiki/vector_store_part01.json');
+            const contentOutputPath = path.join(__dirname, `../../data/${CURRENT_SITE}/vector_store_part01.json`);
             console.log(`Output Path: ${contentOutputPath}`);
             
             const contentDocuments = await loadMediaWikiDocuments(xmlPath, false, finalChunkSize, finalChunkOverlap, config);
-            const contentResult = await createEmbeddings(contentDocuments, config.tokenize?.mode || 'tinysegmenter');
-            const contentFileSizes = await saveAsJSON(contentResult, contentOutputPath, true);
+            const contentResult = await createEmbeddings(contentDocuments, config.tokenize?.mode || 'normal');
+            const contentFileSizes = await saveAsJSON(contentResult, contentOutputPath, true, config);
             await saveMetadata(contentResult, contentOutputPath, true, contentFileSizes);
             
             console.log(`✓ Content store complete! Total chunks: ${contentResult.documents.length}`);
@@ -619,12 +646,12 @@ async function main() {
             
             // 2. タイトルベクターストア作成
             console.log('\n=== Creating Title Vector Store ===');
-            const titleOutputPath = path.join(__dirname, '../../data/ja-googology-wiki/vector_store_titles_part01.json');
+            const titleOutputPath = path.join(__dirname, `../../data/${CURRENT_SITE}/vector_store_titles_part01.json`);
             console.log(`Output Path: ${titleOutputPath}`);
             
             const titleDocuments = await loadMediaWikiDocuments(xmlPath, true, finalChunkSize, finalChunkOverlap, config);
-            const titleResult = await createEmbeddings(titleDocuments, config.tokenize?.mode || 'tinysegmenter');
-            const titleFileSizes = await saveAsJSON(titleResult, titleOutputPath, false);
+            const titleResult = await createEmbeddings(titleDocuments, config.tokenize?.mode || 'normal');
+            const titleFileSizes = await saveAsJSON(titleResult, titleOutputPath, false, config);
             await saveMetadata(titleResult, titleOutputPath, false, titleFileSizes);
             
             console.log(`✓ Title store complete! Total documents: ${titleResult.documents.length}`);
@@ -635,8 +662,8 @@ async function main() {
         } else {
             // 単一モード（従来の動作）
             const singleOutputPath = outputPath || (mode === 'content' 
-                ? path.join(__dirname, '../../data/ja-googology-wiki/vector_store_part01.json')
-                : path.join(__dirname, '../../data/ja-googology-wiki/vector_store_titles_part01.json'));
+                ? path.join(__dirname, `../../data/${CURRENT_SITE}/vector_store_part01.json`)
+                : path.join(__dirname, `../../data/${CURRENT_SITE}/vector_store_titles_part01.json`));
             
             console.log(`Output Path: ${singleOutputPath}`);
             
@@ -646,9 +673,9 @@ async function main() {
             
             const createTitleStore = (mode === 'title');
             const documents = await loadMediaWikiDocuments(xmlPath, createTitleStore, finalChunkSize, finalChunkOverlap, config);
-            const result = await createEmbeddings(documents, config.tokenize?.mode || 'tinysegmenter');
+            const result = await createEmbeddings(documents, config.tokenize?.mode || 'normal');
             const isContentStore = (mode === 'content');
-            const fileSizes = await saveAsJSON(result, singleOutputPath, isContentStore);
+            const fileSizes = await saveAsJSON(result, singleOutputPath, isContentStore, config);
             await saveMetadata(result, singleOutputPath, isContentStore, fileSizes);
             
             console.log('\n✓ Vector store creation complete!');

@@ -1,0 +1,6 @@
+# Root configuration file
+# This file specifies which site configuration to use
+
+# Current site configuration (change this to switch sites)
+current_site: 'googology-wiki'
+# current_site: 'ja-googology-wiki'
