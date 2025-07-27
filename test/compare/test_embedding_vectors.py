@@ -182,8 +182,8 @@ def main():
     for i, text in enumerate(test_texts, 1):
         print(f"  {i}. '{text}'")
     
-    # テスト対象モデル（最も一致しそうなもの）
-    model_name = 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2'
+    # テスト対象モデル（最高精度のmpnet）
+    model_name = 'sentence-transformers/paraphrase-multilingual-mpnet-base-v2'
     
     # Python版テスト
     print(f"\n{'='*60}")

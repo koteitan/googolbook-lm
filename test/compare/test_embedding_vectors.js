@@ -3,8 +3,12 @@
  * Embeddingベクトルの詳細比較 - 入力層（Token IDs）と出力層（Embedding）
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 function cosineSimilarity(a, b) {
     const dotProduct = a.reduce((sum, ai, i) => sum + ai * b[i], 0);
@@ -225,8 +229,8 @@ async function main() {
             console.log(`  ${i+1}. '${text}'`);
         });
         
-        // テスト対象モデル（最も一致しそうなもの）
-        const modelName = 'Xenova/paraphrase-multilingual-MiniLM-L12-v2';
+        // テスト対象モデル（最高精度のmpnet）
+        const modelName = 'Xenova/paraphrase-multilingual-mpnet-base-v2';
         
         // JavaScript版テスト
         console.log(`\n${'='.repeat(60)}`);
@@ -271,6 +275,6 @@ async function main() {
     }
 }
 
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
     main();
 }
