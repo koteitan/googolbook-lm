@@ -43,7 +43,22 @@ def create_vector_store(
     print(f"Using multilingual embedding model: {embedding_model}")
     embeddings = base_embeddings
     
-    vector_store = FAISS.from_documents(documents, embeddings)
+    print(f"Creating embeddings for {len(documents):,} documents...")
+    # Create vector store with progress tracking
+    vector_store = None
+    batch_size = 100
+    
+    for i in range(0, len(documents), batch_size):
+        batch = documents[i:i + batch_size]
+        if i == 0:
+            vector_store = FAISS.from_documents(batch, embeddings)
+        else:
+            batch_store = FAISS.from_documents(batch, embeddings)
+            vector_store.merge_from(batch_store)
+        
+        print(f"Embedded {min(i + batch_size, len(documents)):,}/{len(documents):,} documents...", end='\r')
+    
+    print(f"\nFinished creating embeddings for {len(documents):,} documents")
     return vector_store
 
 

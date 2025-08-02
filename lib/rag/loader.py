@@ -119,6 +119,7 @@ def load_mediawiki_documents(xml_path: str, namespace_filter: List[int] = None) 
         skip_redirects=False  # Include redirects
     )
     
+    print("Loading documents...")
     documents = loader.load()
     print(f"Loaded {len(documents)} documents before filtering")
     
@@ -135,7 +136,10 @@ def load_mediawiki_documents(xml_path: str, namespace_filter: List[int] = None) 
     excluded_prefixes = [ns + ':' for ns in site_config.EXCLUDED_NAMESPACES]
     filtered_documents = []
     
-    for doc in documents:
+    print("Filtering documents and enhancing metadata...")
+    for idx, doc in enumerate(documents):
+        if idx % 1000 == 0:
+            print(f"Processing document {idx:,}/{len(documents):,}...", end='\r')
         if 'source' in doc.metadata:
             source_title = doc.metadata['source']
             
@@ -177,5 +181,5 @@ def load_mediawiki_documents(xml_path: str, namespace_filter: List[int] = None) 
             
             filtered_documents.append(doc)
     
-    print(f"Filtered to {len(filtered_documents)} documents")
+    print(f"\nFiltered to {len(filtered_documents)} documents")
     return filtered_documents
