@@ -12,6 +12,7 @@ import argparse
 import pickle
 import gzip
 import shutil
+import json
 from pathlib import Path
 
 # Add parent directory to path for imports
@@ -27,6 +28,7 @@ from langchain.schema import Document
 from lib.io_utils import find_xml_file
 from lib.formatting import format_number
 from lib.config_loader import get_site_config
+from lib.xml_parser import iterate_pages
 import config
 
 
@@ -185,7 +187,6 @@ def create_and_save_title_vector_store(
     
     # Save metadata with _titles suffix
     meta_path = output_path.replace('.pkl', '_meta.json')
-    import json
     with open(meta_path, 'w', encoding='utf-8') as f:
         json.dump(meta_data, f, indent=2)
     print(f"✓ Title metadata saved: {meta_path}")
@@ -203,14 +204,67 @@ def create_both_vector_stores(
     embedding_model: str = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2",
     title_embedding_dim: int = 384
 ):
-    """Create both body and title vector stores from single XML read."""
+    """Create both body and title vector stores from single XML read, and generate JSONL.gz file."""
     
     print(f"Loading documents from: {xml_path}")
     print(f"Using multilingual embedding model: {embedding_model}")
     
+    # Create JSONL.gz file path
+    jsonl_gz_path = str(xml_path).replace('.xml', '.jsonl.gz')
+    print(f"Will create JSONL.gz file: {jsonl_gz_path}")
+    
+    # Get site configuration for excluded namespaces
+    site_config = get_site_config(config.CURRENT_SITE)
+    excluded_prefixes = [ns + ':' for ns in site_config.EXCLUDED_NAMESPACES]
+    
     # Single XML read for both body and title processing
     documents = load_mediawiki_documents(xml_path)
     print(f"✓ Loaded {format_number(len(documents))} documents")
+    
+    # Create JSONL.gz file with essential fields from loaded documents
+    print("\n=== Creating JSONL.gz file ===")
+    with gzip.open(jsonl_gz_path, 'wt', encoding='utf-8') as jsonl_file:
+        # Group documents by curid to get full page content
+        page_map = {}
+        for doc in documents:
+            curid = doc.metadata.get('curid')
+            if curid:
+                if curid not in page_map:
+                    page_map[curid] = {
+                        'curid': curid,
+                        'title': doc.metadata.get('title', 'Unknown'),
+                        'text': doc.page_content,  # Full page content
+                        'metadata': doc.metadata
+                    }
+                else:
+                    # If multiple documents with same curid (shouldn't happen), keep the first one
+                    pass
+        
+        # Write pages to JSONL
+        page_count = 0
+        for curid, page_data in page_map.items():
+            # Create JSONL entry with essential fields
+            jsonl_entry = {
+                'curid': page_data['curid'],
+                'title': page_data['title'],
+                'text': page_data['text']
+            }
+            
+            # Note: timestamp is not available in the Document objects from load_mediawiki_documents
+            # If needed, we would need to parse the XML directly
+            
+            # Write to JSONL file
+            jsonl_file.write(json.dumps(jsonl_entry, ensure_ascii=False) + '\n')
+            page_count += 1
+            
+            if page_count % 100 == 0:
+                print(f"Written {page_count:,} pages to JSONL...", end='\r')
+        
+        print(f"\n✓ Created JSONL.gz with {format_number(page_count)} pages")
+    
+    # Check JSONL.gz file size
+    jsonl_size = os.path.getsize(jsonl_gz_path) / (1024 * 1024)  # MB
+    print(f"  JSONL.gz file size: {jsonl_size:.1f} MB")
     
     # Split documents for body chunks and title processing
     print("\n=== Processing body chunks ===")
@@ -322,7 +376,6 @@ def create_both_vector_stores(
     }
     
     body_meta_path = body_output.replace('.pkl', '_meta.json')
-    import json
     with open(body_meta_path, 'w', encoding='utf-8') as f:
         json.dump(body_meta_data, f, indent=2)
     print(f"✓ Body metadata saved: {body_meta_path}")

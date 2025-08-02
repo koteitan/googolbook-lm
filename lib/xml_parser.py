@@ -99,9 +99,15 @@ def extract_page_elements(page_elem) -> Dict[str, Optional[str]]:
     # Extract revision information
     elements['contributor'] = None
     elements['contributor_id'] = None
+    elements['timestamp'] = None
     
     revision_elem = page_elem.find(f'.//{config.MEDIAWIKI_NS}revision')
     if revision_elem is not None:
+        # Extract timestamp
+        timestamp_elem = revision_elem.find(f'.//{config.MEDIAWIKI_NS}timestamp')
+        if timestamp_elem is not None:
+            elements['timestamp'] = timestamp_elem.text
+        
         contributor_elem = revision_elem.find(f'.//{config.MEDIAWIKI_NS}contributor')
         if contributor_elem is not None:
             username_elem = contributor_elem.find(f'.//{config.MEDIAWIKI_NS}username')

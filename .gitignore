@@ -22,10 +22,11 @@ Thumbs.db
 *.tmp
 *.temp
 
-# Large XML files excluded from version control
+# Large data files excluded from version control
 data/*/*_pages_current.xml
 data/*/*_pages_current.xml
 data/*/*_pages_current.xml.gz
+data/*/*_pages_current.jsonl.gz
 data/*/vector_store.pkl
 data/*/vector_store_titles.pkl
 data/*/vector_store_part*.json
@@ -52,6 +53,8 @@ package-lock.json
 # Test and temporary files
 test.py
 test_vector_store_titles.pkl
+test_jsonl_creation.py
+data/*/test_pages.jsonl.gz
 
 # Root level vector store files (generated outputs)
 /vector_store_meta.json
