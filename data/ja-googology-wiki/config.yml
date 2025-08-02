@@ -81,8 +81,8 @@ web:
     # External CDN hosting for large vector store files
     part_path_template: "https://www.ukaibutton.com/googolbook-lm/data/ja-googology-wiki/vector_store_part{}.json.gz"
   
-  # Compressed XML file for dynamic content loading
-  xml_gz_path: "https://www.ukaibutton.com/googolbook-lm/data/ja-googology-wiki/jagoogology_pages_current.xml.gz"
+  # Compressed JSONL file for dynamic content loading
+  jsonl_gz_path: "https://www.ukaibutton.com/googolbook-lm/data/ja-googology-wiki/jagoogology_pages_current.jsonl.gz"
   
   # Default API settings
   api:
