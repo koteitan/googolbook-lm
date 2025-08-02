@@ -54,7 +54,7 @@ async function loadConfig() {
             VECTOR_STORE_PART_PATH_TEMPLATE: 'data/googology-wiki/vector_store_part{}.json.gz',
             DEFAULT_TOP_K: 5,
             DEFAULT_API_URL: 'https://api.openai.com/v1',
-            DEFAULT_MODEL: 'gpt-3.5-turbo',
+            DEFAULT_MODEL: 'gpt-4o',
             EMBEDDING_MODEL: 'Xenova/all-MiniLM-L6-v2',
             PRELIMINARY_DOCS_PER_PART: 10,
             FINAL_RESULT_COUNT: 10
