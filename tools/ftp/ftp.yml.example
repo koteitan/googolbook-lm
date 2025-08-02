@@ -1,0 +1,11 @@
+host: xxx.xxx.xxx
+port: 21
+username: xxxxxxx
+password: xxxxxxx
+destinations:
+  - site:
+      sitename: ja-googology-wiki
+      dir: /public_html/xxx.xxx.xxx/googolbook-lm/data/ja-googology-wiki
+  - site:
+      sitename: googology-wiki
+      dir: /public_html/xxx.xxx.xxx/googolbook-lm/data/googology-wiki

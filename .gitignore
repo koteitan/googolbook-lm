@@ -67,3 +67,6 @@ data/*/test_pages.jsonl.gz
 # Test results
 test/compare/*.json
 
+# FTP configuration (contains credentials)
+tools/ftp/ftp.yml
+
