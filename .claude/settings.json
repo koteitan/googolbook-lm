@@ -3,7 +3,8 @@
     "allow": [],
     "deny": [
       "Bash(git commit:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(git add .)"
     ]
   }
 }
