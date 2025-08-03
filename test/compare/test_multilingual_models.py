@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-多言語対応embeddingモデルでのテスト
+Testing with multilingual embedding models
 """
 
 import sys
@@ -16,20 +16,20 @@ from sentence_transformers import SentenceTransformer
 from transformers import AutoTokenizer, AutoModel
 
 def test_model(model_name, text):
-    """指定されたモデルでテキストを処理"""
-    print(f"\n=== モデル: {model_name} ===")
-    print(f"テキスト: '{text}'")
+    """Process text with specified model"""
+    print(f"\n=== Model: {model_name} ===")
+    print(f"Text: '{text}'")
     
     try:
-        # SentenceTransformerでのテスト
+        # Test with SentenceTransformer
         print(f"\n--- SentenceTransformer ---")
         sentence_model = SentenceTransformer(model_name)
         embedding = sentence_model.encode(text, convert_to_numpy=True)
-        print(f"✅ 成功 - Embedding shape: {embedding.shape}")
+        print(f"✅ Success - Embedding shape: {embedding.shape}")
         print(f"   Embedding (first 5): {embedding[:5].tolist()}")
         
-        # Tokenizerの詳細確認
-        print(f"\n--- Tokenizer詳細 ---")
+        # Detailed tokenizer check
+        print(f"\n--- Tokenizer details ---")
         tokenizer = AutoTokenizer.from_pretrained(model_name)
         inputs = tokenizer(text, return_tensors='pt')
         
@@ -37,9 +37,9 @@ def test_model(model_name, text):
         tokens = tokenizer.convert_ids_to_tokens(inputs['input_ids'][0])
         print(f"Tokens: {tokens}")
         
-        # [UNK]の数をチェック
+        # Check number of [UNK] tokens
         unk_count = tokens.count('[UNK]')
-        print(f"[UNK]トークン数: {unk_count}")
+        print(f"[UNK] token count: {unk_count}")
         
         return {
             'model_name': model_name,
@@ -52,7 +52,7 @@ def test_model(model_name, text):
         }
         
     except Exception as e:
-        print(f"❌ エラー: {e}")
+        print(f"❌ Error: {e}")
         return {
             'model_name': model_name,
             'success': False,
@@ -60,22 +60,22 @@ def test_model(model_name, text):
         }
 
 def main():
-    print("=== 多言語対応Embeddingモデルテスト ===")
+    print("=== Multilingual embedding model test ===")
     
-    # テストテキスト
+    # Test text
     test_text = "グラハム数"
     
-    # テスト対象モデル
+    # Test target models
     models_to_test = [
-        # 元のモデル（比較用）
+        # Original model (for comparison)
         'sentence-transformers/all-MiniLM-L6-v2',
         
-        # 多言語対応モデル
+        # Multilingual models
         'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2',
         'sentence-transformers/distiluse-base-multilingual-cased',
         'sentence-transformers/paraphrase-multilingual-mpnet-base-v2',
         
-        # 日本語特化モデル（もし利用可能なら）
+        # Japanese-specific model (if available)
         'sentence-transformers/stsb-xlm-r-multilingual',
     ]
     
@@ -87,52 +87,52 @@ def main():
             results.append(result)
             
             if result['success']:
-                print(f"✅ {model_name}: 成功 ([UNK]: {result['unk_count']}個)")
+                print(f"✅ {model_name}: Success ([UNK]: {result['unk_count']} tokens)")
             else:
-                print(f"❌ {model_name}: 失敗")
+                print(f"❌ {model_name}: Failed")
                 
         except Exception as e:
-            print(f"❌ {model_name}: スキップ - {e}")
+            print(f"❌ {model_name}: Skipped - {e}")
             results.append({
                 'model_name': model_name,
                 'success': False,
                 'error': str(e)
             })
     
-    # 結果の比較
-    print(f"\n=== 結果比較 ===")
+    # Result comparison
+    print(f"\n=== Result comparison ===")
     successful_results = [r for r in results if r['success']]
     
-    print(f"成功したモデル数: {len(successful_results)}/{len(models_to_test)}")
+    print(f"Successful models: {len(successful_results)}/{len(models_to_test)}")
     
     if len(successful_results) >= 2:
-        print(f"\n--- [UNK]トークン数比較 ---")
+        print(f"\n--- [UNK] token count comparison ---")
         for result in successful_results:
-            status = "🟢 良好" if result['unk_count'] == 0 else f"🔴 {result['unk_count']}個"
+            status = "🟢 Good" if result['unk_count'] == 0 else f"🔴 {result['unk_count']} tokens"
             print(f"  {result['model_name']}: {status}")
         
-        # 最もUNKが少ないモデルを推奨
+        # Recommend models with least UNK tokens
         best_models = [r for r in successful_results if r['unk_count'] == 0]
         if best_models:
-            print(f"\n🎯 推奨モデル ([UNK]なし):")
+            print(f"\n🎯 Recommended models (no [UNK]):")
             for model in best_models:
                 print(f"  - {model['model_name']}")
-                print(f"    次元: {model['embedding_dimension']}")
-                print(f"    トークン数: {len(model['tokens'])}")
+                print(f"    Dimensions: {model['embedding_dimension']}")
+                print(f"    Token count: {len(model['tokens'])}")
         else:
             min_unk = min(r['unk_count'] for r in successful_results)
             best_models = [r for r in successful_results if r['unk_count'] == min_unk]
-            print(f"\n🔶 相対的に良いモデル ([UNK]: {min_unk}個):")
+            print(f"\n🔶 Relatively good models ([UNK]: {min_unk} tokens):")
             for model in best_models:
                 print(f"  - {model['model_name']}")
-                print(f"    次元: {model['embedding_dimension']}")
+                print(f"    Dimensions: {model['embedding_dimension']}")
     
-    # 結果をJSONファイルに保存
+    # Save results to JSON file
     output_file = os.path.join(os.path.dirname(__file__), "multilingual_test_results.json")
     with open(output_file, 'w', encoding='utf-8') as f:
         json.dump(results, f, ensure_ascii=False, indent=2)
     
-    print(f"\n詳細結果を保存しました: {output_file}")
+    print(f"\nDetailed results saved: {output_file}")
 
 if __name__ == '__main__':
     main()

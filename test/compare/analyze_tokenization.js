@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Token化の詳細分析 - 区切り位置と文字レベルマッピング（JavaScript版）
+ * Detailed tokenization analysis - Segmentation boundaries and character-level mapping (JavaScript version)
  */
 
 const fs = require('fs');
@@ -57,9 +57,9 @@ class TinySegmenter {
 }
 
 async function analyzeCharacterToTokenMapping(text, tokenizer) {
-    console.log(`\n=== 文字レベルToken化分析 ===`);
-    console.log(`元テキスト: '${text}'`);
-    console.log(`文字数: ${text.length}`);
+    console.log(`\n=== Character-level tokenization analysis ===`);
+    console.log(`Original text: '${text}'`);
+    console.log(`Character count: ${text.length}`);
     
     // Tokenization
     const inputs = await tokenizer(text, { 
@@ -76,9 +76,9 @@ async function analyzeCharacterToTokenMapping(text, tokenizer) {
     
     console.log(`\nToken IDs: [${tokenIds.join(', ')}]`);
     console.log(`Tokens: [${tokens.map(t => `'${t}'`).join(', ')}]`);
-    console.log(`Token数: ${tokens.length}`);
+    console.log(`Token count: ${tokens.length}`);
     
-    // 特殊トークンを除いたコンテンツトークンのみ抽出
+    // Extract content tokens only, excluding special tokens
     const contentTokens = [];
     const contentTokenIds = [];
     
@@ -86,25 +86,25 @@ async function analyzeCharacterToTokenMapping(text, tokenizer) {
         const token = tokens[i];
         const tokenId = tokenIds[i];
         
-        // 特殊トークン（<s>, </s>, 空文字など）をスキップ
+        // Skip special tokens (<s>, </s>, empty strings, etc.)
         if (token !== '<s>' && token !== '</s>' && token !== '<pad>' && token !== '<unk>' && token !== '<mask>') {
             contentTokens.push(token);
             contentTokenIds.push(tokenId);
         }
     }
     
-    console.log(`\nコンテンツトークン: [${contentTokens.map(t => `'${t}'`).join(', ')}]`);
-    console.log(`コンテンツToken IDs: [${contentTokenIds.join(', ')}]`);
+    console.log(`\nContent tokens: [${contentTokens.map(t => `'${t}'`).join(', ')}]`);
+    console.log(`Content Token IDs: [${contentTokenIds.join(', ')}]`);
     
-    // 文字とトークンの対応関係を分析
-    console.log(`\n=== 文字とTokenの対応関係 ===`);
+    // Analyze correspondence between characters and tokens
+    console.log(`\n=== Character-Token correspondence ===`);
     
-    // デコードして文字位置を特定
+    // Decode to identify character positions
     const decodedText = await tokenizer.decode(tokenIds, { skip_special_tokens: true });
-    console.log(`デコード結果: '${decodedText}'`);
+    console.log(`Decoded result: '${decodedText}'`);
     
-    // 個別トークンのデコード
-    console.log(`\n=== 個別Token分析 ===`);
+    // Decode individual tokens
+    console.log(`\n=== Individual token analysis ===`);
     let charPosition = 0;
     
     for (let i = 0; i < tokens.length; i++) {
@@ -112,20 +112,20 @@ async function analyzeCharacterToTokenMapping(text, tokenizer) {
         const tokenId = tokenIds[i];
         
         if (token === '<s>' || token === '</s>') {
-            console.log(`Token ${i.toString().padStart(2)}: '${token}' (ID: ${tokenId}) → 特殊トークン`);
+            console.log(`Token ${i.toString().padStart(2)}: '${token}' (ID: ${tokenId}) → Special token`);
             continue;
         }
         
-        // 個別デコード
+        // Individual decode
         const individualDecoded = await tokenizer.decode([tokenId], { skip_special_tokens: true });
-        console.log(`Token ${i.toString().padStart(2)}: '${token}' (ID: ${tokenId}) → デコード: '${individualDecoded}'`);
+        console.log(`Token ${i.toString().padStart(2)}: '${token}' (ID: ${tokenId}) → Decoded: '${individualDecoded}'`);
         
-        // 文字位置の推定
+        // Estimate character position
         if (individualDecoded && text.includes(individualDecoded)) {
             const position = text.indexOf(individualDecoded, charPosition);
             if (position !== -1) {
                 const endPosition = position + individualDecoded.length;
-                console.log(`         文字位置: ${position}-${endPosition} ('${text.substring(position, endPosition)}')`);
+                console.log(`         Character position: ${position}-${endPosition} ('${text.substring(position, endPosition)}')`);
                 charPosition = endPosition;
             }
         }
@@ -141,28 +141,28 @@ async function analyzeCharacterToTokenMapping(text, tokenizer) {
 }
 
 async function analyzeMorphologicalBoundaries(text, tokenizer) {
-    console.log(`\n=== 形態素境界分析 ===`);
+    console.log(`\n=== Morphological boundary analysis ===`);
     
-    // TinySegmenter参考結果
+    // TinySegmenter reference result
     const segmenter = new TinySegmenter();
     const tinySegmenterWords = segmenter.segment(text);
-    console.log(`TinySegmenter形態素解析: [${tinySegmenterWords.map(w => `'${w}'`).join(', ')}]`);
+    console.log(`TinySegmenter morphological analysis: [${tinySegmenterWords.map(w => `'${w}'`).join(', ')}]`);
     
-    // Tokenizerの結果
+    // Tokenizer result
     const inputs = await tokenizer(text, { return_tensor: false });
     const tokens = await tokenizer.batch_decode(
         inputs.input_ids.map(id => [id]), 
         { skip_special_tokens: false }
     );
     
-    // 特殊トークンを除去
+    // Remove special tokens
     const contentTokens = tokens.filter(t => t !== '<s>' && t !== '</s>' && t !== '<pad>' && t !== '<unk>' && t !== '<mask>');
     
-    // 空文字やスペース文字の処理
+    // Handle empty strings and whitespace characters
     const processedTokens = [];
     for (const token of contentTokens) {
         if (token.trim() === '') {
-            // 空文字やスペースのみのトークン
+            // Tokens that are empty strings or whitespace only
             if (token === '') {
                 processedTokens.push('[EMPTY]');
             } else {
@@ -173,43 +173,43 @@ async function analyzeMorphologicalBoundaries(text, tokenizer) {
         }
     }
     
-    // 特殊記号を除去
+    // Remove special symbols
     const finalTokens = processedTokens.filter(t => t !== '[EMPTY]');
     
-    console.log(`Tokenizer結果: [${finalTokens.map(t => `'${t}'`).join(', ')}]`);
+    console.log(`Tokenizer result: [${finalTokens.map(t => `'${t}'`).join(', ')}]`);
     
-    // 境界の比較
-    console.log(`\n=== 境界比較 ===`);
-    console.log(`TinySegmenter境界数: ${tinySegmenterWords.length - 1}`);
-    console.log(`Tokenizer境界数: ${finalTokens.length - 1}`);
+    // Compare boundaries
+    console.log(`\n=== Boundary comparison ===`);
+    console.log(`TinySegmenter boundary count: ${tinySegmenterWords.length - 1}`);
+    console.log(`Tokenizer boundary count: ${finalTokens.length - 1}`);
     
-    console.log(`\nTinySegmenter単語:`);
+    console.log(`\nTinySegmenter words:`);
     tinySegmenterWords.forEach((word, i) => {
         console.log(`  ${(i + 1).toString().padStart(2)}. '${word}'`);
     });
     
-    console.log(`\nTokenizer単語:`);
+    console.log(`\nTokenizer words:`);
     finalTokens.forEach((token, i) => {
         console.log(`  ${(i + 1).toString().padStart(2)}. '${token}'`);
     });
     
-    // 一致分析
-    console.log(`\n=== 一致分析 ===`);
+    // Match analysis
+    console.log(`\n=== Match analysis ===`);
     const tinySegmenterText = tinySegmenterWords.join('');
     const tokenizerText = finalTokens.filter(t => t !== '[SPACE]').join('');
     
-    console.log(`TinySegmenter再結合: '${tinySegmenterText}'`);
-    console.log(`Tokenizer再結合: '${tokenizerText}'`);
-    console.log(`元テキスト: '${text}'`);
+    console.log(`TinySegmenter recombined: '${tinySegmenterText}'`);
+    console.log(`Tokenizer recombined: '${tokenizerText}'`);
+    console.log(`Original text: '${text}'`);
     
     if (tinySegmenterText === text && tokenizerText === text) {
-        console.log("✅ 両方とも元テキストと一致");
+        console.log("✅ Both match original text");
     } else if (tokenizerText === text) {
-        console.log("✅ Tokenizerのみ元テキストと一致");
+        console.log("✅ Tokenizer only matches original text");
     } else if (tinySegmenterText === text) {
-        console.log("✅ TinySegmenterのみ元テキストと一致");
+        console.log("✅ TinySegmenter only matches original text");
     } else {
-        console.log("❌ いずれも元テキストと不一致");
+        console.log("❌ Neither matches original text");
     }
     
     return {
@@ -221,39 +221,39 @@ async function analyzeMorphologicalBoundaries(text, tokenizer) {
 }
 
 async function main() {
-    console.log("=== Token化詳細分析（JavaScript版） ===");
+    console.log("=== Detailed tokenization analysis (JavaScript version) ===");
     
     try {
-        // テストテキスト
+        // Test text
         const testText = "巨大数は、気の遠くなるほど大きな有限の数である。";
         
-        // 多言語モデルのTokenizer
+        // Multilingual model Tokenizer
         const modelName = 'Xenova/paraphrase-multilingual-MiniLM-L12-v2';
         
-        console.log(`モデル: ${modelName}`);
-        console.log(`テストテキスト: '${testText}'`);
+        console.log(`Model: ${modelName}`);
+        console.log(`Test text: '${testText}'`);
         
-        // Transformers.js動的インポート
+        // Dynamic import of Transformers.js
         const { AutoTokenizer } = await import('@xenova/transformers');
         const tokenizer = await AutoTokenizer.from_pretrained(modelName);
         
-        // 文字レベル分析
+        // Character-level analysis
         const charAnalysis = await analyzeCharacterToTokenMapping(testText, tokenizer);
         
-        // 形態素境界分析
+        // Morphological boundary analysis
         const morphAnalysis = await analyzeMorphologicalBoundaries(testText, tokenizer);
         
-        // 結果保存
+        // Save results
         const outputFile = path.join(__dirname, 'tokenization_analysis_js.json');
         fs.writeFileSync(outputFile, JSON.stringify({
             character_analysis: charAnalysis,
             morphological_analysis: morphAnalysis
         }, null, 2), 'utf-8');
         
-        console.log(`\n分析結果を保存しました: ${outputFile}`);
+        console.log(`\nAnalysis results saved: ${outputFile}`);
         
     } catch (error) {
-        console.error('エラー:', error);
+        console.error('Error:', error);
         process.exit(1);
     }
 }

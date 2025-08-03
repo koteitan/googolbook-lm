@@ -1,34 +1,34 @@
 #!/usr/bin/env node
 /**
- * 多言語対応embeddingモデルでのJavaScriptテスト
+ * JavaScript test with multilingual embedding models
  */
 
 const fs = require('fs');
 const path = require('path');
 
 async function testModel(modelName, text) {
-    console.log(`\n=== モデル: ${modelName} ===`);
-    console.log(`テキスト: '${text}'`);
+    console.log(`\n=== Model: ${modelName} ===`);
+    console.log(`Text: '${text}'`);
     
     try {
-        // Transformers.js動的インポート
+        // Dynamic import of Transformers.js
         const { pipeline, AutoTokenizer } = await import('@xenova/transformers');
         
         console.log(`\n--- Transformers.js Pipeline ---`);
         
-        // Embedding pipeline初期化
+        // Initialize Embedding pipeline
         const embedder = await pipeline('feature-extraction', modelName);
         
-        // Embedding生成
+        // Generate Embedding
         const output = await embedder(text, { pooling: 'mean', normalize: true });
         const embedding = Array.from(output.data);
         
-        console.log(`✅ 成功 - Embedding shape: [${embedding.length}]`);
+        console.log(`✅ Success - Embedding shape: [${embedding.length}]`);
         console.log(`   Embedding (first 5): [${embedding.slice(0, 5).map(x => x.toFixed(6)).join(', ')}]`);
         
-        console.log(`\n--- Tokenizer詳細 ---`);
+        console.log(`\n--- Tokenizer details ---`);
         
-        // Tokenizer詳細
+        // Tokenizer details
         const tokenizer = await AutoTokenizer.from_pretrained(modelName);
         const inputs = await tokenizer(text, { 
             return_tensor: false,
@@ -38,13 +38,13 @@ async function testModel(modelName, text) {
         
         console.log(`Token IDs: [${inputs.input_ids.join(', ')}]`);
         
-        // Token IDsをテキストに戻して確認
+        // Convert Token IDs back to text for verification
         const tokens = await tokenizer.batch_decode(inputs.input_ids.map(id => [id]), { skip_special_tokens: false });
         console.log(`Tokens: [${tokens.map(t => `'${t}'`).join(', ')}]`);
         
-        // [UNK]の数をチェック
+        // Check number of [UNK] tokens
         const unkCount = tokens.filter(token => token === '[UNK]').length;
-        console.log(`[UNK]トークン数: ${unkCount}`);
+        console.log(`[UNK] token count: ${unkCount}`);
         
         return {
             model_name: modelName,
@@ -57,7 +57,7 @@ async function testModel(modelName, text) {
         };
         
     } catch (error) {
-        console.log(`❌ エラー: ${error.message}`);
+        console.log(`❌ Error: ${error.message}`);
         return {
             model_name: modelName,
             success: false,
@@ -67,23 +67,23 @@ async function testModel(modelName, text) {
 }
 
 async function main() {
-    console.log("=== 多言語対応EmbeddingモデルJavaScriptテスト ===");
+    console.log("=== Multilingual embedding model JavaScript test ===");
     
     try {
-        // テストテキスト
+        // Test text
         const testText = "グラハム数";
         
-        // テスト対象モデル（Xenova版が利用可能なもの）
+        // Target test models (Xenova versions available)
         const modelsToTest = [
-            // 元のモデル（比較用）
+            // Original model (for comparison)
             'Xenova/all-MiniLM-L6-v2',
             
-            // 多言語対応モデル（Xenova版）
+            // Multilingual models (Xenova versions)
             'Xenova/paraphrase-multilingual-MiniLM-L12-v2',
             'Xenova/distiluse-base-multilingual-cased',
             'Xenova/paraphrase-multilingual-mpnet-base-v2',
             
-            // その他の多言語モデル
+            // Other multilingual models
             'Xenova/multilingual-e5-small',
             'Xenova/multilingual-e5-base',
         ];
@@ -96,13 +96,13 @@ async function main() {
                 results.push(result);
                 
                 if (result.success) {
-                    console.log(`✅ ${modelName}: 成功 ([UNK]: ${result.unk_count}個)`);
+                    console.log(`✅ ${modelName}: Success ([UNK]: ${result.unk_count})`);
                 } else {
-                    console.log(`❌ ${modelName}: 失敗`);
+                    console.log(`❌ ${modelName}: Failed`);
                 }
                 
             } catch (error) {
-                console.log(`❌ ${modelName}: スキップ - ${error.message}`);
+                console.log(`❌ ${modelName}: Skipped - ${error.message}`);
                 results.push({
                     model_name: modelName,
                     success: false,
@@ -111,44 +111,44 @@ async function main() {
             }
         }
         
-        // 結果の比較
-        console.log(`\n=== 結果比較 ===`);
+        // Compare results
+        console.log(`\n=== Results comparison ===`);
         const successfulResults = results.filter(r => r.success);
         
-        console.log(`成功したモデル数: ${successfulResults.length}/${modelsToTest.length}`);
+        console.log(`Successful models: ${successfulResults.length}/${modelsToTest.length}`);
         
         if (successfulResults.length >= 1) {
-            console.log(`\n--- [UNK]トークン数比較 ---`);
+            console.log(`\n--- [UNK] token count comparison ---`);
             for (const result of successfulResults) {
-                const status = result.unk_count === 0 ? "🟢 良好" : `🔴 ${result.unk_count}個`;
+                const status = result.unk_count === 0 ? "🟢 Good" : `🔴 ${result.unk_count}`;
                 console.log(`  ${result.model_name}: ${status}`);
             }
             
-            // 最もUNKが少ないモデルを推奨
+            // Recommend models with least UNK tokens
             const bestModels = successfulResults.filter(r => r.unk_count === 0);
             if (bestModels.length > 0) {
-                console.log(`\n🎯 推奨モデル ([UNK]なし):`);
+                console.log(`\n🎯 Recommended models (no [UNK]):`);
                 for (const model of bestModels) {
                     console.log(`  - ${model.model_name}`);
-                    console.log(`    次元: ${model.embedding_dimension}`);
-                    console.log(`    トークン数: ${model.tokens.length}`);
+                    console.log(`    Dimensions: ${model.embedding_dimension}`);
+                    console.log(`    Token count: ${model.tokens.length}`);
                 }
             } else {
                 const minUnk = Math.min(...successfulResults.map(r => r.unk_count));
                 const bestModels = successfulResults.filter(r => r.unk_count === minUnk);
-                console.log(`\n🔶 相対的に良いモデル ([UNK]: ${minUnk}個):`);
+                console.log(`\n🔶 Relatively good models ([UNK]: ${minUnk})`);
                 for (const model of bestModels) {
                     console.log(`  - ${model.model_name}`);
-                    console.log(`    次元: ${model.embedding_dimension}`);
+                    console.log(`    Dimensions: ${model.embedding_dimension}`);
                 }
             }
         }
         
-        // 結果をJSONファイルに保存
+        // Save results to JSON file
         const outputFile = path.join(__dirname, 'multilingual_test_results_js.json');
         fs.writeFileSync(outputFile, JSON.stringify(results, null, 2), 'utf-8');
         
-        console.log(`\n詳細結果を保存しました: ${outputFile}`);
+        console.log(`\nDetailed results saved: ${outputFile}`);
         
     } catch (error) {
         console.error('Error during multilingual model test:', error);
