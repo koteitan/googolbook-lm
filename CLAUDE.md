@@ -119,7 +119,10 @@ This site is a chat with RAG for MediaWiki. The site user put the question in th
   - For title search, the redirecting page is included in the vector store and if the vector store is hit, the body of the destination page is shown to the LLM.
 
 ## rules
+## Language
 - Speak to me in Japanese.
+- All the comments on the code, the log messages, and .md files are written in English.
+
 - git add . is denied because it may include unnecessary files. Please add files one by one.
 - git commit is denied. Please suggest the commit message in English by the following format:
 ```markdown
