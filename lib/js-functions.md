@@ -11,11 +11,11 @@
 ### 3. Sendボタン押下 / Ctrl+Enter
 - `handleSend()`
 
-## UIアクセス
+## インターフェース
 
 ### 値の取得
 
-UI要素から値を取得する関数:
+UI要素やブラウザオブジェクトから値を取得する関数:
 
 #### elements.baseUrl(APIベースURL)
 - `checkAndShowErrors()` - 値を取得してエラーチェック
@@ -35,9 +35,19 @@ UI要素から値を取得する関数:
 #### elements.promptWindow(質問入力欄)
 - `handleSend()` - 質問文を取得
 
+#### localStorage(ローカルストレージ)
+- `loadSettingsFromLocalStorage()` - 保存された設定を取得
+- `initializeRAG()` - 最後のクエリを取得
+
+#### window.location(ウィンドウ位置情報)
+- `checkAndShowErrors()` - ホスト名を取得してローカルアクセス判定
+
+#### window.lastDocumentSelection(ドキュメント選択情報)
+- `getRepresentativeContentFromChunks()` - 最後の文書選択情報を取得
+
 ### 値の変更
 
-UI要素の値を変更・設定する関数:
+UI要素やブラウザオブジェクトの値を変更・設定する関数:
 
 #### elements.baseUrl(APIベースURL)
 - `loadSettingsFromLocalStorage()` - localStorageから読み込んで値を設定
@@ -104,6 +114,22 @@ UI要素の値を変更・設定する関数:
 
 #### elements.userQueryContent(ユーザークエリ内容)
 - `displayLLMPrompt(systemPrompt, userQuery, elements, ...)` - ユーザークエリを表示
+
+#### localStorage(ローカルストレージ)
+- `saveSettingsToLocalStorage()` - 設定を保存
+- `handleSend()` - 最後のクエリを保存
+
+#### window.location(ウィンドウ位置情報)
+- `callLLMAPI()` - リファラーヘッダーにオリジンを設定
+
+#### window.lastDocumentSelection(ドキュメント選択情報)
+- `findOptimalDocumentNumbers()` - 文書選択情報を保存
+
+#### window.MathJax(数式レンダリング)
+- `generateAIResponse()` - 数式のタイプセットを実行
+
+#### document(ドキュメント)
+- `initializeRAG()` - 全てのUI要素を取得
 
 ## Function Call Graph (Mermaid)
 
