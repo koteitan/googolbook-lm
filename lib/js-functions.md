@@ -13,83 +13,97 @@
 
 ## UIアクセス
 
-UIへの入力取得・出力設定を行う関数:
+### 値の取得
 
-1. `getCurrentModel(elements)` - 現在選択されているモデルを取得
-   - LLM Model: `elements.modelSelect.value` (`document.getElementById('model-select')`)
+UI要素から値を取得する関数:
 
-2. `updateLicenseInfo(config, elements)` - ライセンス情報を更新
-   - License Link表示: `elements.licenseLink.textContent` (`document.getElementById('license-link')`)
-   - Fetch Date表示: `elements.fetchDate.textContent` (`document.getElementById('fetch-date')`)
+#### elements.baseUrl(APIベースURL)
+- `checkAndShowErrors()` - 値を取得してエラーチェック
+- `extractSearchKeywords(query, apiKey, elements)` - 値を取得してLLM APIに送信
+- `generateAIResponse()` - 値を取得してLLM APIに送信
+- `saveSettingsToLocalStorage()` - 値を取得してlocalStorageに保存
 
-3. `loadVectorStore()` - ベクトルストアを読み込み
-   - Load Data Button無効化: `elements.loadDataBtn.disabled` (`document.getElementById('load-data-btn')`)
-   - Loading Progress CSS: `elements.loadingProgress.classList`, `elements.loadingProgress.style` (`document.getElementById('loading-progress')`)
-   - Loading Status表示: `elements.loadingStatus.textContent` (`document.getElementById('loading-status')`)
+#### elements.apiKey(APIキー)
+- `checkAndShowErrors()` - 値を取得してエラーチェック
+- `processSearchAndResponse()` - 値を取得してAPIキーとして使用
 
-4. `showErrorMessages()` - エラーメッセージを表示
-   - Error Messages表示: `elements.errorMessages.innerHTML` (`document.getElementById('error-messages')`)
+#### elements.modelSelect(LLMモデル)
+- `getCurrentModel(elements)` - 現在選択されているモデルを取得
+- `extractSearchKeywords(query, apiKey, elements)` - 値を取得してLLM APIに送信
+- `saveSettingsToLocalStorage()` - 値を取得してlocalStorageに保存
 
-5. `clearErrorMessages()` - エラーメッセージをクリア
-   - Error Messages消去: `elements.errorMessages.innerHTML` (`document.getElementById('error-messages')`)
+#### elements.promptWindow(質問入力欄)
+- `handleSend()` - 質問文を取得
 
-6. `checkAndShowErrors()` - エラーをチェックして表示
-   - API Base URL: `elements.baseUrl.value.trim()` (`document.getElementById('base-url')`)
-   - API Key: `elements.apiKey.value.trim()` (`document.getElementById('api-key')`)
-   - Send Button無効化制御: `elements.sendBtn.disabled` (`document.getElementById('send-btn')`)
+### 値の変更
 
-7. `handleSend()` - 送信ハンドラー
-   - 質問文: `elements.promptWindow.value.trim()` (`document.getElementById('prompt-window')`)
-   - Response Window表示: `elements.responseWindow.innerHTML` (`document.getElementById('response-window')`)
-   - RAG Window表示: `elements.ragWindow.innerHTML` (`document.getElementById('rag-window')`)
-   - Send Button無効化: `elements.sendBtn.disabled` (`document.getElementById('send-btn')`)
-   - Prompt Window無効化: `elements.promptWindow.disabled` (`document.getElementById('prompt-window')`)
+UI要素の値を変更・設定する関数:
 
-8. `extractSearchKeywords(query, apiKey, elements)` - 検索キーワードを抽出
-   - API Base URL: `elements.baseUrl.value.trim()` (`document.getElementById('base-url')`)
-   - LLM Model: `elements.modelSelect.value.trim()` (`document.getElementById('model-select')`)
-   - API Key: `apiKey` (引数として受け取る)
+#### elements.baseUrl(APIベースURL)
+- `loadSettingsFromLocalStorage()` - localStorageから読み込んで値を設定
+- `initializeRAG()` - 初期値を設定
+- `updateUIForProvider()` - プロバイダーに応じて値とplaceholderを更新
 
-9. `processSearchAndResponse()` - 検索とレスポンスを処理
-   - API Key: `elements.apiKey.value.trim()` (`document.getElementById('api-key')`)
-   - 質問文: `query` (引数として受け取る)
-   - RAG Window表示: `elements.ragWindow.innerHTML` (`document.getElementById('rag-window')`)
-   - Response Window表示: `elements.responseWindow.innerHTML` (`document.getElementById('response-window')`)
-   - Prompt Window無効化解除: `elements.promptWindow.disabled` (`document.getElementById('prompt-window')`)
+#### elements.apiKey(APIキー)
+- `updateUIForProvider()` - placeholderを更新
 
-10. `displayRAGResults()` - RAG検索結果を表示
-    - RAG Window表示: `elements.ragWindow.innerHTML` (`document.getElementById('rag-window')`)
+#### elements.apiKeyHelp(APIキーヘルプ)
+- `updateUIForProvider()` - ヘルプテキストを表示
 
-11. `displayLLMPrompt(systemPrompt, userQuery, elements, ...)` - LLMプロンプトを表示（デバッグ用）
-    - Debug Info表示: `elements.debugInfoContent.innerHTML` (`document.getElementById('debug-info-content')`)
-    - System Prompt表示: `elements.systemPromptContent.textContent` (`document.getElementById('system-prompt-content')`)
-    - User Query表示: `elements.userQueryContent.textContent` (`document.getElementById('user-query-content')`)
-    - Debug Section表示制御: `elements.debugSection.style.display` (`document.getElementById('llm-prompt-debug-section')`)
+#### elements.debugInfoContent(デバッグ情報コンテンツ)
+- `displayLLMPrompt(systemPrompt, userQuery, elements, ...)` - デバッグ情報を表示
 
-12. `generateAIResponse()` - AI応答を生成
-    - API Base URL: `elements.baseUrl.value.trim()` (`document.getElementById('base-url')`)
-    - API Key: `apiKey` (引数として受け取る)
-    - Response Window表示: `elements.responseWindow.innerHTML` (`document.getElementById('response-window')`)
+#### elements.debugSection(デバッグセクション)
+- `displayLLMPrompt(systemPrompt, userQuery, elements, ...)` - 表示制御
 
-13. `saveSettingsToLocalStorage()` - 設定をlocalStorageに保存
-    - API Base URL: `elements.baseUrl.value.trim()` (`document.getElementById('base-url')`)
-    - LLM Model: `elements.modelSelect?.value` (`document.getElementById('model-select')`)
+#### elements.errorMessages(エラーメッセージ)
+- `showErrorMessages()` - エラーメッセージを表示
+- `clearErrorMessages()` - エラーメッセージをクリア
 
-14. `loadSettingsFromLocalStorage()` - localStorageから設定を読み込み
-    - API Base URL: `elements.baseUrl.value` (`document.getElementById('base-url')`)に設定
-    - LLM Model: `elements.modelSelect.value` (`document.getElementById('model-select')`)に設定
+#### elements.fetchDate(取得日時)
+- `updateLicenseInfo(config, elements)` - 取得日時を表示
 
-15. `initializeRAG()` - RAGシステムを初期化
-    - API Base URL: `elements.baseUrl.value` (`document.getElementById('base-url')`)に初期値設定
-    - LLM Model: `elements.modelSelect.value` (`document.getElementById('model-select')`)に初期値設定
-    - Loading Status表示: `elements.loadingStatus.textContent` (`document.getElementById('loading-status')`)
-    - Prompt Window復元: `elements.promptWindow.value` (`document.getElementById('prompt-window')`)
+#### elements.licenseLink(ライセンスリンク)
+- `updateLicenseInfo(config, elements)` - ライセンス情報を表示
 
-16. `updateUIForProvider()` - プロバイダーに応じてUIを更新
-    - API Base URL: `elements.baseUrl.value` (`document.getElementById('base-url')`)を条件により更新
-    - Base URL Placeholder: `elements.baseUrl.placeholder` (`document.getElementById('base-url')`)
-    - API Key Placeholder: `elements.apiKey.placeholder` (`document.getElementById('api-key')`)
-    - API Key Help表示: `elements.apiKeyHelp.innerHTML` (`document.getElementById('api-key-help')`)
+#### elements.modelSelect(LLMモデル)
+- `loadSettingsFromLocalStorage()` - localStorageから読み込んで値を設定
+- `initializeRAG()` - 初期値を設定
+
+#### elements.loadDataBtn(データ読み込みボタン)
+- `loadVectorStore()` - ボタンを無効化
+
+#### elements.loadingProgress(読み込み進捗)
+- `loadVectorStore()` - CSSクラスとスタイルを制御
+
+#### elements.loadingStatus(読み込み状態)
+- `loadVectorStore()` - ステータステキストを表示
+- `initializeRAG()` - ステータステキストを表示
+
+#### elements.promptWindow(質問入力欄)
+- `handleSend()` - 無効化
+- `processSearchAndResponse()` - 無効化解除
+- `initializeRAG()` - 値を復元
+
+#### elements.ragWindow(RAG検索結果表示)
+- `handleSend()` - RAG検索結果を表示
+- `processSearchAndResponse()` - RAG検索結果を表示
+- `displayRAGResults()` - RAG検索結果を表示
+
+#### elements.responseWindow(応答表示)
+- `handleSend()` - AI応答を表示
+- `processSearchAndResponse()` - AI応答を表示
+- `generateAIResponse()` - AI応答を表示
+
+#### elements.sendBtn(送信ボタン)
+- `checkAndShowErrors()` - 無効化制御
+- `handleSend()` - 無効化
+
+#### elements.systemPromptContent(システムプロンプト内容)
+- `displayLLMPrompt(systemPrompt, userQuery, elements, ...)` - システムプロンプトを表示
+
+#### elements.userQueryContent(ユーザークエリ内容)
+- `displayLLMPrompt(systemPrompt, userQuery, elements, ...)` - ユーザークエリを表示
 
 ## Function Call Graph (Mermaid)
 
@@ -107,9 +121,9 @@ graph TD
     checkAndShowErrors --> showErrorMessages["showErrorMessages()"]
     updateUIForProvider --> getProviderFromModel["getProviderFromModel()"]
     
-    classDef entry fill:#f9f,stroke:#333,stroke-width:4px
-    classDef ui fill:#fbb,stroke:#333,stroke-width:2px
-    classDef util fill:#bfb,stroke:#333,stroke-width:2px
+    classDef entry fill:none,stroke:#333,stroke-width:4px
+    classDef ui fill:none,stroke:#333,stroke-width:2px
+    classDef util fill:none,stroke:#333,stroke-width:2px
     
     class initializeRAG entry
     class showErrorMessages,updateUIForProvider ui
@@ -128,9 +142,9 @@ graph TD
     loadCompressedJSONL --> getPageFromXML["getPageFromXML()"]
     checkAndShowErrors --> showErrorMessages["showErrorMessages()"]
     
-    classDef entry fill:#f9f,stroke:#333,stroke-width:4px
-    classDef ui fill:#fbb,stroke:#333,stroke-width:2px
-    classDef data fill:#fbf,stroke:#333,stroke-width:2px
+    classDef entry fill:none,stroke:#333,stroke-width:4px
+    classDef ui fill:none,stroke:#333,stroke-width:2px
+    classDef data fill:none,stroke:#333,stroke-width:2px
     
     class loadVectorStore entry
     class showErrorMessages ui
@@ -169,10 +183,10 @@ graph TD
     
     checkAndShowErrors --> showErrorMessages["showErrorMessages()"]
     
-    classDef entry fill:#f9f,stroke:#333,stroke-width:4px
-    classDef api fill:#bbf,stroke:#333,stroke-width:2px
-    classDef ui fill:#fbb,stroke:#333,stroke-width:2px
-    classDef search fill:#bfb,stroke:#333,stroke-width:2px
+    classDef entry fill:none,stroke:#333,stroke-width:4px
+    classDef api fill:none,stroke:#333,stroke-width:2px
+    classDef ui fill:none,stroke:#333,stroke-width:2px
+    classDef search fill:none,stroke:#333,stroke-width:2px
     
     class handleSend entry
     class callLLMAPI,callOpenAIAPI,callClaudeAPI,callGeminiAPI,callOpenRouterAPI,callAzureOpenAIAPI api
