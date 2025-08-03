@@ -139,7 +139,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 -----------------------------commit message end
 ```
   - When you make the commit message, please check `git log -3` and avoid duplicating the last commit message.
-  - When you make the commit message, write one line for the one change.
+  - To simplify the commit messages, write only one line for the one change when you make the commit message. Don't write multiple lines for one change.
   - Don't use `git push`
   - I check browser by myself. Please don't check browser.
 
