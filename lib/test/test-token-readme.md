@@ -1,6 +1,6 @@
 # test-token.js - JavaScript Tokenization Test Tool
 
-lib/rag-common.jsと同じロジックを使用してJavaScript側のトークン化をテストするNode.jsツールです。
+lib/js/rag-common.jsと同じロジックを使用してJavaScript側のトークン化をテストするNode.jsツールです。
 
 ## 機能
 
@@ -50,12 +50,12 @@ Detailed morphemes:
 
 === Summary ===
 Current configuration uses TinySegmenter for Japanese morphological analysis.
-This matches the browser-side tokenization in rag-common.js.
+This matches the browser-side tokenization in lib/js/rag-common.js.
 ```
 
-## rag-common.jsとの対応
+## lib/js/rag-common.jsとの対応
 
-このツールは以下の点でrag-common.jsと同じ動作をします：
+このツールは以下の点でlib/js/rag-common.jsと同じ動作をします：
 
 1. **同じTinySegmenter**: 同じライブラリとトークン化ロジック
 2. **同じ設定読み込み**: config.ymlのtokenize.modeを使用

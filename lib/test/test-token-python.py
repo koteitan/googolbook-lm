@@ -56,7 +56,7 @@ def main():
             
             print('\n=== Summary ===')
             print(f'Current configuration uses {tokenize_mode} for Japanese morphological analysis.')
-            print('This matches the browser-side tokenization in rag-common.js.')
+            print('This matches the browser-side tokenization in lib/js/rag-common.js.')
             
         except Exception as e:
             print(f"❌ {tokenize_mode} failed: {e}")

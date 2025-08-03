@@ -1,4 +1,4 @@
-# lib/rag-common.js Function Call Graph
+# クライアントサイド JavaScript
 
 ## イベントハンドラ
 

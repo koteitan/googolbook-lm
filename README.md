@@ -87,7 +87,7 @@ Each site features:
 - Localized user interface
 - Independent RAG search functionality
 
-Shared components are located in the root directory (`index.css`) and lib directory (`lib/rag-common.js`).
+Shared components are located in the root directory (`index.css`) and lib directory (`lib/js/rag-common.js`).
 
 ## Requirements
 

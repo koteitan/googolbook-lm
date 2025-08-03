@@ -82,7 +82,10 @@ This site is a chat with RAG for MediaWiki. The site user put the question in th
 │   ├── reporting.py         # Report generation utilities
 │   ├── test/                # Test scripts
 │   ├── xml_parser.py        # MediaWiki XML parsing utilities
-│   ├── rag-common.js        # Common RAG functionality for web interface
+│   ├── js/                  # JavaScript modules
+│       ├── rag-common.js        # Common RAG functionality for web interface
+│       └── test/                # JavaScript tests
+│           └── test-token.js    # Tokenization testing tool
 │   ├── rag/                 # RAG (Retrieval-Augmented Generation) utilities
 │       ├── __init__.py      # Package initialization
 │       ├── custom_loader.py # Custom MWDumpLoader (unused)
