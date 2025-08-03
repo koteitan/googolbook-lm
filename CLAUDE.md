@@ -135,7 +135,8 @@ This site is a chat with RAG for MediaWiki. The site user put the question in th
 Co-Authored-By: Claude <noreply@anthropic.com>
 -----------------------------commit message end
 ```
-  - When you make the commit message, please check `git log -1` and avoid duplicating the last commit message.
+  - When you make the commit message, please check `git log -3` and avoid duplicating the last commit message.
+  - When you make the commit message, write one line for the one change.
   - Don't use `git push`
   - I check browser by myself. Please don't check browser.
 
