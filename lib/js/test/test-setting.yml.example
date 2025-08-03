@@ -5,41 +5,6 @@
 ui_values:
   baseUrl: "https://api.openai.com/v1"
   apiKey: "test-api-key-12345"
-  modelSelect: "gpt-4"
-  promptWindow: "テスト用の質問文です"
+  modelSelect: "gpt-4o"
+  promptWindow: "What is bashicu matrix system?"
 
-# 初期設定
-initial_settings:
-  currentSite: "test-site"
-  vectorStoreLoaded: false
-  debugMode: true
-
-# モックレスポンス
-mock_responses:
-  llm_api:
-    success: "これはテスト用のLLM応答です。"
-    error: "API呼び出しでエラーが発生しました。"
-  
-  rag_search:
-    results:
-      - id: "doc1"
-        title: "テスト文書1"
-        score: 0.95
-        content: "これはテスト用の文書内容です。"
-      - id: "doc2"
-        title: "テスト文書2"
-        score: 0.87
-        content: "別のテスト用文書の内容です。"
-
-# 出力確認用の初期値
-output_tracking:
-  messages: []
-  ui_changes: []
-  api_calls: []
-  storage_operations: []
-
-# エラーテスト用
-error_scenarios:
-  api_key_missing: true
-  network_error: false
-  invalid_model: false
