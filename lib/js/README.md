@@ -36,8 +36,9 @@ UI要素やブラウザオブジェクトから値を取得する関数:
   - `handleOnClickSend()` - 質問文を取得
 
 - **elements.localStorage(storage, ローカルストレージ)**
-  - `loadSettingsFromLocalStorage()` - 保存された設定を取得
-  - `handleOnLoad()` - 最後のクエリを取得
+  - `loadState(storage)` - `googolbook-lm:state` から状態オブジェクトを取得(無ければ旧キーから復元)
+  - `loadSettingsFromLocalStorage()` - `loadState()` 経由で保存された設定を取得
+  - `handleOnLoad()` - `loadState()` 経由で最後のクエリを取得
 
 - **elements.window.location(location, ウィンドウ位置情報)**
   - `checkAndShowErrors()` - ホスト名を取得してローカルアクセス判定
@@ -116,8 +117,9 @@ UI要素やブラウザオブジェクトの値を変更・設定する関数:
   - `displayLLMPrompt(systemPrompt, userQuery, elements, ...)` - ユーザークエリを表示
 
 - **elements.localStorage(storage, ローカルストレージ)**
-  - `saveSettingsToLocalStorage()` - 設定を保存
-  - `handleOnClickSend()` - 最後のクエリを保存
+  - `saveState(storage, patch)` - `googolbook-lm:state` に状態オブジェクトをマージして保存
+  - `saveSettingsToLocalStorage()` - `saveState()` 経由で設定(`ragSettings`)を保存
+  - `handleOnClickSend()` - `saveState()` 経由で最後のクエリ(`lastQuery`)を保存
 
 - **elements.window.location(location, ウィンドウ位置情報)**
   - `callLLMAPI()` - リファラーヘッダーにオリジンを設定
@@ -127,6 +129,19 @@ UI要素やブラウザオブジェクトの値を変更・設定する関数:
 
 - **elements.window.MathJax(object, 数式レンダリング)**
   - `generateAIResponse()` - 数式のタイプセットを実行
+
+## localStorage のキー名前空間
+
+全サイトが `https://koteitan.github.io/` という単一オリジンを共有するため、
+localStorage のキーはリポジトリ名で名前空間を切る。
+
+- キー: `googolbook-lm:state` (JSON オブジェクト1個)
+  - `lastQuery` (string) - 最後に送信した質問文
+  - `ragSettings` (object) - `{ baseUrl, model }`
+- アクセスは `loadState(storage)` / `saveState(storage, patch)` ヘルパ経由のみ。
+  `elements.localStorage` の DI ラッパはそのまま維持する。
+- 旧キー `lastQuery` / `ragSettings` は読み込み時のフォールバックとしてのみ参照し、
+  削除はしない。保存は常に新キーへ行う。
 
 - **elements.document(document, ドキュメント)**
   - `handleOnLoad()` - 全てのUI要素を取得
